@@ -8,9 +8,10 @@ instead of a vibe. Everything stays on your device.
 This app is for personal self-experiments. It is not medical advice and does not
 recommend taking any supplement.
 
-> **Status:** foundation only. This is the skeleton, data layer, curated
-> supplement list, and CI. The cognitive tests, statistics, scheduling, and the
-> real screens land in later PRs.
+> **Status:** foundation plus the daily loop. The data layer, curated supplement
+> list, cognitive-test engine, Today/home screen, daily check-in flow, local
+> notifications, and a small UI kit are in place. Statistics, scheduling setup,
+> and the verdict/evidence screens land in later PRs.
 
 ## Running it
 
@@ -65,10 +66,31 @@ src/
     seed.ts           Curated ~30-supplement seed list
     index.ts          getDatabase() + public re-exports
     __tests__/        Jest tests + in-memory test driver
-  engines/            Reserved: stats, cognitive-test, experiment-design
-  screens/            Reserved: real screen implementations
+  engines/            Cognitive-test engine (PVT + 2-back); stats reserved
+  features/
+    daily-loop/       Pure Today-view, context, off-window, timer, device,
+                      session-assembly logic (UI-free, fully unit-tested)
+    notifications/    expo-notifications scheduling (degrades to no-op headless)
+  screens/            Reserved: remaining real screen implementations
+  ui/                 Local UI kit — tokens, Button, Card, Slider, Scaffold,
+                      ProgressRing/streak (imported as @/ui, no hardcoded colors)
   components/         Shared UI components
 ```
+
+## The daily loop
+
+- **Today (`app/index.tsx`)** — the hub: Day X of N, today's dose instruction,
+  Mark taken, Start check-in, and the streak. During a blinded run the arm is
+  never revealed; the instruction is phrased as a numbered cup.
+- **Daily test (`app/daily-test.tsx`)** — a full-screen ~90-second flow: pre-test
+  context (sleep, caffeine, phone/tablet), a PVT timed with the high-resolution
+  clock (`performance.now`), a letter 2-back, and three 0–10 sliders plus an
+  optional note. Raw trials are scored through the cognitive-test engine; one
+  `test_session` row is persisted, with off-window and abandoned/invalid runs
+  flagged.
+- **Notifications** — a morning dose reminder and a check-in-window reminder,
+  scheduled with `expo-notifications`; permission is requested gracefully and
+  every call degrades to a no-op where the module is unavailable.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for where later features belong and the
 conventions that keep the data layer testable.
