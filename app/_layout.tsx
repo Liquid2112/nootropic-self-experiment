@@ -1,20 +1,23 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { OnboardingProvider } from '@/screens/onboarding/OnboardingContext';
 
 import { ThemeProvider, useTheme } from '@/ui';
 
 /**
- * Root navigator. One stack with a placeholder route per MVP screen.
- * Later PRs replace each placeholder with its real screen implementation
- * (see src/screens/). The whole tree is wrapped in the design-system
- * `ThemeProvider` so every screen reads the same tokens.
+ * Root navigator. One stack with a route per MVP screen, wrapped in the
+ * design-system `ThemeProvider` so every screen reads the same tokens and in
+ * `OnboardingProvider` so the onboarding flow can share draft state across its
+ * Welcome -> Goal picker -> Experiment setup steps.
  */
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ThemedStack />
+        <OnboardingProvider>
+          <ThemedStack />
+        </OnboardingProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

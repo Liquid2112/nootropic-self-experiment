@@ -1,13 +1,6 @@
-import { ScreenPlaceholder } from '@/components/ScreenPlaceholder';
+import { ExperimentSetupScreen } from '@/screens/onboarding/ExperimentSetupScreen';
 
-// Experiment setup. Later PRs configure design, blinding mode, and length,
-// then generate the ON/OFF schedule.
-export default function ExperimentSetupScreen() {
-  return (
-    <ScreenPlaceholder
-      title="Experiment Setup"
-      description="Configure design, blinding, and length here."
-      links={[{ label: 'Go to Today', href: '/' }]}
-    />
-  );
+// Experiment setup: length, blinding, test-time window; confirms and stores.
+export default function ExperimentSetup() {
+  return <ExperimentSetupScreen />;
 }
