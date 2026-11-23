@@ -20,6 +20,7 @@ export { MAX_RUN, balancedCounts, hasTooLongRun, buildAcuteSequence } from './ac
 export { blockLayoutFor, buildCumulativeSequence, type BlockLayout } from './cumulative';
 export {
   applyBlinding,
+  selfBlindPassphrase,
   type ArmMapping,
   type BlindingResult,
   type SealOptions,

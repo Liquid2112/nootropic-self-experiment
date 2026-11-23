@@ -34,6 +34,13 @@ export type Experiment = {
   startDate: string;
   status: ExperimentStatus;
   sealedKey: string | null;
+  /**
+   * The schedule/blinding seed used at creation. A self-blinded run derives its
+   * unseal passphrase from this seed, so it must be persisted to recover the
+   * A/B -> ON/OFF mapping at run end. Null for rows created before the seed was
+   * stored (treated as not-yet-unsealable for self-blind).
+   */
+  seed: string | null;
 };
 
 export type ScheduleArm = 'ON' | 'OFF' | 'A' | 'B';

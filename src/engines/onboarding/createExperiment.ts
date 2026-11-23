@@ -108,6 +108,7 @@ export function createExperiment(
     startDate: selections.startDate,
     status: 'active',
     sealedKey: schedule.sealedKey,
+    seed: deps.seed,
   };
 
   experiments.insert(db, experiment);

@@ -113,3 +113,42 @@ export type ConfidenceInterval = { low: number; high: number };
 export function confidenceInterval90(estimate: number, se: number): ConfidenceInterval {
   return { low: estimate - Z_90 * se, high: estimate + Z_90 * se };
 }
+
+/**
+ * Two-sided 90% t critical value for `df` degrees of freedom, via the
+ * Cornish-Fisher expansion around the normal quantile. Accurate to a few parts
+ * in 1e-4 for df >= 3 — ample for a verdict threshold, and far better than the
+ * normal quantile at the small samples (df ~ 20) a 28-day run produces, where
+ * the normal under-covers and inflates the false-positive rate. Falls back to
+ * the normal quantile as df -> infinity.
+ */
+export function tCritical90(df: number): number {
+  if (!Number.isFinite(df) || df <= 0) return Z_90;
+  const z = Z_90;
+  const z3 = z * z * z;
+  const z5 = z3 * z * z;
+  const z7 = z5 * z * z;
+  const g1 = (z3 + z) / 4;
+  const g2 = (5 * z5 + 16 * z3 + 3 * z) / 96;
+  const g3 = (3 * z7 + 19 * z5 + 17 * z3 - 15 * z) / 384;
+  return z + g1 / df + g2 / (df * df) + g3 / (df * df * df);
+}
+
+/**
+ * Two-sided 90% CI using a t critical value with `df` degrees of freedom and
+ * the finite-sample scale correction sqrt(n / (n - k)). Both widen the interval
+ * at small n, which is what pulls a true-null run's false-positive rate down
+ * toward the nominal 5%.
+ */
+export function confidenceInterval90T(
+  estimate: number,
+  se: number,
+  n: number,
+  k: number,
+): ConfidenceInterval {
+  const df = n - k;
+  const crit = tCritical90(df);
+  const correction = df > 0 ? Math.sqrt(n / df) : 1;
+  const half = crit * se * correction;
+  return { low: estimate - half, high: estimate + half };
+}

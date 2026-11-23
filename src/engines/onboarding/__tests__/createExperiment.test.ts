@@ -3,7 +3,11 @@ import { experiments, scheduleDays, supplements } from '@/db/repositories';
 import type { SqlDriver } from '@/db/driver';
 import { migrate } from '@/db/schema';
 import { seedSupplements } from '@/db/seed';
-import { unsealArmMapping, type ArmMapping } from '@/engines/experiment';
+import {
+  selfBlindPassphrase,
+  unsealArmMapping,
+  type ArmMapping,
+} from '@/engines/experiment';
 import { createExperiment, validateSelections } from '../createExperiment';
 import type { OnboardingSelections } from '../types';
 
@@ -126,6 +130,32 @@ describe('createExperiment: blinded runs never expose the assignment', () => {
     for (const arm of arms) {
       expect(arm === 'A' || arm === 'B').toBe(true);
     }
+  });
+
+  it('persists the seed so a self-blinded run can be unsealed later (finding 1)', () => {
+    const db = freshDb();
+    const id = createExperiment(db, base({ blindingMode: 'self_blind' }), {
+      experimentId: 'exp_seed',
+      seed: 'seed-persist',
+    });
+    const exp = experiments.getById(db, id)!;
+    // The seed is stored verbatim, not lost after creation.
+    expect(exp.seed).toBe('seed-persist');
+    // Unsealing with the passphrase DERIVED FROM THE STORED SEED recovers the
+    // mapping — the bug was sealing with the seed but unsealing with the
+    // experiment id, which never matched.
+    const mapping = unsealArmMapping<ArmMapping>(
+      exp.sealedKey!,
+      selfBlindPassphrase(exp.seed!),
+    );
+    expect(mapping.supplementLabel === 'A' || mapping.supplementLabel === 'B').toBe(true);
+    expect(mapping.placeboLabel).not.toBe(mapping.supplementLabel);
+  });
+
+  it('stores the seed for open runs as well', () => {
+    const db = freshDb();
+    const id = createExperiment(db, base(), { experimentId: 'exp_open_seed', seed: 'os-1' });
+    expect(experiments.getById(db, id)!.seed).toBe('os-1');
   });
 });
 

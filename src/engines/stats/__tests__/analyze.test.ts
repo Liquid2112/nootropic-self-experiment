@@ -1,4 +1,4 @@
-import { analyzeMetric, type DayObservation, toDbVerdict } from '../analyze';
+import { analyzeMetric, blockMeans, type DayObservation, toDbVerdict } from '../analyze';
 import { OlsError } from '../ols';
 import { REFERENCE } from './reference';
 
@@ -114,5 +114,93 @@ describe('analyzeMetric edge cases', () => {
       caffeine: (i % 2) as 0 | 1,
     }));
     expect(() => analyzeMetric('focus', days)).toThrow(OlsError);
+  });
+});
+
+describe('covariate guard (finding 2)', () => {
+  /** A clean alternating acute run with a real ON effect on reaction time. */
+  function rtDays(n: number, mutate: (d: DayObservation, i: number) => void): DayObservation[] {
+    return Array.from({ length: n }, (_, i) => {
+      const on: 0 | 1 = (i % 2) as 0 | 1;
+      const d: DayObservation = {
+        y: 300 - (on ? 18 : 0) + Math.sin(i * 1.7) * 3,
+        on,
+        t: i,
+        sleep: 6.5 + ((i * 7) % 5) * 0.2,
+        caffeine: (i % 3 === 0 ? 1 : 0) as 0 | 1,
+      };
+      mutate(d, i);
+      return d;
+    });
+  }
+
+  it('does not throw when caffeine is constant (always "yes") and drops it', () => {
+    const days = rtDays(28, (d) => {
+      d.caffeine = 1; // 100% of days -> zero-variance column
+    });
+    const res = analyzeMetric('pvtMedianMs', days);
+    expect(res.droppedCovariates).toContain('caffeine');
+    expect(res.estimate).toBeLessThan(0); // still recovers the ~18ms improvement
+    expect(res.verdictState).toBe('measurable_improvement');
+  });
+
+  it('does not throw when sleep is never logged (constant 0) and drops it', () => {
+    const days = rtDays(28, (d) => {
+      d.sleep = 0; // unlogged default -> zero variance
+    });
+    const res = analyzeMetric('pvtMedianMs', days);
+    expect(res.droppedCovariates).toContain('sleep');
+    expect(res.estimate).toBeLessThan(0);
+  });
+
+  it('drops a caffeine covariate that is collinear with the ON days', () => {
+    // Caffeine taken exactly on ON days -> caffeine column == ON column.
+    const days = rtDays(28, (d) => {
+      d.caffeine = d.on;
+    });
+    const res = analyzeMetric('pvtMedianMs', days);
+    expect(res.droppedCovariates).toContain('caffeine');
+    expect(res.estimate).toBeLessThan(0);
+    expect(res.verdictState).toBe('measurable_improvement');
+  });
+
+  it('keeps all covariates when they vary independently', () => {
+    const days = rtDays(28, () => {});
+    const res = analyzeMetric('pvtMedianMs', days);
+    expect(res.droppedCovariates).toEqual([]);
+    expect(res.coefficients).toHaveLength(5); // const, ON, t, sleep, caffeine
+  });
+});
+
+describe('cumulative block-means analysis (finding 4)', () => {
+  /** A 28-day ABAB block design (7-day blocks), optional ON effect. */
+  function blockDays(onEffect: number): DayObservation[] {
+    const arms: (0 | 1)[] = [];
+    for (const block of [1, 0, 1, 0] as const) for (let i = 0; i < 7; i++) arms.push(block);
+    return arms.map((on, i) => ({
+      y: 50 + (on ? onEffect : 0) + Math.sin(i * 2.1) * 2,
+      on,
+      t: i,
+      sleep: 7,
+      caffeine: 0,
+    }));
+  }
+
+  it('collapses the daily series to one mean per block', () => {
+    const blocks = blockMeans(blockDays(5));
+    expect(blocks).toHaveLength(4);
+    expect(blocks.map((b) => b.on)).toEqual([1, 0, 1, 0]);
+  });
+
+  it('fits only [const, ON] on the blocks and reports all covariates dropped', () => {
+    const res = analyzeMetric('focus', blockDays(5), { design: 'cumulative' });
+    expect(res.coefficients).toHaveLength(2);
+    expect(res.droppedCovariates).toEqual(['t', 'sleep', 'caffeine']);
+  });
+
+  it('surfaces the low-power note on a non-null verdict', () => {
+    const res = analyzeMetric('focus', blockDays(10), { design: 'cumulative' });
+    expect(res.verdictSentence).toContain('cumulative run');
+    expect(res.verdictSentence.toLowerCase()).toContain('miss small effects');
   });
 });
