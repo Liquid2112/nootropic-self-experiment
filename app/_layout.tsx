@@ -42,7 +42,7 @@ function ThemedStack() {
         <Stack.Screen name="welcome" options={{ title: 'Welcome' }} />
         <Stack.Screen name="goal-picker" options={{ title: 'Goal & Supplement' }} />
         <Stack.Screen name="experiment-setup" options={{ title: 'Experiment Setup' }} />
-        <Stack.Screen name="daily-test" options={{ title: 'Daily Test' }} />
+        <Stack.Screen name="daily-test" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
         <Stack.Screen name="progress" options={{ title: 'Progress' }} />
         <Stack.Screen name="verdict" options={{ title: 'Verdict' }} />
         <Stack.Screen name="evidence-card" options={{ title: 'Evidence Card' }} />
