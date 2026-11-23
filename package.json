@@ -26,10 +26,12 @@
     "@types/better-sqlite3": "^7.6.11",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.2.0",
+    "@types/react-test-renderer": "19.3.1",
     "better-sqlite3": "^11.10.0",
     "eslint": "^9.22.0",
     "eslint-config-expo": "~10.0.0",
     "jest": "^29.7.0",
+    "react-test-renderer": "19.3.1",
     "ts-jest": "^29.2.5",
     "typescript": "~5.9.2"
   },
