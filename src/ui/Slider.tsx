@@ -27,6 +27,12 @@ export type SliderProps = {
   label?: string;
   /** Hide the numeric value readout. */
   hideValue?: boolean;
+  /** Optional caption under the left end of the track (e.g. "Foggy"). */
+  lowLabel?: string;
+  /** Optional caption under the right end of the track (e.g. "Sharp"). */
+  highLabel?: string;
+  /** Test id forwarded to the interactive track. */
+  testID?: string;
   /** Disable interaction and dim the control. */
   disabled?: boolean;
   style?: ViewStyle;
@@ -56,6 +62,9 @@ export function Slider({
   step = 1,
   label,
   hideValue = false,
+  lowLabel,
+  highLabel,
+  testID,
   disabled = false,
   style,
 }: SliderProps) {
@@ -136,6 +145,7 @@ export function Slider({
         accessibilityRole="adjustable"
         accessibilityState={{ disabled }}
         accessibilityValue={{ min, max, now: snap(value, min, max, step) }}
+        testID={testID}
         style={styles.touch}
         onLayout={onLayout}
         {...responder.panHandlers}
@@ -169,6 +179,16 @@ export function Slider({
           ]}
         />
       </View>
+      {(lowLabel !== undefined || highLabel !== undefined) && (
+        <View style={styles.ends}>
+          <AppText variant="caption2" color="textTertiary">
+            {lowLabel ?? ''}
+          </AppText>
+          <AppText variant="caption2" color="textTertiary">
+            {highLabel ?? ''}
+          </AppText>
+        </View>
+      )}
     </View>
   );
 }
@@ -179,6 +199,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
+  },
+  ends: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
   },
   touch: {
     height: THUMB_SIZE,

@@ -33,3 +33,19 @@ export {
   type StreakIndicatorProps,
 } from './ProgressRing';
 export { Scaffold, type ScaffoldProps } from './Scaffold';
+
+// Flat-token + `Text` compatibility shims (see compat.tsx). These re-export the
+// one canonical palette under the flat `colors` / `fontSize` / `fontWeight` /
+// `radii` shape and a tone-keyed `Text`, so every screen imports from this
+// single barrel instead of carrying a private kit.
+export {
+  colors,
+  type ColorToken,
+  fontSize,
+  fontWeight,
+  radii,
+  Text,
+  type TextProps,
+  type TextTone,
+  type TextVariant,
+} from './compat';

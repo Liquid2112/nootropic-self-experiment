@@ -19,7 +19,6 @@ import {
   Chip,
   Scaffold,
   SectionHeader,
-  Slider,
   colors,
   fontSize,
   fontWeight,
@@ -133,7 +132,7 @@ export function ExperimentSetupScreen() {
       }
     >
       {state.goal && state.supplement ? (
-        <Card variant="flat">
+        <Card>
           <Text style={styles.summary}>
             {goalLabel(state.goal)} · {state.supplement.name} ·{' '}
             {state.supplement.type === 'acute' ? 'acute' : 'cumulative'} design
@@ -143,12 +142,17 @@ export function ExperimentSetupScreen() {
 
       <View>
         <SectionHeader title="How long?" caption="A longer run gives a clearer answer." />
-        <Slider
-          testID="length-slider"
-          options={LENGTH_OPTIONS}
-          value={state.lengthDays}
-          onChange={(value) => update({ lengthDays: value })}
-        />
+        <View style={styles.chipRow} testID="length-slider">
+          {LENGTH_OPTIONS.map((option) => (
+            <Chip
+              key={option.value}
+              testID={`length-${option.value}`}
+              label={option.label}
+              selected={state.lengthDays === option.value}
+              onPress={() => update({ lengthDays: option.value })}
+            />
+          ))}
+        </View>
       </View>
 
       <View>
@@ -196,12 +200,17 @@ export function ExperimentSetupScreen() {
           title="Daily test time"
           caption="Test at the same time each day for a fair comparison."
         />
-        <Slider
-          testID="test-window-slider"
-          options={TEST_WINDOWS.map((w) => ({ value: w.id, label: w.label }))}
-          value={state.testWindow}
-          onChange={(value) => update({ testWindow: value })}
-        />
+        <View style={styles.chipRow} testID="test-window-slider">
+          {TEST_WINDOWS.map((w) => (
+            <Chip
+              key={w.id}
+              testID={`test-window-${w.id}`}
+              label={w.label}
+              selected={state.testWindow === w.id}
+              onPress={() => update({ testWindow: w.id })}
+            />
+          ))}
+        </View>
       </View>
     </Scaffold>
   );

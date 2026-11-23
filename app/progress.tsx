@@ -90,9 +90,8 @@ export default function ProgressScreen() {
             {calendar.map((day) => (
               <CalendarCell
                 key={day.dayIndex}
-                dayNumber={day.dayNumber}
-                status={day.status}
-                tested={day.tested}
+                day={day.dayNumber}
+                state={day.status === 'baseline' ? 'off' : day.status}
               />
             ))}
           </View>

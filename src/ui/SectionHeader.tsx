@@ -9,16 +9,22 @@ export type SectionHeaderProps = {
   title: string;
   /** Optional supporting line under the title. */
   subtitle?: string;
+  /** Alias for `subtitle`, used by screens that predate the rename. */
+  caption?: string;
   /** Optional trailing accessory (e.g. an action link). */
   accessory?: ReactNode;
+  /** Test id forwarded to the container. */
+  testID?: string;
   style?: ViewStyle;
 };
 
 /** Heading that introduces a group of content or a list section. */
-export function SectionHeader({ title, subtitle, accessory, style }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, caption, accessory, testID, style }: SectionHeaderProps) {
   const theme = useTheme();
+  const supporting = subtitle ?? caption;
   return (
     <View
+      testID={testID}
       style={[
         styles.container,
         { paddingHorizontal: theme.spacing.xs, marginBottom: theme.spacing.sm },
@@ -27,9 +33,9 @@ export function SectionHeader({ title, subtitle, accessory, style }: SectionHead
     >
       <View style={styles.textCol}>
         <AppText variant="title3">{title}</AppText>
-        {subtitle ? (
+        {supporting ? (
           <AppText variant="footnote" color="textSecondary">
-            {subtitle}
+            {supporting}
           </AppText>
         ) : null}
       </View>

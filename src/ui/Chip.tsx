@@ -12,6 +12,8 @@ export type ChipProps = {
   disabled?: boolean;
   /** Called when the chip is pressed. */
   onPress?: () => void;
+  /** Test id forwarded to the pressable. */
+  testID?: string;
   style?: ViewStyle;
 };
 
@@ -20,7 +22,7 @@ export type ChipProps = {
  * chooser. Selected chips fill with the muted accent and show accent text; the
  * press is exposed through `onPress` so the parent owns selection state.
  */
-export function Chip({ label, selected = false, disabled = false, onPress, style }: ChipProps) {
+export function Chip({ label, selected = false, disabled = false, onPress, testID, style }: ChipProps) {
   const theme = useTheme();
   return (
     <Pressable
@@ -28,6 +30,7 @@ export function Chip({ label, selected = false, disabled = false, onPress, style
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}
+      testID={testID}
     >
       {({ pressed }) => (
         <View

@@ -15,12 +15,18 @@ export type ListRowProps = {
   trailing?: ReactNode;
   /** Show a chevron on the trailing edge to signal navigation. */
   showChevron?: boolean;
+  /** Render as selected (accent checkmark on the trailing edge). */
+  selected?: boolean;
+  /** Small tag shown on the trailing edge (e.g. supplement type). */
+  badge?: string;
   /** Draw a hairline divider below the row. */
   divider?: boolean;
   /** Called when the row is pressed. Makes the whole row tappable. */
   onPress?: () => void;
   /** Disable interaction and dim the row. */
   disabled?: boolean;
+  /** Test id forwarded to the pressable / container. */
+  testID?: string;
   style?: ViewStyle;
 };
 
@@ -35,9 +41,12 @@ export function ListRow({
   leading,
   trailing,
   showChevron = false,
+  selected = false,
+  badge,
   divider = false,
   onPress,
   disabled = false,
+  testID,
   style,
 }: ListRowProps) {
   const theme = useTheme();
@@ -67,7 +76,24 @@ export function ListRow({
           </AppText>
         ) : null}
       </View>
+      {badge ? (
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: theme.colors.fill, borderRadius: theme.radius.sm },
+          ]}
+        >
+          <AppText variant="caption2" color="textSecondary">
+            {badge}
+          </AppText>
+        </View>
+      ) : null}
       {trailing ? <View>{trailing}</View> : null}
+      {selected ? (
+        <AppText variant="body" color="accent">
+          {'\u2713'}
+        </AppText>
+      ) : null}
       {showChevron ? (
         <AppText variant="body" color="textTertiary">
           {'\u203A'}
@@ -80,7 +106,7 @@ export function ListRow({
     return content({ pressed: false });
   }
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected }} disabled={disabled} onPress={onPress} testID={testID}>
       {content}
     </Pressable>
   );
@@ -94,6 +120,10 @@ const styles = StyleSheet.create({
   textCol: {
     flex: 1,
     gap: 2,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   disabled: {
     opacity: 0.4,

@@ -137,16 +137,14 @@ export default function TodayScreen() {
   return (
     <Scaffold>
       <View style={styles.header}>
-        <StreakIndicator streak={view.streak} />
+        <StreakIndicator count={view.streak} />
       </View>
 
       <View style={styles.ringRow}>
-        <ProgressRing
-          value={view.hasDayForToday ? view.dayNumber : 0}
-          total={view.totalDays}
-          centerLabel={view.hasDayForToday ? String(view.dayNumber) : '—'}
-          caption={`of ${view.totalDays}`}
-        />
+        <ProgressRing progress={view.totalDays > 0 && view.hasDayForToday ? view.dayNumber / view.totalDays : 0}>
+          <Text style={styles.ringCenter}>{view.hasDayForToday ? String(view.dayNumber) : '—'}</Text>
+          <Text style={styles.ringCaption}>{`of ${view.totalDays}`}</Text>
+        </ProgressRing>
         <Text style={styles.dayLabel}>
           {view.hasDayForToday ? `Day ${view.dayNumber} of ${view.totalDays}` : 'Between days'}
         </Text>
@@ -203,6 +201,17 @@ const styles = StyleSheet.create({
     fontSize: typography.headline.fontSize,
     fontWeight: typography.headline.fontWeight,
     color: colors.text,
+  },
+  ringCenter: {
+    fontSize: typography.title.fontSize,
+    fontWeight: typography.title.fontWeight,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  ringCaption: {
+    fontSize: typography.caption.fontSize,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   title: {
     fontSize: typography.title.fontSize,

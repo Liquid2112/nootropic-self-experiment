@@ -19,6 +19,10 @@ export type ScaffoldProps = {
   contentStyle?: ViewStyle;
   /** Fixed element pinned to the bottom (e.g. a primary action button). */
   footer?: ReactNode;
+  /** Use the dark, full-bleed inverse background (distraction-free screens). */
+  inverse?: boolean;
+  /** Test id forwarded to the safe-area container. */
+  testID?: string;
   style?: ViewStyle;
 };
 
@@ -36,9 +40,12 @@ export function Scaffold({
   edges = DEFAULT_EDGES,
   contentStyle,
   footer,
+  inverse = false,
+  testID,
   style,
 }: ScaffoldProps) {
   const theme = useTheme();
+  const backgroundColor = inverse ? theme.colors.textPrimary : theme.colors.background;
   const padding: ViewStyle = {
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.lg,
@@ -61,7 +68,8 @@ export function Scaffold({
   return (
     <SafeAreaView
       edges={edges}
-      style={[styles.flex, { backgroundColor: theme.colors.background }, style]}
+      testID={testID}
+      style={[styles.flex, { backgroundColor }, style]}
     >
       {body}
       {footer ? (
