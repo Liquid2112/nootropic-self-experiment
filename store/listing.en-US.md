@@ -83,7 +83,7 @@ PRIVATE BY DESIGN
 No account. Your experiment data, scores and Health data stay on your device. We can't see them.
 
 PLACEBO PRO
-Running an experiment needs Placebo Pro, with a free trial for new subscribers. Choose yearly or monthly. Payment is charged to your Apple ID when you confirm after the trial. Your subscription renews automatically unless you turn off auto-renew at least 24 hours before the end of the current period, and your account is charged for renewal within 24 hours before the end of the period. Manage or cancel in your App Store account settings. Placebo reminds you 2 days before a trial ends.
+Running an experiment needs Placebo Pro, with a free trial for new subscribers. Choose yearly or monthly. Payment is charged to your Apple ID when you confirm after the trial. Your subscription renews automatically unless you turn off auto-renew at least 24 hours before the end of the current period, and your account is charged for renewal within 24 hours before the end of the period. Manage or cancel in your App Store account settings. If notifications are on, Placebo reminds you 2 days before a trial ends.
 
 Placebo is a personal measurement tool, not a medical device. It does not diagnose, treat or prevent any condition, and it doesn't tell you what to take. Talk to a doctor before starting any supplement, especially if you take prescription medication, are pregnant, or have a health condition.
 

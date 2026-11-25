@@ -11,8 +11,8 @@ actually sends today:
 - **RevenueCat** (`react-native-purchases`): an anonymous app user ID and
   purchase history, to check the `pro` entitlement. Also the referral and
   creator codes as subscriber attributes (`src/features/referral/rewards.ts`:
-  `referral_code`, `referred_by`, `creator_code`, `$campaign`), used to credit
-  referral rewards and pay creators.
+  `referral_code`, `referred_by`, `creator_code`, `$campaign`), used to pay
+  creators and, once the rewards server exists, credit referral rewards.
 - **Nothing else leaves the device.** Experiment data, test scores, ratings,
   Health data and adverse-event logs live only in the on-device SQLite database.
   Notifications are local. No ads, no ad SDKs, no IDFA, no ATT prompt.
