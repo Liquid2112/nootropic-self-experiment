@@ -1,22 +1,22 @@
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import { brand } from '@/ui/tokens';
 
-export type NoodleMood = 'happy' | 'wink' | 'wow' | 'sleepy' | 'proud' | 'focused';
+export type BrianMood = 'happy' | 'wink' | 'wow' | 'sleepy' | 'proud' | 'focused';
 
-export type NoodleProps = {
+export type BrianProps = {
   size?: number;
-  mood?: NoodleMood;
-  /** Tilt in degrees; Noodle leans a little by default. */
+  mood?: BrianMood;
+  /** Tilt in degrees; Brian leans a little by default. */
   tilt?: number;
 };
 
 /**
- * Noodle, Placebo's mascot: a chunky, friendly brain with a Tang hemisphere
+ * Brian, Placebo's mascot: a chunky, friendly brain with a Tang hemisphere
  * and a Lilac hemisphere (the same split as the logo, and the two blinded
  * cups). Shapes are bold and rounded so the same character reads in the flat
  * app art and in the blocky 3D Stack City videos.
  */
-export function Noodle({ size = 120, mood = 'happy', tilt = -6 }: NoodleProps) {
+export function Brian({ size = 120, mood = 'happy', tilt = -6 }: BrianProps) {
   const ink = brand.ink;
   return (
     <Svg width={size} height={size * 0.92} viewBox="0 0 120 110">
@@ -55,7 +55,7 @@ export function Noodle({ size = 120, mood = 'happy', tilt = -6 }: NoodleProps) {
   );
 }
 
-function face(mood: NoodleMood) {
+function face(mood: BrianMood) {
   const ink = brand.ink;
   const eye = (cx: number) => (
     <>

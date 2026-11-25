@@ -36,7 +36,7 @@ import {
   celebrate,
   tapLight,
 } from '@/components/game';
-import { Icon, Logo, Noodle } from '@/brand';
+import { Icon, Logo, Brian } from '@/brand';
 import { Button, ProgressRing, Scaffold, brand, fonts } from '@/ui';
 
 type Loaded = {
@@ -266,7 +266,7 @@ export default function TodayScreen() {
               )}
             </View>
             <View style={styles.heroMascot}>
-              <Noodle size={96} mood={view.isFinished ? 'wow' : game.today.checkIn ? 'proud' : 'focused'} tilt={8} />
+              <Brian size={96} mood={view.isFinished ? 'wow' : game.today.checkIn ? 'proud' : 'focused'} tilt={8} />
             </View>
           </View>
           <View style={styles.heroTrack}>

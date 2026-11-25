@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card, Chip, Scaffold, Text, brand, fonts, radii, spacing } from '@/ui';
-import { Icon, Noodle } from '@/brand';
+import { Icon, Brian } from '@/brand';
 import {
   DICTIONARY_FILTERS,
   EVIDENCE_LABELS,
@@ -65,7 +65,7 @@ export default function DictionaryScreen() {
 
       {empty && (
         <View style={styles.empty}>
-          <Noodle size={96} mood="wow" />
+          <Brian size={96} mood="wow" />
           <Text variant="headline">{'Nothing matches that search'}</Text>
           <Text tone="secondary" style={styles.center}>
             {'Try a compound name, an alias, or an effect like "sleep".'}

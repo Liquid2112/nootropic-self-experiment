@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Scaffold, brand, fonts } from '@/ui';
-import { Icon, Logo, Noodle, type IconName } from '@/brand';
+import { Icon, Logo, Brian, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
@@ -57,7 +57,7 @@ export function WelcomeScreen() {
       <View style={styles.hero}>
         <Logo size={24} />
         <View style={styles.mascot}>
-          <Noodle size={148} mood="happy" />
+          <Brian size={148} mood="happy" />
         </View>
         <Text style={styles.promise}>Does your nootropic actually work?</Text>
         <Text style={styles.subtitle}>

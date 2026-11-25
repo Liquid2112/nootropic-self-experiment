@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Icon, Noodle } from '@/brand';
+import { Icon, Brian } from '@/brand';
 import { Text, brand, fonts, spacing } from '@/ui';
 import { buildEvidenceCard, COMPLIANCE_DISCLAIMER } from '@/results';
 import { useExperimentData } from '@/screens/useExperimentData';
@@ -25,7 +25,7 @@ export default function EvidenceCardScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.empty}>
-          <Noodle size={110} mood="focused" />
+          <Brian size={110} mood="focused" />
           <Text variant="title" style={styles.center}>
             No evidence card yet
           </Text>

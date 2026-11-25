@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Card, Scaffold, Text, brand, fonts, radii, spacing } from '@/ui';
-import { Icon, Noodle, type IconName } from '@/brand';
+import { Icon, Brian, type IconName } from '@/brand';
 import {
   DICTIONARY_DISCLAIMER,
   EVIDENCE_EXPLAINERS,
@@ -38,7 +38,7 @@ export default function DictionaryEntryScreen() {
     return (
       <Scaffold>
         <View style={styles.missing}>
-          <Noodle size={96} mood="sleepy" />
+          <Brian size={96} mood="sleepy" />
           <Text tone="secondary">{'That entry could not be found.'}</Text>
         </View>
       </Scaffold>

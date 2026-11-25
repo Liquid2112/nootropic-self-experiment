@@ -32,7 +32,7 @@ import {
 import { PvtTask } from '@/screens/PvtTask';
 import { claimProgress, type GameState, type ProgressDelta } from '@/features/gamification';
 import { Celebration } from '@/components/game';
-import { Icon, Noodle } from '@/brand';
+import { Icon, Brian } from '@/brand';
 import { Card, Scaffold, Slider, brand, fonts, radius, spacing } from '@/ui';
 
 type Phase = 'context' | 'pvt' | 'nback' | 'ratings' | 'saved' | 'no-experiment';
@@ -138,7 +138,7 @@ export default function DailyTestScreen() {
   if (phase === 'no-experiment') {
     return (
       <Scaffold inverse scroll={false} contentStyle={styles.centerFill}>
-        <Noodle size={110} mood="sleepy" />
+        <Brian size={110} mood="sleepy" />
         <Text style={styles.invTitle}>No active experiment</Text>
         <Text style={styles.invMuted}>Start an experiment to log a daily check-in.</Text>
         <LightButton label="Back to today" onPress={() => router.replace('/')} />
@@ -222,7 +222,7 @@ export default function DailyTestScreen() {
   }
   return (
     <Scaffold inverse scroll={false} contentStyle={styles.centerFill}>
-      <Noodle size={110} mood={recorded ? 'happy' : 'wink'} />
+      <Brian size={110} mood={recorded ? 'happy' : 'wink'} />
       <Text style={styles.invTitle}>{recorded ? 'Check-in saved' : 'Practice run done'}</Text>
       <Text style={styles.invMuted}>
         {recorded

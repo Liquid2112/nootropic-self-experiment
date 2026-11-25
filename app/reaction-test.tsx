@@ -13,7 +13,7 @@ import {
 import { PvtTask } from '@/screens/PvtTask';
 import { claimProgress, type ProgressDelta } from '@/features/gamification';
 import { Confetti, celebrate } from '@/components/game';
-import { Icon, Noodle, type IconName } from '@/brand';
+import { Icon, Brian, type IconName } from '@/brand';
 import { Button, Card, Scaffold, Text, brand, fonts, spacing } from '@/ui';
 
 type Phase = 'intro' | 'test' | 'result';
@@ -141,7 +141,7 @@ export default function ReactionTestScreen() {
             </View>
           ) : (
             <View style={styles.failCard}>
-              <Noodle size={110} mood="wow" />
+              <Brian size={110} mood="wow" />
               <Text variant="title2" style={styles.centerText}>
                 No score this time
               </Text>
@@ -180,7 +180,7 @@ export default function ReactionTestScreen() {
   return (
     <Scaffold footer={<Button label="Start" onPress={start} />}>
       <View style={styles.intro}>
-        <Noodle size={140} mood="focused" />
+        <Brian size={140} mood="focused" />
         <Text variant="largeTitle" style={styles.centerText}>
           How fast is your brain today?
         </Text>

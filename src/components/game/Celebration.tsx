@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Icon, Noodle } from '@/brand';
+import { Icon, Brian } from '@/brand';
 import type { GameState, ProgressDelta } from '@/features/gamification';
 import { Button, brand, fonts } from '@/ui';
 import { Confetti } from './Confetti';
@@ -24,7 +24,7 @@ export type CelebrationProps = {
 };
 
 /**
- * Full-screen reward moment: Noodle pops in, confetti falls, and the XP,
+ * Full-screen reward moment: Brian pops in, confetti falls, and the XP,
  * streak, level and any new badges are laid out as a receipt. Used after a
  * check-in.
  */
@@ -58,7 +58,7 @@ export function Celebration({
     <SafeAreaView style={styles.screen}>
       <View style={styles.content}>
         <Animated.View style={[styles.hero, { transform: [{ scale: pop }] }]}>
-          <Noodle size={132} mood={big ? 'proud' : 'happy'} />
+          <Brian size={132} mood={big ? 'proud' : 'happy'} />
           <Text style={styles.title}>{title}</Text>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </Animated.View>

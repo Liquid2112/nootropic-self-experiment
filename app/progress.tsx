@@ -15,7 +15,7 @@ import { loadGameState } from '@/features/gamification';
 import { useExperimentData } from '@/screens/useExperimentData';
 import { JourneyPath, StreakFlame } from '@/components/game';
 import { Button, Card, Scaffold, brand, fonts } from '@/ui';
-import { Icon, Noodle } from '@/brand';
+import { Icon, Brian } from '@/brand';
 
 /**
  * Journey (progress) screen: the run as a winding trail of day stops with
@@ -41,7 +41,7 @@ export default function ProgressScreen() {
     return (
       <Scaffold>
         <View style={styles.empty}>
-          <Noodle size={110} mood="sleepy" />
+          <Brian size={110} mood="sleepy" />
           <Text style={styles.title}>Your journey starts here</Text>
           <Text style={styles.muted}>Start an experiment to see your run mapped out day by day.</Text>
         </View>

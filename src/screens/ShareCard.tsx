@@ -1,6 +1,6 @@
 import { type ComponentRef, forwardRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Icon, Logo, Noodle } from '@/brand';
+import { Icon, Logo, Brian } from '@/brand';
 import { brand, fonts } from '@/ui';
 import type { MetricVerdict } from '@/results';
 import { COMPLIANCE_DISCLAIMER } from '@/results';
@@ -11,7 +11,7 @@ export type ViewRef = ComponentRef<typeof View>;
 /**
  * Branded verdict card, sized for a TikTok/Instagram export (9:16 portrait).
  * Ink background, the Placebo lockup up top, the verdict sentence as the hero,
- * the plain-unit effect and cost under it, Noodle in the corner and the
+ * the plain-unit effect and cost under it, Brian in the corner and the
  * compliance line pinned at the bottom. It is a plain View so
  * react-native-view-shot can capture it to an image; the ref is forwarded to
  * the capture root.
@@ -51,7 +51,7 @@ export const ShareCard = forwardRef<ViewRef, ShareCardProps>(function ShareCard(
 
       <View style={styles.bottom}>
         <Text style={styles.disclaimer}>{COMPLIANCE_DISCLAIMER}</Text>
-        <Noodle size={76} mood="proud" tilt={-8} />
+        <Brian size={76} mood="proud" tilt={-8} />
       </View>
     </View>
   );

@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Icon, Noodle, type IconName, type NoodleMood } from '@/brand';
+import { Icon, Brian, type IconName, type BrianMood } from '@/brand';
 import { Button, Card, Text, brand, fonts, spacing, radius } from '@/ui';
 import {
   COMPLIANCE_DISCLAIMER,
@@ -87,7 +87,7 @@ export default function VerdictScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.empty}>
-          <Noodle size={120} mood="sleepy" />
+          <Brian size={120} mood="sleepy" />
           <Text variant="title" style={styles.center}>
             Your verdict is sealed
           </Text>
@@ -121,7 +121,7 @@ export default function VerdictScreen() {
                 <Icon name="calendar" size={14} color={brand.ink} strokeWidth={2.4} />
                 <Text style={[styles.chipText, { color: brand.ink }]}>Not enough data</Text>
               </View>
-              <Noodle size={72} mood="sleepy" tilt={0} />
+              <Brian size={72} mood="sleepy" tilt={0} />
             </View>
             <Text style={styles.heroTitleDark}>{vm.primary.verdictSentence}</Text>
             <Text tone="secondary">
@@ -216,7 +216,7 @@ export default function VerdictScreen() {
 
 const VERDICT_STYLE: Record<
   MetricVerdict['dbVerdict'],
-  { label: string; color: string; icon: IconName; mood: NoodleMood }
+  { label: string; color: string; icon: IconName; mood: BrianMood }
 > = {
   works: { label: 'Effect detected', color: brand.mint, icon: 'check', mood: 'proud' },
   no_effect: { label: 'No clear effect', color: brand.lilac, icon: 'eyeOff', mood: 'focused' },
@@ -233,7 +233,7 @@ function PrimaryVerdict({ primary, monthlyCost }: { primary: MetricVerdict; mont
           <Icon name={v.icon} size={14} color={brand.ink} strokeWidth={2.6} />
           <Text style={styles.chipText}>{v.label}</Text>
         </View>
-        <Noodle size={72} mood={v.mood} tilt={0} />
+        <Brian size={72} mood={v.mood} tilt={0} />
       </View>
       <Text style={styles.heroTitle}>{primary.verdictSentence}</Text>
       {primary.effectSentence && <Text style={styles.heroEffect}>{primary.effectSentence}</Text>}
