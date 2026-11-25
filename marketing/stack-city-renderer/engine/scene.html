@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Stack City Renderer</title>
+<style>
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url('./fonts/inter-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: block;
+  src: url('./fonts/inter-latin-800-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url('./fonts/inter-latin-900-normal.woff2') format('woff2');
+}
+html, body {
+  margin: 0;
+  width: 540px;
+  height: 960px;
+  overflow: hidden;
+  background: #0b1030;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+#c {
+  position: absolute;
+  inset: 0;
+  width: 540px;
+  height: 960px;
+}
+#pill {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0d0c12;
+  color: #fff;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-radius: 14px;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+#pill b {
+  color: #FF5A36;
+}
+#cap {
+  position: absolute;
+  top: 560px;
+  left: 30px;
+  right: 30px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 46px;
+  line-height: 1.08;
+  color: #fff;
+  -webkit-text-stroke: 9px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 #000;
+}
+#cap span {
+  display: inline-block;
+  margin: 0 0.12em;
+  transform-origin: 50% 80%;
+}
+#cap .hl {
+  color: #FF5A36;
+}
+#cap .now {
+  transform: scale(1.12);
+}
+</style>
+</head>
+<body>
+<canvas id="c" width="540" height="960"></canvas>
+<div id="pill"></div>
+<div id="cap"></div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "../node_modules/three/build/three.module.js"
+  }
+}
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

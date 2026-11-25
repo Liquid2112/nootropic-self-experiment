@@ -1,0 +1,6 @@
+out/
+*.mp4
+_frames_*/
+frames/
+debug.log
+
