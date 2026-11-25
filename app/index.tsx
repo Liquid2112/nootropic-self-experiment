@@ -398,6 +398,14 @@ export default function TodayScreen() {
             iconColor={brand.lilacDeep}
             onPress={() => router.push('/health')}
           />
+          <ActionTile
+            icon="gift"
+            title="Invite friends"
+            subtitle="You both get a month free"
+            tint={brand.tangSoft}
+            iconColor={brand.tang}
+            onPress={() => router.push('/invite')}
+          />
         </View>
       </Scaffold>
 

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Icon, Brian, type IconName, type BrianMood } from '@/brand';
 import { Button, Card, Text, brand, fonts, spacing, radius } from '@/ui';
 import {
@@ -15,6 +15,7 @@ import { addDays, selfBlindPassphrase } from '@/engines/experiment';
 import { useExperimentData } from '@/screens/useExperimentData';
 import { ShareCard, type ViewRef } from '@/screens/ShareCard';
 import { shareCard } from '@/screens/share';
+import { normalizeKey, referralMessage, referralState } from '@/features/referral';
 
 /**
  * Verdict screen: the payoff. It runs the stats engine over the finished run,
@@ -30,7 +31,18 @@ export default function VerdictScreen() {
   const [shareNote, setShareNote] = useState<string | null>(null);
   // Friend-blinded runs need the friend's passphrase typed in at run end; held
   // here until entered. Self-blind and open runs never use it.
-  const [friendPassphrase, setFriendPassphrase] = useState('');
+  // A keyholder's unlock link opens this screen with the key filled in.
+  const params = useLocalSearchParams<{ key?: string }>();
+  const [friendPassphrase, setFriendPassphrase] = useState(() =>
+    typeof params.key === 'string' ? normalizeKey(params.key) : '',
+  );
+  const [referralCode] = useState(() => {
+    try {
+      return referralState(getDatabase()).myCode;
+    } catch {
+      return null;
+    }
+  });
   const [unsealError, setUnsealError] = useState<string | null>(null);
 
   const vm: VerdictViewModel | null = useMemo(() => {
@@ -40,29 +52,38 @@ export default function VerdictScreen() {
     //   - self-blind         : derived from the seed persisted at seal time, so
     //                          the same key input is used to seal and unseal.
     //   - friend-blind       : the friend's passphrase, typed in below.
-    let passphrase: string | undefined;
+    //                          A keyholder key ("K7QX-M2PA-...") may be typed
+    //                          without dashes, so its normalized form is tried
+    //                          first, then the text exactly as typed.
+    const candidates: (string | undefined)[] = [];
     if (experiment.blindingMode === 'self_blind') {
-      passphrase = experiment.seed ? selfBlindPassphrase(experiment.seed) : undefined;
+      candidates.push(experiment.seed ? selfBlindPassphrase(experiment.seed) : undefined);
     } else if (experiment.blindingMode === 'sealed') {
-      passphrase = friendPassphrase.trim().length > 0 ? friendPassphrase : undefined;
+      const typed = friendPassphrase.trim();
+      if (typed.length > 0) candidates.push(normalizeKey(typed), friendPassphrase);
     }
-    try {
-      return computeExperimentVerdict(getDatabase(), {
-        experiment,
-        schedule,
-        sessions,
-        unsealPassphrase: passphrase,
-        // Nights from Apple Health / Health Connect, matched to the dose the
-        // day before. Empty when Health isn't connected.
-        healthNights: healthNights.listBetween(
-          getDatabase(),
-          addDays(experiment.startDate, 1),
-          addDays(experiment.startDate, experiment.lengthDays),
-        ),
-      });
-    } catch {
-      return null;
+    if (candidates.length === 0) candidates.push(undefined);
+    const nights = healthNights.listBetween(
+      getDatabase(),
+      addDays(experiment.startDate, 1),
+      addDays(experiment.startDate, experiment.lengthDays),
+    );
+    for (const passphrase of candidates) {
+      try {
+        return computeExperimentVerdict(getDatabase(), {
+          experiment,
+          schedule,
+          sessions,
+          unsealPassphrase: passphrase,
+          // Nights from Apple Health / Health Connect, matched to the dose the
+          // day before. Empty when Health isn't connected.
+          healthNights: nights,
+        });
+      } catch {
+        // Wrong passphrase form; try the next one.
+      }
     }
+    return null;
   }, [experiment, schedule, sessions, friendPassphrase]);
 
   // A friend-blinded run can't be unblinded until the friend enters the
@@ -109,7 +130,7 @@ export default function VerdictScreen() {
   const supplementName = supplement?.name ?? 'Your supplement';
 
   async function onShare() {
-    const ok = await shareCard(shareRef);
+    const ok = await shareCard(shareRef, referralCode ? referralMessage(referralCode) : undefined);
     setShareNote(ok ? null : 'Sharing isn\u2019t available on this device.');
   }
 
@@ -224,6 +245,7 @@ export default function VerdictScreen() {
           primary={vm.primary}
           monthlyCost={vm.monthlyCost}
           blinded={experiment.blindingMode !== 'none'}
+          referralCode={referralCode}
         />
       </View>
     </SafeAreaView>

@@ -83,6 +83,11 @@ function ThemedStack() {
         <Stack.Screen name="dictionary/index" options={{ title: 'Library' }} />
         <Stack.Screen name="dictionary/[id]" options={{ title: '' }} />
         <Stack.Screen name="health" options={{ title: 'Health sync' }} />
+        <Stack.Screen name="invite" options={{ title: 'Invite friends' }} />
+        <Stack.Screen name="keyholder-invite" options={{ title: 'Your keyholder', headerBackVisible: false }} />
+        <Stack.Screen name="k/[token]" options={{ title: 'Keyholder' }} />
+        <Stack.Screen name="u/[token]" options={{ title: 'Unlock' }} />
+        <Stack.Screen name="r/[code]" options={{ headerShown: false }} />
       </Stack>
     </>
   );

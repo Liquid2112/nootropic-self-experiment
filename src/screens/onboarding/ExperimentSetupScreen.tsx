@@ -18,6 +18,7 @@ import { Button, Chip, Scaffold, brand, fonts } from '@/ui';
 import { Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
+import { startKeyholderRun } from '@/features/referral';
 
 /**
  * Screen 3 — Experiment setup.
@@ -46,7 +47,7 @@ const BLINDING_OPTIONS: readonly [BlindingOption, ...BlindingOption[]] = [
     mode: 'sealed',
     label: 'Friend-blinded',
     instructions:
-      'A friend fills two sets of identical cups — supplement and placebo — labels them A and B, and keeps a sealed note of which is which. You take the cup the app names each day and never see the mapping until the run ends.',
+      'The gold standard. A friend becomes your keyholder: Placebo sends them a link that says which cup gets the real supplement. They fill cups A and B, you take the cup the app names each day, and on reveal day they send the key that unlocks your verdict. You both get a free month.',
   },
   {
     mode: 'self_blind',
@@ -85,14 +86,15 @@ export function ExperimentSetupScreen() {
             // The run starts after the 3-day baseline: today through the next
             // two days are baseline (test only, no supplement), day 0 is day 4.
             startDate: addDays(state.startDate, BASELINE_DAYS),
-            friendPassphrase: state.friendPassphrase,
+            // Friend-blinded runs are sealed with a key Placebo generates when
+            // the run starts (see startKeyholderRun), so nothing is typed here.
+            friendPassphrase: state.blindingMode === 'sealed' ? 'generated-on-start' : state.friendPassphrase,
           }
         : null,
     [state],
   );
 
   const errors = selections ? validateSelections(selections) : [];
-  const passphraseError = errors.find((e) => e.field === 'friendPassphrase');
   const canConfirm = selections !== null && errors.length === 0 && !submitting;
 
   // Set when the paywall was shown for this confirm, so returning from a
@@ -105,10 +107,15 @@ export function ExperimentSetupScreen() {
     }
     try {
       const db = getDatabase();
-      createExperiment(db, selections, {
-        experimentId: newExperimentId(),
-        seed: newScheduleSeed(),
-      });
+      const deps = { experimentId: newExperimentId(), seed: newScheduleSeed() };
+      if (selections.blindingMode === 'sealed') {
+        // Seal with a fresh key and hand it to a keyholder next.
+        startKeyholderRun(db, selections, deps, state.keyholderFromName);
+        reset();
+        router.replace('/keyholder-invite');
+        return;
+      }
+      createExperiment(db, selections, deps);
       reset();
       router.replace('/');
     } catch (err) {
@@ -116,7 +123,7 @@ export function ExperimentSetupScreen() {
       const message = err instanceof Error ? err.message : 'Could not create the experiment.';
       Alert.alert('Setup failed', message);
     }
-  }, [selections, reset, router]);
+  }, [selections, reset, router, state.keyholderFromName]);
 
   async function onConfirm() {
     if (!selections) {
@@ -230,21 +237,17 @@ export function ExperimentSetupScreen() {
         </View>
         {state.blindingMode === 'sealed' ? (
           <View style={styles.passphraseBlock}>
-            <Text style={styles.fieldLabel}>Friend’s sealing passphrase</Text>
+            <Text style={styles.fieldLabel}>Your first name</Text>
             <TextInput
-              testID="friend-passphrase"
-              value={state.friendPassphrase}
-              onChangeText={(text) => update({ friendPassphrase: text })}
-              placeholder="Ask your friend to type a secret phrase"
+              testID="keyholder-from-name"
+              value={state.keyholderFromName}
+              onChangeText={(text) => update({ keyholderFromName: text })}
+              placeholder="So your keyholder knows it’s you"
               placeholderTextColor={brand.faint}
-              secureTextEntry
-              autoCapitalize="none"
+              autoCapitalize="words"
               autoCorrect={false}
               style={styles.input}
             />
-            {passphraseError ? (
-              <Text style={styles.errorText}>{passphraseError.message}</Text>
-            ) : null}
           </View>
         ) : null}
       </Section>

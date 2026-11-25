@@ -71,7 +71,14 @@ export type NotificationsAdapter = {
   requestPermissions: () => Promise<boolean>;
   cancelAll: () => Promise<void>;
   schedule: (plan: ReminderPlan) => Promise<void>;
+  /** Cancel one reminder by id. Optional: fakes and older adapters may lack it. */
+  cancel?: (id: string) => Promise<void>;
+  /** Schedule a one-off reminder at a date (e.g. a keyholder's reveal day). */
+  scheduleOnce?: (plan: OneOffReminder) => Promise<void>;
 };
+
+/** A reminder that fires once, at a specific time. */
+export type OneOffReminder = { id: string; title: string; body: string; at: Date };
 
 /** A no-op adapter used when expo-notifications is not available. */
 export const noopNotificationsAdapter: NotificationsAdapter = {
@@ -105,7 +112,8 @@ type ExpoNotificationsLike = {
   requestPermissionsAsync: () => Promise<{ granted?: boolean; status?: string }>;
   cancelAllScheduledNotificationsAsync: () => Promise<void>;
   scheduleNotificationAsync: (request: unknown) => Promise<string>;
-  SchedulableTriggerInputTypes?: { DAILY?: string };
+  cancelScheduledNotificationAsync?: (id: string) => Promise<void>;
+  SchedulableTriggerInputTypes?: { DAILY?: string; DATE?: string };
 };
 
 /** Wrap the expo-notifications module in our adapter. Isolated for testability. */
@@ -134,6 +142,17 @@ export function createExpoAdapter(mod: unknown): NotificationsAdapter {
         trigger: { type: dailyType, hour: plan.hour, minute: plan.minute },
       });
     },
+    async cancel(id: string) {
+      await api.cancelScheduledNotificationAsync?.(id);
+    },
+    async scheduleOnce(plan: OneOffReminder) {
+      const dateType = api.SchedulableTriggerInputTypes?.DATE ?? 'date';
+      await api.scheduleNotificationAsync({
+        identifier: plan.id,
+        content: { title: plan.title, body: plan.body },
+        trigger: { type: dateType, date: plan.at },
+      });
+    },
   };
 }
 
@@ -159,7 +178,13 @@ export async function scheduleDailyReminders(
     return { scheduled: false, count: 0 };
   }
   const plans = buildDailyReminders(input);
-  await adapter.cancelAll();
+  // Replace only our own daily reminders when the adapter can, so one-off
+  // reminders (a keyholder's reveal day) survive a reschedule.
+  if (adapter.cancel) {
+    for (const plan of plans) await adapter.cancel(plan.id);
+  } else {
+    await adapter.cancelAll();
+  }
   for (const plan of plans) {
     await adapter.schedule(plan);
   }
