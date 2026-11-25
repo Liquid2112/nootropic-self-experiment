@@ -110,7 +110,7 @@ export const QUIZ_QUESTIONS: readonly QuizQuestion[] = [
     id: 'peak',
     eyebrow: 'Your routine',
     title: 'When is your brain usually at its best?',
-    subtitle: 'Your daily 90-second check-in goes here, at the same time each day.',
+    subtitle: 'Your daily 2-minute check-in goes here, at the same time each day.',
     options: [
       { id: 'early_morning', label: 'Early morning', hint: '6 to 8 am' },
       { id: 'morning', label: 'Morning', hint: '8 to 11 am' },
@@ -122,7 +122,7 @@ export const QUIZ_QUESTIONS: readonly QuizQuestion[] = [
   {
     id: 'commitment',
     eyebrow: 'Last one',
-    title: 'Can you give it 90 seconds a day for 4 weeks?',
+    title: 'Can you give it 2 minutes a day for 4 weeks?',
     subtitle: "That's what a real answer takes. Most people never find out.",
     options: [
       { id: 'all_in', label: "I'm in, every day" },
@@ -143,7 +143,7 @@ export const QUIZ_INTERSTITIALS: Partial<Record<QuizQuestionId, { title: string;
   },
   ifNot: {
     title: 'How Placebo finds out',
-    body: 'You take a supplement on some days and a look-alike on others, without knowing which is which. A 90-second test each day measures your brain. At the end, we unseal the schedule and compare.',
+    body: 'You take a supplement on some days and a look-alike on others, without knowing which is which. A 2-minute test each day measures your brain. At the end, we unseal the schedule and compare.',
   },
 };
 

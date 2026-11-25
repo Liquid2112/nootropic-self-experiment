@@ -3,6 +3,7 @@ import {
   METRICS,
   selectPrimaryMetric,
   CORE_METRICS,
+  CHECK_IN_METRICS,
 } from '../metrics';
 
 describe('metric direction', () => {
@@ -34,7 +35,7 @@ describe('selectPrimaryMetric', () => {
   it('maps each goal to its primary metric', () => {
     expect(selectPrimaryMetric('focus').primary).toBe('pvtMedianMs');
     expect(selectPrimaryMetric('memory').primary).toBe('nbackDprime');
-    expect(selectPrimaryMetric('calm').primary).toBe('mood');
+    expect(selectPrimaryMetric('calm').primary).toBe('calmScore');
     expect(selectPrimaryMetric('sleep').primary).toBe('energy');
   });
 
@@ -42,7 +43,11 @@ describe('selectPrimaryMetric', () => {
     const sel = selectPrimaryMetric('focus');
     expect(sel.secondary).not.toContain('pvtMedianMs');
     expect(sel.secondary).toContain('nbackDprime');
-    expect(sel.secondary.length).toBe(CORE_METRICS.length - 1);
+    expect(sel.secondary.length).toBe(CHECK_IN_METRICS.length - 1);
+  });
+
+  it('judges an older calm run (no calm check) on the mood rating', () => {
+    expect(selectPrimaryMetric('calm', CORE_METRICS).primary).toBe('mood');
   });
 
   it('respects a restricted available set', () => {

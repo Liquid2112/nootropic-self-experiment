@@ -55,7 +55,7 @@ export function buildDailyReminders(input: BuildRemindersInput): ReminderPlan[] 
     {
       id: 'daily-check-in',
       title: 'Daily check-in',
-      body: 'Take your 90-second check-in while your routine is fresh.',
+      body: 'Take your 2-minute check-in while your routine is fresh.',
       hour: reminderHour,
       minute: 0,
     },

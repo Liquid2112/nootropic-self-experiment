@@ -47,3 +47,33 @@ export type {
   SessionValidity,
   ValidateSessionInput,
 } from './validity';
+
+export {
+  STROOP_COLORS,
+  STROOP_DEFAULT_TRIALS,
+  STROOP_MIN_RT_MS,
+  generateStroopTrials,
+  scoreStroop,
+} from './stroop';
+export type { StroopColor, StroopTrial, StroopResponse, StroopScore } from './stroop';
+
+export {
+  SYMBOL_COUNT,
+  SYMBOL_DURATION_MS,
+  SYMBOL_STREAM_LENGTH,
+  generateSymbolSet,
+  scoreSymbol,
+} from './symbol';
+export type { SymbolSet, SymbolScore } from './symbol';
+
+export {
+  RECALL_STUDY_WORDS,
+  RECALL_WORD_MS,
+  RECALL_WORD_POOL,
+  generateRecallSet,
+  scoreRecall,
+} from './recall';
+export type { RecallSet, RecallScore } from './recall';
+
+export { CALM_ITEMS, CALM_SCALE, scoreCalm } from './calm';
+export type { CalmItem } from './calm';

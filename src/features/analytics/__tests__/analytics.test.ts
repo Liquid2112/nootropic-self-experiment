@@ -31,6 +31,22 @@ describe('privacy filter', () => {
     ).toEqual({ run_day: 5, phase: 'run' });
   });
 
+  it('counts the tests in a check-in but never names them or their scores', () => {
+    expect(
+      sanitizeProps('check_in_completed', {
+        run_day: 5,
+        phase: 'run',
+        tests_count: 4,
+        stroop_interference_ms: 84,
+        calm_score: 70,
+        tests: 'pvt_stroop',
+      }),
+    ).toEqual({ run_day: 5, phase: 'run', tests_count: 4 });
+    expect(
+      sanitizeProps('experiment_started', { blinding_mode: 'none', length_days: 28, tests_count: 3, tests_customized: true }),
+    ).toEqual({ blinding_mode: 'none', length_days: 28, tests_count: 3, tests_customized: true });
+  });
+
   it('drops free text and odd numbers even on allowlisted keys', () => {
     expect(sanitizeProps('trial_started', { plan_period: 'I feel anxious today', trial_days: 7 })).toEqual({
       trial_days: 7,

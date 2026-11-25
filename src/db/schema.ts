@@ -152,6 +152,22 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX idx_adverse_event_experiment ON adverse_event (experiment_id)`,
     ],
   },
+  {
+    // The expanded daily battery. `experiment.battery` is the JSON list of test
+    // ids the user picked at setup (NULL on older runs, which used the original
+    // reaction + 2-back pair). The new test_session columns hold the scores of
+    // the Stroop, symbol-coding, word-memory, and calm-check tasks; each is NULL
+    // on a day that test wasn't part of the check-in.
+    version: 7,
+    statements: [
+      `ALTER TABLE experiment ADD COLUMN battery TEXT`,
+      `ALTER TABLE test_session ADD COLUMN stroop_interference_ms REAL`,
+      `ALTER TABLE test_session ADD COLUMN stroop_accuracy REAL`,
+      `ALTER TABLE test_session ADD COLUMN symbol_per_min REAL`,
+      `ALTER TABLE test_session ADD COLUMN recall_score REAL`,
+      `ALTER TABLE test_session ADD COLUMN calm_score REAL`,
+    ],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

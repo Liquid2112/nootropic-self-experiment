@@ -31,6 +31,11 @@ export type OnboardingSelections = {
   testWindow: TestWindowId;
   /** ISO YYYY-MM-DD start date (day 0 of the run). */
   startDate: string;
+  /**
+   * Test ids for the daily check-in (see features/battery). Omitted by callers
+   * that predate the picker; those runs use the original reaction + 2-back pair.
+   */
+  battery?: string[];
   /** Friend's passphrase, required only for the 'sealed' (friend-blinded) mode. */
   friendPassphrase?: string;
 };

@@ -137,6 +137,7 @@ describe('assembleDailyTest — persistence mapping', () => {
     expect(keys).toEqual(
       [
         'caffeine',
+        'calmScore',
         'dayIndex',
         'deviceModel',
         'energy',
@@ -148,8 +149,12 @@ describe('assembleDailyTest — persistence mapping', () => {
         'note',
         'pvtLapses',
         'pvtMedianMs',
+        'recallScore',
         'sleepHours',
         'startedAt',
+        'stroopAccuracy',
+        'stroopInterferenceMs',
+        'symbolPerMin',
         'valid',
       ].sort(),
     );

@@ -36,6 +36,7 @@ import {
 } from './adherence';
 import { COMPLIANCE_DISCLAIMER, UNBLINDED_CAVEAT } from './compliance';
 import { monthlyCostLine, type MonthlyCostInput } from './cost';
+import { batteryOf, metricsForBattery } from '@/features/battery';
 
 /** Column on test_session holding each metric's value. */
 const METRIC_COLUMN: Partial<Record<MetricKey, keyof TestSession>> = {
@@ -46,6 +47,10 @@ const METRIC_COLUMN: Partial<Record<MetricKey, keyof TestSession>> = {
   focus: 'focus',
   energy: 'energy',
   mood: 'mood',
+  stroopInterferenceMs: 'stroopInterferenceMs',
+  symbolPerMin: 'symbolPerMin',
+  recallScore: 'recallScore',
+  calmScore: 'calmScore',
 };
 
 /** health_night metric behind each Health metric key. */
@@ -256,6 +261,12 @@ function fromAnalysis(analysis: MetricAnalysis): MetricVerdict {
   };
 }
 
+/** Keep the original metrics in their familiar order, new ones after them. */
+function orderLikeCore(metrics: MetricKey[]): MetricKey[] {
+  const core = CORE_METRICS.filter((m) => metrics.includes(m));
+  return [...core, ...metrics.filter((m) => !CORE_METRICS.includes(m))];
+}
+
 function countOnDays(onByDay: Map<number, 0 | 1>): number {
   let n = 0;
   for (const v of onByDay.values()) if (v === 1) n += 1;
@@ -292,7 +303,10 @@ export function computeExperimentVerdict(
   const goal = experiment.goal as Goal;
   const nights = input.healthNights ?? [];
   const hasHealth = nights.length > 0;
-  const available: MetricKey[] = hasHealth ? [...CORE_METRICS, ...HEALTH_METRICS] : CORE_METRICS;
+  // The run's own battery decides what it measured: its tests plus the ratings.
+  // Older runs fall back to the original reaction + 2-back pair.
+  const checkIn = orderLikeCore(metricsForBattery(batteryOf(experiment)));
+  const available: MetricKey[] = hasHealth ? [...checkIn, ...HEALTH_METRICS] : checkIn;
   const goalSelection = selectPrimaryMetric(goal, available);
   // A run that connected Health before day 1 pre-registered a Health outcome.
   const preRegistered = HEALTH_PRIMARY_DB[experiment.primaryMetric];
