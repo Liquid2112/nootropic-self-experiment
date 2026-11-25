@@ -2,7 +2,8 @@ import { DICTIONARY_ENTRIES } from './entries';
 import type { DictionaryEntry, DictionaryGoal, EvidenceGrade } from './types';
 
 export * from './types';
-export { DICTIONARY_ENTRIES, OTC_ENTRIES, UNREGULATED_ENTRIES } from './entries';
+export { DICTIONARY_ENTRIES, OTC_ENTRIES, SUPPLEMENT_ENTRIES, UNREGULATED_ENTRIES } from './entries';
+export { amazonAffiliateUrl } from './affiliate';
 
 /** Filter chips on the dictionary list. 'all' and 'unregulated' are not goals. */
 export type DictionaryFilter = 'all' | DictionaryGoal | 'unregulated';

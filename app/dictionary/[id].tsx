@@ -9,6 +9,8 @@ import {
   getDictionaryEntry,
 } from '@/features/dictionary';
 import { EvidencePill } from '@/features/dictionary/EvidencePill';
+import { amazonAffiliateUrl } from '@/features/dictionary/affiliate';
+import { AMAZON_DISCLOSURE } from '@/config/links';
 import { SEED_SUPPLEMENTS } from '@/db/seed';
 import { useOnboarding } from '@/screens/onboarding/OnboardingContext';
 
@@ -40,6 +42,7 @@ export default function DictionaryEntryScreen() {
   }
 
   const unregulated = entry.kind === 'unregulated';
+  const buyUrl = amazonAffiliateUrl(entry);
 
   return (
     <Scaffold>
@@ -128,6 +131,19 @@ export default function DictionaryEntryScreen() {
             {'Studies describe averages. Run a blinded experiment to see whether it moves your own reaction time and memory.'}
           </Text>
           <Button label="Test it on yourself" onPress={testIt} />
+        </Card>
+      )}
+
+      {buyUrl && (
+        <Card style={styles.card}>
+          <Text variant="headline">{'Where to find it'}</Text>
+          <Text variant="footnote" tone="secondary">
+            {'Quality varies between brands. Look for third-party testing (USP, NSF or Informed Choice).'}
+          </Text>
+          <Button label="Buy on Amazon" variant="secondary" onPress={() => void Linking.openURL(buyUrl)} />
+          <Text variant="caption" tone="tertiary">
+            {`Affiliate link. ${AMAZON_DISCLOSURE}`}
+          </Text>
         </Card>
       )}
 

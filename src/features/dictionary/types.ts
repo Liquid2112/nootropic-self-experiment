@@ -65,4 +65,10 @@ export type DictionaryEntry = {
   studies: StudyRef[];
   /** Seeded supplement id, when the user can run an experiment on it. */
   supplementId?: string;
+  /**
+   * Set true to hide the "Buy on Amazon" affiliate button on a supplement entry
+   * (e.g. not sold on Amazon, or Rx in some markets). Unregulated entries never
+   * get one regardless.
+   */
+  noAffiliate?: boolean;
 };

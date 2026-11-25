@@ -12,15 +12,11 @@ import type { DictionaryEntry } from './types';
  * - Claims go in `claims`; only what studies show goes in `research`.
  */
 
-/** PubMed search URL. A specific author + year + topic query lands on the paper. */
-function pubmed(query: string): string {
-  return `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(query)}`;
-}
-
-/** NIH Office of Dietary Supplements health-professional fact sheet. */
-function ods(slug: string): string {
-  return `https://ods.od.nih.gov/factsheets/${slug}-HealthProfessional/`;
-}
+import { ADAPTOGEN_SLEEP_ENTRIES } from './content/adaptogensSleep';
+import { FOCUS_MOOD_ENTRIES } from './content/focusMood';
+import { GRAY_MARKET_ENTRIES } from './content/grayMarket';
+import { LONGEVITY_ENERGY_ENTRIES } from './content/longevityEnergy';
+import { ods, pubmed } from './sources';
 
 export const OTC_ENTRIES: DictionaryEntry[] = [
   {
@@ -791,7 +787,7 @@ export const OTC_ENTRIES: DictionaryEntry[] = [
  * Unregulated compounds. Reference only: no dosing, no sourcing, never in the
  * experiment picker. Each gets the gray-market warning on its detail screen.
  */
-export const UNREGULATED_ENTRIES: DictionaryEntry[] = [
+const CORE_UNREGULATED_ENTRIES: DictionaryEntry[] = [
   {
     id: 'piracetam',
     name: 'Piracetam',
@@ -1057,4 +1053,17 @@ export const UNREGULATED_ENTRIES: DictionaryEntry[] = [
   },
 ];
 
-export const DICTIONARY_ENTRIES: DictionaryEntry[] = [...OTC_ENTRIES, ...UNREGULATED_ENTRIES];
+/** The 30 seeded experiment supplements (each links to the experiment picker). */
+export const SEEDED_ENTRIES = OTC_ENTRIES;
+
+/** Every OTC supplement entry, seeded or reference-only. */
+export const SUPPLEMENT_ENTRIES: DictionaryEntry[] = [
+  ...OTC_ENTRIES,
+  ...FOCUS_MOOD_ENTRIES,
+  ...ADAPTOGEN_SLEEP_ENTRIES,
+  ...LONGEVITY_ENERGY_ENTRIES,
+];
+
+export const UNREGULATED_ENTRIES: DictionaryEntry[] = [...CORE_UNREGULATED_ENTRIES, ...GRAY_MARKET_ENTRIES];
+
+export const DICTIONARY_ENTRIES: DictionaryEntry[] = [...SUPPLEMENT_ENTRIES, ...UNREGULATED_ENTRIES];

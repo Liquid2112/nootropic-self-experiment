@@ -81,7 +81,7 @@ describe('searchDictionary', () => {
   });
 
   it('matches aliases case-insensitively', () => {
-    expect(searchDictionary('BRAHMI').supplements.map((e) => e.id)).toEqual(['bacopa-monnieri']);
+    expect(searchDictionary('BRAHMI').supplements.map((e) => e.id)).toContain('bacopa-monnieri');
     expect(searchDictionary('osavampator').unregulated.map((e) => e.id)).toEqual(['tak-653']);
   });
 
