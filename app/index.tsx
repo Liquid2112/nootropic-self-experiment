@@ -257,6 +257,9 @@ export default function TodayScreen() {
     // day still counts as following the plan.
     doseTitle: view.instruction.startsWith('No capsule') ? 'Log your off day' : undefined,
   });
+  // Open runs say "No capsule today" on OFF days; "Mark taken" would read as
+  // "I took something", so the action names what is actually logged.
+  const offDay = view.instruction.startsWith('No capsule');
   const goal = dailyGoalProgress(quests);
   const goalDone = quests.filter((q) => !q.bonus && q.done).length;
   const goalTotal = quests.filter((q) => !q.bonus).length;
@@ -269,9 +272,6 @@ export default function TodayScreen() {
         ? (view.dayNumber - 1) / Math.max(1, view.totalDays)
         : 0;
   const checkInDue = (view.hasDayForToday || view.isBaseline) && !game.today.checkIn;
-  // Open runs say "No capsule today" on OFF days; "Mark taken" would read as
-  // "I took something", so the action names what is actually logged.
-  const offDay = view.instruction.startsWith('No capsule');
 
   return (
     <View style={styles.root}>
