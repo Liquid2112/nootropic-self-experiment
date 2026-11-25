@@ -1,3 +1,4 @@
+import { POSTHOG_PROJECT_KEY, posthogConfig } from '@/config/analytics';
 import { migrate } from '@/db/schema';
 import { createMemoryDriver } from '@/db/__tests__/memoryDriver';
 import {
@@ -177,5 +178,26 @@ describe('tracker', () => {
   it('never throws when the database is unavailable', () => {
     const t = createTracker({ getDb: () => null, config: () => ({ apiKey: 'k', host: 'h' }), platform: 'ios' });
     expect(() => t.track('onboarding_started')).not.toThrow();
+  });
+});
+
+describe('config', () => {
+  const saved = { ...process.env };
+  afterEach(() => {
+    process.env = { ...saved };
+  });
+
+  it('uses the built-in project key on the US host by default', () => {
+    delete process.env.EXPO_PUBLIC_POSTHOG_KEY;
+    delete process.env.EXPO_PUBLIC_POSTHOG_HOST;
+    expect(posthogConfig()).toEqual({ apiKey: POSTHOG_PROJECT_KEY, host: 'https://us.i.posthog.com' });
+    expect(POSTHOG_PROJECT_KEY).toMatch(/^phc_/);
+  });
+
+  it('can be switched off or pointed elsewhere from the env', () => {
+    process.env.EXPO_PUBLIC_POSTHOG_KEY = 'off';
+    expect(posthogConfig().apiKey).toBe('');
+    process.env.EXPO_PUBLIC_POSTHOG_KEY = 'phc_dev';
+    expect(posthogConfig().apiKey).toBe('phc_dev');
   });
 });
