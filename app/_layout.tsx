@@ -15,6 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OnboardingProvider } from '@/screens/onboarding/OnboardingContext';
 
 import { ThemeProvider, useTheme } from '@/ui';
+import { useWidgetSync } from '@/features/widget/useWidgetSync';
 
 /**
  * Root navigator. One stack with a route per MVP screen, wrapped in the
@@ -23,6 +24,7 @@ import { ThemeProvider, useTheme } from '@/ui';
  * Welcome -> Goal picker -> Experiment setup steps.
  */
 export default function RootLayout() {
+  useWidgetSync();
   // Brand fonts. Render nothing until they load (the native splash stays up),
   // so text never flashes in the system font first.
   const [fontsLoaded, fontError] = useFonts({

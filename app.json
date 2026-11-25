@@ -50,7 +50,37 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.liquid2112.nootropicexperiment",
+          "enableAndroid": true,
+          "widgets": [
+            {
+              "name": "PlaceboToday",
+              "displayName": "Placebo",
+              "description": "Today's cup, your check-in countdown, streak and days until the verdict.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "accessoryCircular",
+                  "accessoryRectangular",
+                  "accessoryInline"
+                ]
+              },
+              "android": {
+                "targetCellWidth": 3,
+                "targetCellHeight": 2,
+                "minWidth": 180,
+                "minHeight": 110,
+                "resizeMode": "both"
+              }
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

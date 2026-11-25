@@ -13,6 +13,7 @@ import {
   ensureSnapshot,
   hasNews,
   levelForXp,
+  onProgressClaimed,
   localDayOfIso,
   loadGameState,
   xpForLevel,
@@ -180,5 +181,20 @@ describe('store', () => {
   it('reads game state straight from the database', () => {
     const db = freshDb();
     expect(loadGameState(db, now).stats.totalXp).toBe(0);
+  });
+});
+
+describe('onProgressClaimed', () => {
+  it('notifies listeners after an action and stops after unsubscribe', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    let calls = 0;
+    const off = onProgressClaimed(() => {
+      calls += 1;
+    });
+    claimProgress(db);
+    off();
+    claimProgress(db);
+    expect(calls).toBe(1);
   });
 });

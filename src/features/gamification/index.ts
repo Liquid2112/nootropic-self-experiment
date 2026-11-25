@@ -1,2 +1,2 @@
 export * from './engine';
-export { loadActivity, loadGameState, ensureSnapshot, claimProgress } from './store';
+export { loadActivity, loadGameState, ensureSnapshot, claimProgress, onProgressClaimed } from './store';
