@@ -13,13 +13,18 @@ import type { Goal, TestWindow, TestWindowId } from './types';
  *   - focus  -> reaction time (PVT median, ms; lower is better)
  *   - memory -> working memory (n-back d-prime; higher is better)
  *   - calm   -> self-rated mood
- *   - sleep  -> self-reported sleep hours
+ *   - sleep  -> self-rated next-day energy
+ *
+ * This must match the stats engine's PRIMARY_BY_GOAL (src/engines/stats/
+ * metrics.ts), which is what the verdict actually judges on; a test pins the
+ * two together. Sleep hours are a covariate in the model, so they can't also
+ * be the outcome.
  */
 const GOAL_TO_METRIC: Record<Goal, string> = {
   focus: 'pvt_median_ms',
   memory: 'nback_dprime',
   calm: 'mood',
-  sleep: 'sleep_hours',
+  sleep: 'energy',
 };
 
 export function primaryMetricForGoal(goal: Goal): string {

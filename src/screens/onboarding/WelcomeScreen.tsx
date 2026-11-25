@@ -7,10 +7,11 @@ import {
   Scaffold,
   colors,
   fontSize,
-  fontWeight,
+  gameColors,
   radius,
   spacing,
 } from '@/ui';
+import { tapLight } from '@/components/game';
 import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
 
@@ -41,13 +42,16 @@ export function WelcomeScreen() {
       footer={
         <View style={styles.footer}>
           <Button
-            label="Continue"
+            label="Let's go"
             testID="welcome-continue"
-            onPress={onContinue}
+            onPress={() => {
+              tapLight();
+              onContinue();
+            }}
             disabled={!canContinue}
           />
           <Button
-            label="Just try the free reaction test"
+            label="⚡ Just try the free reaction test"
             variant="subtle"
             testID="welcome-reaction-test"
             onPress={() => router.push('/reaction-test')}
@@ -55,15 +59,40 @@ export function WelcomeScreen() {
         </View>
       }
     >
-      <View style={styles.header}>
+      <View style={styles.hero}>
+        <View style={styles.heroBubble}>
+          <Text style={styles.heroEmoji}>🧠</Text>
+        </View>
+        <Text style={styles.heroEyebrow}>YOUR BRAIN, YOUR DATA</Text>
         <Text style={styles.promise}>Find out if your nootropic actually works for you.</Text>
         <Text style={styles.subtitle}>
           A blinded 3–4 week self-experiment on one supplement, measured on your own device.
         </Text>
       </View>
 
-      <Card>
-        <Text style={styles.cardTitle}>Before you start</Text>
+      <View style={styles.benefits}>
+        <BenefitRow
+          emoji="🙈"
+          tint={colors.cautionSurface}
+          title="Blinded, like a real trial"
+          body="You won't know which days are the real thing, so hype can't fake the result."
+        />
+        <BenefitRow
+          emoji="🔥"
+          tint={gameColors.flameMuted}
+          title="90 seconds a day"
+          body="A quick reaction and memory check-in. Build streaks, earn XP, unlock badges."
+        />
+        <BenefitRow
+          emoji="🏆"
+          tint={gameColors.xpMuted}
+          title="A real verdict in ~4 weeks"
+          body="Stats on your own data tell you if it works, does nothing, or backfires."
+        />
+      </View>
+
+      <Card radius="xl" style={styles.card}>
+        <Text style={styles.cardTitle}>⚠️ Before you start</Text>
         <Text style={styles.body}>
           This app helps you run a personal experiment. It is not medical advice and does not
           diagnose, treat, or prevent any condition.
@@ -80,13 +109,19 @@ export function WelcomeScreen() {
         <AcknowledgeRow
           testID="ack-not-medical"
           checked={notMedical}
-          onToggle={() => setNotMedical((v) => !v)}
+          onToggle={() => {
+            tapLight();
+            setNotMedical((v) => !v);
+          }}
           label="I understand this is not medical advice."
         />
         <AcknowledgeRow
           testID="ack-adult"
           checked={adult}
-          onToggle={() => setAdult((v) => !v)}
+          onToggle={() => {
+            tapLight();
+            setAdult((v) => !v);
+          }}
           label="I am 18 years of age or older."
         />
       </View>
@@ -97,7 +132,7 @@ export function WelcomeScreen() {
         onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
       >
         <Text style={styles.privacyLink}>
-          Your data stays on this phone. Read the privacy policy.
+          🔒 Your data stays on this phone. Read the privacy policy.
         </Text>
       </Pressable>
     </Scaffold>
@@ -128,27 +163,104 @@ function AcknowledgeRow({ label, checked, onToggle, testID }: AcknowledgeRowProp
   );
 }
 
+type BenefitRowProps = { emoji: string; tint: string; title: string; body: string };
+
+function BenefitRow({ emoji, tint, title, body }: BenefitRowProps) {
+  return (
+    <View style={styles.benefit}>
+      <View style={[styles.benefitIcon, { backgroundColor: tint }]}>
+        <Text style={styles.benefitEmoji}>{emoji}</Text>
+      </View>
+      <View style={styles.benefitText}>
+        <Text style={styles.benefitTitle}>{title}</Text>
+        <Text style={styles.benefitBody}>{body}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   footer: {
     gap: 8,
   },
-  header: {
+  hero: {
+    backgroundColor: colors.accent,
+    borderRadius: 24,
+    padding: spacing.xl,
     gap: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  heroBubble: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  heroEmoji: {
+    fontSize: 34,
+  },
+  heroEyebrow: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   promise: {
-    fontSize: fontSize.largeTitle,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   subtitle: {
-    fontSize: fontSize.body,
+    fontSize: fontSize.callout,
+    lineHeight: 22,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  benefits: {
+    gap: spacing.md,
+  },
+  benefit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: spacing.md,
+  },
+  benefitIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitEmoji: {
+    fontSize: 24,
+  },
+  benefitText: {
+    flex: 1,
+    gap: 2,
+  },
+  benefitTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  benefitBody: {
+    fontSize: fontSize.footnote,
+    lineHeight: 18,
     color: colors.textSecondary,
   },
+  card: {
+    gap: spacing.sm,
+  },
   cardTitle: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.semibold,
+    fontSize: 17,
+    fontWeight: '800',
     color: colors.text,
-    marginBottom: spacing.sm,
   },
   body: {
     fontSize: fontSize.footnote,
@@ -156,54 +268,59 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   safety: {
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
     padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.cautionSurface,
+    borderRadius: radius.lg,
+    backgroundColor: gameColors.flameMuted,
   },
   safetyText: {
     fontSize: fontSize.footnote,
-    color: colors.caution,
+    color: '#B5410F',
     lineHeight: 21,
   },
   acks: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   ackRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.xs,
+    padding: spacing.md,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
   },
   ackPressed: {
     opacity: 0.6,
   },
   box: {
-    width: 26,
-    height: 26,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
   },
   boxChecked: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: gameColors.mint,
+    borderColor: gameColors.mint,
   },
   check: {
     color: colors.onAccent,
-    fontSize: fontSize.footnote,
-    fontWeight: fontWeight.bold,
+    fontSize: fontSize.callout,
+    fontWeight: '800',
   },
   privacyLink: {
     fontSize: fontSize.footnote,
     color: colors.accent,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   ackLabel: {
     flex: 1,
-    fontSize: fontSize.footnote,
+    fontSize: fontSize.callout,
+    fontWeight: '600',
     color: colors.text,
   },
 });

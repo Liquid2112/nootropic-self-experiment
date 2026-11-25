@@ -1,70 +1,109 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import {
   experiments,
   getDatabase,
   scheduleDays,
+  supplements,
   type Experiment,
   type ScheduleDay,
 } from '@/db';
+import { BASELINE_DAYS } from '@/engines/experiment';
 import {
   buildTodayView,
   DEFAULT_CHECK_IN_WINDOW,
   type TodayView,
 } from '@/features/daily-loop';
+import {
+  buildDailyQuests,
+  claimProgress,
+  dailyGoalProgress,
+  ensureSnapshot,
+  loadGameState,
+  localDay,
+  type GameState,
+  type ProgressDelta,
+  type Quest,
+} from '@/features/gamification';
 import { loadNotificationsAdapter, scheduleDailyReminders } from '@/features/notifications';
 import {
-  Button,
-  Card,
-  ProgressRing,
-  Scaffold,
-  StreakIndicator,
-  colors,
-  spacing,
-  typography,
-} from '@/ui';
-
-/** Today's date as a local ISO day (YYYY-MM-DD). */
-function todayIso(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+  ActionTile,
+  Confetti,
+  QuestList,
+  StreakFlame,
+  XpBar,
+  celebrate,
+  tapLight,
+} from '@/components/game';
+import { Button, Card, ProgressRing, Scaffold, gameColors, lightTheme } from '@/ui';
 
 type Loaded = {
   experiment: Experiment;
   schedule: ScheduleDay[];
   view: TodayView;
+  supplementName: string;
+  game: GameState;
 };
 
+function greeting(now: Date): string {
+  const h = now.getHours();
+  if (h < 5) return 'Up late';
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/** Days left until the verdict unlocks, counting the baseline when in it. */
+function daysUntilVerdict(view: TodayView, lengthDays: number): number {
+  if (view.isBaseline) {
+    return BASELINE_DAYS - view.dayNumber + 1 + lengthDays;
+  }
+  if (view.hasDayForToday) {
+    return Math.max(0, lengthDays - view.dayNumber + 1);
+  }
+  return view.isFinished ? 0 : lengthDays;
+}
+
 /**
- * Today (home) — the daily hub. On first run there is no active experiment, so
- * the user is sent through the onboarding gate (welcome -> goal -> setup).
- * Once a run exists this shows Day X of N, today's dose instruction (never
- * revealing the arm during a blinded run), a Mark taken action, the Start
- * check-in entry point, and the streak. Reads the active experiment and its
- * schedule from the on-device database on focus.
+ * Today (home) — the daily hub, built to pull the user back every day.
+ *
+ * Top to bottom: greeting with the streak flame, a hero card with the run's
+ * progress and a countdown to the verdict, today's quests (dose, check-in,
+ * bonus reaction test) with XP rewards, the dose instruction, level and XP,
+ * then shortcut tiles to the reaction test, journey map, badges and the
+ * nootropic library.
+ *
+ * Blinding: nothing here shows a score. XP and streaks only count that the
+ * dose and check-in happened, and the dose instruction stays the blinded cup
+ * wording from `buildTodayView`.
  */
 export default function TodayScreen() {
   const router = useRouter();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [ready, setReady] = useState(false);
+  const [toast, setToast] = useState<ProgressDelta | null>(null);
+  const [burst, setBurst] = useState(0);
+  const [toastAnim] = useState(() => new Animated.Value(0));
 
   const load = useCallback(() => {
     const db = getDatabase();
-    const active = experiments.listByStatus(db, 'active');
-    const experiment = active[0];
+    const experiment = experiments.listByStatus(db, 'active')[0];
     if (!experiment) {
       setLoaded(null);
       setReady(true);
       return;
     }
+    ensureSnapshot(db);
     const schedule = scheduleDays.listForExperiment(db, experiment.id);
-    const view = buildTodayView({ experiment, schedule, isoDate: todayIso() });
-    setLoaded({ experiment, schedule, view });
+    const view = buildTodayView({ experiment, schedule, isoDate: localDay(new Date()) });
+    setLoaded({
+      experiment,
+      schedule,
+      view,
+      supplementName: supplements.getById(db, experiment.supplementId)?.name ?? 'your supplement',
+      game: loadGameState(db),
+    });
     setReady(true);
   }, []);
 
@@ -74,19 +113,43 @@ export default function TodayScreen() {
     }, [load]),
   );
 
+  const showToast = useCallback(
+    (delta: ProgressDelta) => {
+      setToast(delta);
+      toastAnim.setValue(0);
+      Animated.sequence([
+        Animated.spring(toastAnim, { toValue: 1, useNativeDriver: true, friction: 6 }),
+        Animated.delay(2200),
+        Animated.timing(toastAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+      ]).start(() => setToast(null));
+    },
+    [toastAnim],
+  );
+
   const markTaken = useCallback(() => {
-    if (!loaded || !loaded.view.hasDayForToday) {
+    if (!loaded || !loaded.view.hasDayForToday || loaded.view.taken) {
       return;
     }
     const db = getDatabase();
-    const dayIndex = loaded.view.dayNumber - 1;
-    scheduleDays.markTaken(db, loaded.experiment.id, dayIndex, new Date().toISOString());
+    scheduleDays.markTaken(db, loaded.experiment.id, loaded.view.dayNumber - 1, new Date().toISOString());
+    const { delta } = claimProgress(db);
+    celebrate();
+    if (delta.newBadges.length > 0 || delta.levelUp !== null) {
+      setBurst((b) => b + 1);
+    }
+    showToast(delta);
     load();
-  }, [loaded, load]);
+  }, [loaded, load, showToast]);
 
-  const startCheckIn = useCallback(() => {
-    router.push('/daily-test');
-  }, [router]);
+  const onQuest = useCallback(
+    (quest: Quest) => {
+      tapLight();
+      if (quest.id === 'dose') markTaken();
+      if (quest.id === 'check_in') router.push('/daily-test');
+      if (quest.id === 'reaction') router.push('/reaction-test');
+    },
+    [markTaken, router],
+  );
 
   // Schedule the morning dose + check-in reminders for the active experiment.
   // Degrades to a no-op when notification permission is denied or the module is
@@ -113,10 +176,10 @@ export default function TodayScreen() {
     };
   }, [experimentId, instruction]);
 
-  const checkInWindow = DEFAULT_CHECK_IN_WINDOW;
   const windowLabel = useMemo(
-    () => `Best taken ${formatHour(checkInWindow.startHour)}–${formatHour(checkInWindow.endHour)}`,
-    [checkInWindow.startHour, checkInWindow.endHour],
+    () =>
+      `Best taken ${formatHour(DEFAULT_CHECK_IN_WINDOW.startHour)}–${formatHour(DEFAULT_CHECK_IN_WINDOW.endHour)}`,
+    [],
   );
 
   if (!ready) {
@@ -132,68 +195,185 @@ export default function TodayScreen() {
     return <Redirect href="/welcome" />;
   }
 
-  const { view } = loaded;
+  const { view, game, experiment } = loaded;
+  const quests = buildDailyQuests({
+    doseScheduled: view.hasDayForToday,
+    checkInScheduled: view.hasDayForToday || view.isBaseline,
+    game,
+    // Only an open (unblinded) run ever says "No capsule today"; logging that
+    // day still counts as following the plan.
+    doseTitle: view.instruction.startsWith('No capsule') ? 'Log your no-capsule day' : undefined,
+  });
+  const goal = dailyGoalProgress(quests);
+  const goalDone = quests.filter((q) => !q.bonus && q.done).length;
+  const goalTotal = quests.filter((q) => !q.bonus).length;
+  const verdictIn = daysUntilVerdict(view, experiment.lengthDays);
+  const runProgress = view.isBaseline
+    ? 0
+    : view.isFinished
+      ? 1
+      : view.hasDayForToday
+        ? (view.dayNumber - 1) / Math.max(1, view.totalDays)
+        : 0;
+  const checkInDue = (view.hasDayForToday || view.isBaseline) && !game.today.checkIn;
 
   return (
-    <Scaffold>
-      <View style={styles.header}>
-        <StreakIndicator count={view.streak} />
-      </View>
+    <View style={styles.root}>
+      <Scaffold>
+        {/* Greeting + streak */}
+        <View style={styles.topRow}>
+          <View style={styles.flex}>
+            <Text style={styles.greeting}>{greeting(new Date())}</Text>
+            <Text style={styles.subGreeting} numberOfLines={1}>
+              Testing {loaded.supplementName}
+            </Text>
+          </View>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/achievements')}>
+            <StreakFlame count={game.streak.current} atRisk={game.streak.atRisk} />
+          </Pressable>
+        </View>
 
-      <View style={styles.ringRow}>
-        <ProgressRing
-          progress={
-            view.totalDays > 0 && (view.hasDayForToday || view.isBaseline)
-              ? view.dayNumber / view.totalDays
-              : 0
-          }
-        >
-          <Text style={styles.ringCenter}>
-            {view.hasDayForToday || view.isBaseline ? String(view.dayNumber) : '—'}
-          </Text>
-          <Text style={styles.ringCaption}>{`of ${view.totalDays}`}</Text>
-        </ProgressRing>
-        <Text style={styles.dayLabel}>
-          {view.isBaseline
-            ? `Baseline ${view.dayNumber} of ${view.totalDays}`
-            : view.hasDayForToday
-              ? `Day ${view.dayNumber} of ${view.totalDays}`
-              : 'Between days'}
-        </Text>
-      </View>
+        {game.streak.atRisk ? (
+          <View style={styles.riskBanner}>
+            <Text style={styles.riskText}>
+              🔥 Your {game.streak.current}-day streak ends at midnight. Do one thing today to keep it.
+            </Text>
+          </View>
+        ) : null}
 
-      <Card>
-        <Text style={styles.cardTitle}>{view.isBaseline ? 'Baseline' : 'Today\u2019s dose'}</Text>
-        <Text style={styles.instruction}>{view.instruction}</Text>
-        {!view.isBaseline && <Text style={styles.windowLabel}>{windowLabel}</Text>}
-        {view.hasDayForToday &&
-          (view.taken ? (
-            <View style={styles.takenRow}>
-              <Text style={styles.takenText}>✓ Marked taken</Text>
+        {/* Hero: run progress + verdict countdown */}
+        <View style={styles.hero}>
+          <View style={styles.heroTop}>
+            <View style={styles.flex}>
+              <Text style={styles.heroEyebrow}>
+                {view.isBaseline ? 'BASELINE' : view.isFinished ? 'EXPERIMENT DONE' : 'EXPERIMENT'}
+              </Text>
+              <Text style={styles.heroTitle}>
+                {view.isBaseline
+                  ? `Baseline day ${view.dayNumber} of ${BASELINE_DAYS}`
+                  : view.hasDayForToday
+                    ? `Day ${view.dayNumber} of ${view.totalDays}`
+                    : view.isFinished
+                      ? 'Your verdict is ready'
+                      : 'Between days'}
+              </Text>
             </View>
+            <View style={styles.lockBubble}>
+              <Text style={styles.lockEmoji}>{view.isFinished ? '🏆' : '🔒'}</Text>
+            </View>
+          </View>
+          <View style={styles.heroTrack}>
+            <View style={[styles.heroFill, { width: `${Math.round(runProgress * 100)}%` }]} />
+          </View>
+          {view.isFinished ? (
+            <Button label="Reveal my verdict" variant="secondary" onPress={() => router.push('/verdict')} />
           ) : (
-            <Button label="Mark taken" onPress={markTaken} accessibilityHint="Records that you took today's dose" />
-          ))}
-      </Card>
+            <Text style={styles.heroCaption}>
+              {`Verdict unlocks in ${verdictIn} day${verdictIn === 1 ? '' : 's'}. Results stay sealed until then so nothing sways your data.`}
+            </Text>
+          )}
+        </View>
 
-      {view.isFinished && (
-        <Card>
-          <Text style={styles.cardTitle}>Your experiment is done</Text>
-          <Text style={styles.muted}>The results are unsealed. See what the data says.</Text>
-          <Button label="See your verdict" onPress={() => router.push('/verdict')} />
+        {/* Daily quests */}
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <ProgressRing progress={goal} size={44} thickness={6} color={goal >= 1 ? 'success' : 'accent'}>
+              <Text style={styles.ringText}>{goal >= 1 ? '✓' : `${goalDone}/${goalTotal}`}</Text>
+            </ProgressRing>
+            <View style={styles.flex}>
+              <Text style={styles.cardTitle}>Today&apos;s quests</Text>
+              <Text style={styles.muted}>
+                {goal >= 1 ? 'Daily goal complete. Nice work!' : 'Finish them to grow your streak and level up.'}
+              </Text>
+            </View>
+          </View>
+          <QuestList quests={quests} onPressQuest={onQuest} />
         </Card>
-      )}
 
-      <Card>
-        <Text style={styles.cardTitle}>Daily check-in</Text>
-        <Text style={styles.muted}>About 90 seconds: a quick reaction test, a memory task, and three sliders.</Text>
-        <Button
-          label="Start check-in"
-          variant={view.hasDayForToday || view.isBaseline ? 'primary' : 'secondary'}
-          onPress={startCheckIn}
-        />
-      </Card>
-    </Scaffold>
+        {/* Dose instruction (blinded wording) */}
+        {(view.hasDayForToday || view.isBaseline) && (
+          <Card style={styles.card}>
+            <Text style={styles.cardTitle}>{view.isBaseline ? '🧭 Baseline' : '💊 Today’s dose'}</Text>
+            <Text style={styles.body}>{view.instruction}</Text>
+            {!view.isBaseline && <Text style={styles.muted}>{windowLabel}</Text>}
+            {view.hasDayForToday &&
+              (view.taken ? (
+                <Text style={styles.takenText}>✓ Dose logged</Text>
+              ) : (
+                <Button label="Mark taken" onPress={markTaken} accessibilityHint="Records that you took today's dose" />
+              ))}
+          </Card>
+        )}
+
+        {checkInDue && (
+          <Button label="Start today's check-in  ·  90 sec" onPress={() => router.push('/daily-test')} />
+        )}
+
+        {/* Level */}
+        <Pressable accessibilityRole="button" onPress={() => router.push('/achievements')}>
+          <Card style={styles.card}>
+            <XpBar level={game.level} />
+            <Text style={styles.muted}>
+              {`${game.badges.length} badge${game.badges.length === 1 ? '' : 's'} earned  ·  ${game.stats.totalXp} XP total  ·  tap for all`}
+            </Text>
+          </Card>
+        </Pressable>
+
+        {/* Shortcuts */}
+        <Text style={styles.section}>Explore</Text>
+        <View style={styles.grid}>
+          <ActionTile
+            emoji="⚡"
+            title="Reaction test"
+            subtitle="Beat your best time"
+            tint={gameColors.xpMuted}
+            onPress={() => router.push('/reaction-test')}
+          />
+          <ActionTile
+            emoji="🗺️"
+            title="Journey"
+            subtitle="Your run, day by day"
+            tint={lightTheme.colors.accentMuted}
+            onPress={() => router.push('/progress')}
+          />
+          <ActionTile
+            emoji="🏅"
+            title="Badges"
+            subtitle={`${game.badges.length} unlocked`}
+            tint={gameColors.flameMuted}
+            onPress={() => router.push('/achievements')}
+          />
+          <ActionTile
+            emoji="📚"
+            title="Library"
+            subtitle="What each nootropic does"
+            tint={gameColors.mintMuted}
+            tag="NEW"
+            onPress={() => router.push('/dictionary')}
+          />
+        </View>
+      </Scaffold>
+
+      {toast ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            {
+              opacity: toastAnim,
+              transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }],
+            },
+          ]}
+        >
+          <Text style={styles.toastText}>
+            {`+${toast.xpGained} XP  ·  🔥 ${toast.streak}`}
+            {toast.levelUp !== null ? `  ·  Level ${toast.levelUp}!` : ''}
+            {toast.newBadges.length ? `  ·  ${toast.newBadges.map((b) => `${b.emoji} ${b.title}`).join(', ')}` : ''}
+          </Text>
+        </Animated.View>
+      ) : null}
+      {burst > 0 ? <Confetti burstKey={burst} count={60} /> : null}
+    </View>
   );
 }
 
@@ -207,60 +387,57 @@ function formatHour(hour24: number): string {
   return hour24 < 12 ? `${hour24}am` : `${hour24 - 12}pm`;
 }
 
+const c = lightTheme.colors;
+
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
+  root: { flex: 1, backgroundColor: c.background },
+  flex: { flex: 1 },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  greeting: { fontSize: 28, fontWeight: '800', color: c.textPrimary },
+  subGreeting: { fontSize: 15, color: c.textSecondary },
+  riskBanner: { backgroundColor: gameColors.flameMuted, borderRadius: 14, padding: 12 },
+  riskText: { color: '#B5410F', fontWeight: '600', fontSize: 14 },
+  hero: {
+    backgroundColor: c.accent,
+    borderRadius: 24,
+    padding: 18,
+    gap: 12,
+    ...lightTheme.shadows.md,
   },
-  ringRow: {
+  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  heroEyebrow: { color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
+  heroTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
+  lockBubble: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
+    justifyContent: 'center',
   },
-  dayLabel: {
-    fontSize: typography.headline.fontSize,
-    fontWeight: typography.headline.fontWeight,
-    color: colors.text,
+  lockEmoji: { fontSize: 26 },
+  heroTrack: { height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
+  heroFill: { height: '100%', borderRadius: 6, backgroundColor: gameColors.xp },
+  heroCaption: { color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 19 },
+  card: { gap: 12 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary },
+  ringText: { fontSize: 12, fontWeight: '800', color: c.textPrimary },
+  body: { fontSize: 16, lineHeight: 22, color: c.textPrimary },
+  muted: { fontSize: 14, color: c.textSecondary },
+  takenText: { fontSize: 17, fontWeight: '700', color: c.success },
+  section: { fontSize: 20, fontWeight: '800', color: c.textPrimary, marginTop: 4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  toast: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 40,
+    backgroundColor: c.textPrimary,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    ...lightTheme.shadows.lg,
   },
-  ringCenter: {
-    fontSize: typography.title.fontSize,
-    fontWeight: typography.title.fontWeight,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  ringCaption: {
-    fontSize: typography.caption.fontSize,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: typography.title.fontSize,
-    fontWeight: typography.title.fontWeight,
-    color: colors.text,
-  },
-  cardTitle: {
-    fontSize: typography.headline.fontSize,
-    fontWeight: typography.headline.fontWeight,
-    color: colors.text,
-  },
-  instruction: {
-    fontSize: typography.body.fontSize,
-    color: colors.text,
-  },
-  windowLabel: {
-    fontSize: typography.caption.fontSize,
-    color: colors.textMuted,
-  },
-  muted: {
-    fontSize: typography.body.fontSize,
-    color: colors.textMuted,
-  },
-  takenRow: {
-    paddingVertical: spacing.sm,
-  },
-  takenText: {
-    fontSize: typography.headline.fontSize,
-    fontWeight: typography.headline.fontWeight,
-    color: colors.success,
-  },
+  toastText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', textAlign: 'center' },
 });

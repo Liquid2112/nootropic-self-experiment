@@ -96,8 +96,9 @@ export function Button({
             {
               backgroundColor: pressed ? colors.backgroundPressed : colors.background,
               borderColor: colors.border,
-              borderRadius: theme.radius.md,
+              borderRadius: theme.radius.lg,
               paddingVertical: theme.spacing.md,
+              transform: [{ translateY: pressed && !isInactive ? 2 : 0 }],
               paddingHorizontal: theme.spacing.xl,
             },
             fullWidth ? styles.fullWidth : null,
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 50,
+    minHeight: 54,
   },
   fullWidth: {
     alignSelf: 'stretch',

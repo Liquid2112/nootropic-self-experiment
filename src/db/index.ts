@@ -18,6 +18,7 @@ export {
   testSessions,
   results,
   quickTests,
+  appState,
 } from './repositories';
 export { MIGRATIONS, migrate, latestSchemaVersion, getSchemaVersion } from './schema';
 export { SEED_SUPPLEMENTS, seedSupplements } from './seed';
