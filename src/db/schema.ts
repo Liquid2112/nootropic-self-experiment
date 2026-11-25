@@ -91,6 +91,20 @@ export const MIGRATIONS: Migration[] = [
     version: 2,
     statements: [`ALTER TABLE experiment ADD COLUMN seed TEXT`],
   },
+  {
+    // The free standalone reaction test (no experiment needed). Each run keeps
+    // only its score so the screen can show a personal best and recent runs.
+    version: 3,
+    statements: [
+      `CREATE TABLE quick_test (
+        id TEXT PRIMARY KEY NOT NULL,
+        taken_at TEXT NOT NULL,
+        median_ms REAL NOT NULL,
+        lapses INTEGER NOT NULL,
+        trials INTEGER NOT NULL
+      )`,
+    ],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

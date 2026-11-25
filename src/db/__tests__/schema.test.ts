@@ -1,6 +1,7 @@
 import { createMemoryDriver } from './memoryDriver';
 import {
   experiments,
+  quickTests,
   results,
   scheduleDays,
   supplements,
@@ -15,8 +16,58 @@ import type {
   TestSession,
 } from '../types';
 
+describe('quick_test (free reaction test)', () => {
+  it('stores runs, lists most recent first, and reports the fastest as best', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    quickTests.insert(db, { id: 'a', takenAt: '2026-01-01T10:00:00Z', medianMs: 300, lapses: 1, trials: 12 });
+    quickTests.insert(db, { id: 'b', takenAt: '2026-01-02T10:00:00Z', medianMs: 250, lapses: 0, trials: 12 });
+    quickTests.insert(db, { id: 'c', takenAt: '2026-01-03T10:00:00Z', medianMs: 280, lapses: 0, trials: 12 });
+    expect(quickTests.listRecent(db).map((q) => q.id)).toEqual(['c', 'b', 'a']);
+    expect(quickTests.listRecent(db, 1).map((q) => q.id)).toEqual(['c']);
+    expect(quickTests.best(db)?.id).toBe('b');
+  });
+
+  it('has no best before the first run', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    expect(quickTests.best(db)).toBeUndefined();
+  });
+});
+
+describe('experiments.setStatus', () => {
+  it('moves an experiment out of active', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    supplements.insert(db, {
+      id: 's1',
+      name: 'L-theanine',
+      type: 'acute',
+      evidenceSummary: 'x',
+      evidenceLinks: [],
+      excluded: false,
+    });
+    experiments.insert(db, {
+      id: 'e1',
+      supplementId: 's1',
+      goal: 'focus',
+      primaryMetric: 'pvt_median_ms',
+      design: 'acute',
+      blindingMode: 'none',
+      lengthDays: 21,
+      startDate: '2026-01-01',
+      status: 'active',
+      sealedKey: null,
+      seed: null,
+    });
+    experiments.setStatus(db, 'e1', 'completed');
+    expect(experiments.listByStatus(db, 'active')).toHaveLength(0);
+    expect(experiments.listByStatus(db, 'completed').map((e) => e.id)).toEqual(['e1']);
+  });
+});
+
 describe('schema migrations', () => {
-  it('creates all five tables and records the latest version', () => {
+  it('creates all tables and records the latest version', () => {
     const db = createMemoryDriver();
     const version = migrate(db);
 
@@ -30,6 +81,7 @@ describe('schema migrations', () => {
       .map((row) => row.name);
     expect(tables).toEqual([
       'experiment',
+      'quick_test',
       'result',
       'schedule_day',
       'supplement',

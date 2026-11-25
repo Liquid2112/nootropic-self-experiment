@@ -1,6 +1,7 @@
 import type { SqlDriver, SqlRow, SqlValue } from './driver';
 import type {
   Experiment,
+  QuickTest,
   Result,
   ScheduleDay,
   Supplement,
@@ -153,6 +154,9 @@ export const experiments = {
       .all('SELECT * FROM experiment WHERE status = ? ORDER BY start_date DESC', [status])
       .map(rowToExperiment);
   },
+  setStatus(db: SqlDriver, id: string, status: Experiment['status']): void {
+    db.run('UPDATE experiment SET status = ? WHERE id = ?', [status, id]);
+  },
 };
 
 // --- schedule_day ----------------------------------------------------------
@@ -298,5 +302,37 @@ export const results = {
     return db
       .all('SELECT * FROM result WHERE experiment_id = ? ORDER BY metric', [experimentId])
       .map(rowToResult);
+  },
+};
+
+// --- quick_test ------------------------------------------------------------
+
+function rowToQuickTest(row: SqlRow): QuickTest {
+  return {
+    id: requireText(row.id, 'id'),
+    takenAt: requireText(row.taken_at, 'taken_at'),
+    medianMs: requireNumber(row.median_ms, 'median_ms'),
+    lapses: requireNumber(row.lapses, 'lapses'),
+    trials: requireNumber(row.trials, 'trials'),
+  };
+}
+
+export const quickTests = {
+  insert(db: SqlDriver, q: QuickTest): void {
+    db.run(
+      'INSERT INTO quick_test (id, taken_at, median_ms, lapses, trials) VALUES (?, ?, ?, ?, ?)',
+      [q.id, q.takenAt, q.medianMs, q.lapses, q.trials],
+    );
+  },
+  /** Most recent first. */
+  listRecent(db: SqlDriver, limit = 10): QuickTest[] {
+    return db
+      .all('SELECT * FROM quick_test ORDER BY taken_at DESC LIMIT ?', [limit])
+      .map(rowToQuickTest);
+  },
+  /** Fastest median ever recorded, or undefined before the first run. */
+  best(db: SqlDriver): QuickTest | undefined {
+    const row = db.get('SELECT * FROM quick_test ORDER BY median_ms ASC LIMIT 1');
+    return row ? rowToQuickTest(row) : undefined;
   },
 };

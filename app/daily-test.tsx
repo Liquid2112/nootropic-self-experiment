@@ -24,12 +24,12 @@ import {
   DEFAULT_CHECK_IN_WINDOW,
   emptyContext,
   localHourOf,
-  now,
   SLEEP_HOUR_OPTIONS,
   type DailyContext,
   type DeviceInfoReader,
   type FormFactor,
 } from '@/features/daily-loop';
+import { PvtTask } from '@/screens/PvtTask';
 import {
   Button,
   Card,
@@ -164,7 +164,7 @@ export default function DailyTestScreen() {
 
   if (phase === 'pvt') {
     return (
-      <PvtStep
+      <PvtTask
         schedule={pvtSchedule}
         onDone={(rts) => {
           rtRef.current = rts;
@@ -305,64 +305,6 @@ function ContextStep({
   );
 }
 
-// --- PVT step --------------------------------------------------------------
-
-function PvtStep({
-  schedule,
-  onDone,
-}: {
-  schedule: number[];
-  onDone: (reactionTimesMs: number[]) => void;
-}) {
-  const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const onsetRef = useRef<number>(0);
-  const rtsRef = useRef<number[]>([]);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const scheduleNext = useCallback(
-    (i: number) => {
-      if (i >= schedule.length) {
-        onDone(rtsRef.current);
-        return;
-      }
-      const isi = schedule[i] ?? 1000;
-      timeoutRef.current = setTimeout(() => {
-        onsetRef.current = now();
-        setVisible(true);
-      }, isi);
-    },
-    [schedule, onDone],
-  );
-
-  // Kick off the first trial once.
-  const started = useRef(false);
-  if (!started.current) {
-    started.current = true;
-    scheduleNext(0);
-  }
-
-  const onTap = useCallback(() => {
-    if (!visible) {
-      return;
-    }
-    const rt = now() - onsetRef.current;
-    rtsRef.current = [...rtsRef.current, rt];
-    setVisible(false);
-    const next = index + 1;
-    setIndex(next);
-    scheduleNext(next);
-  }, [visible, index, scheduleNext]);
-
-  return (
-    <Pressable style={styles.pvtArea} onPress={onTap} accessibilityRole="button" accessibilityLabel="Tap when the dot appears">
-      <Text style={styles.invMuted}>Tap the moment the dot appears</Text>
-      <Text style={styles.pvtProgress}>{`${Math.min(index + 1, schedule.length)} / ${schedule.length}`}</Text>
-      {visible ? <View style={styles.dot} /> : <View style={styles.dotPlaceholder} />}
-    </Pressable>
-  );
-}
-
 // --- N-back step -----------------------------------------------------------
 
 function NbackStep({
@@ -493,27 +435,10 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
     textAlignVertical: 'top',
   },
-  pvtArea: {
-    flex: 1,
-    backgroundColor: colors.surfaceInverse,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xl,
-  },
   pvtProgress: {
     fontSize: typography.body.fontSize,
     color: colors.textInverse,
     opacity: 0.6,
-  },
-  dot: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.stimulus,
-  },
-  dotPlaceholder: {
-    width: 120,
-    height: 120,
   },
   nbackLetter: {
     fontSize: 96,
