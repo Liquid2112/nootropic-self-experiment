@@ -197,8 +197,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   bigNumber: {
+    // The base Text style sets a 24pt line height; without its own line height
+    // the 64pt number overflows upward and sits on top of the label above it.
     fontSize: 64,
-    fontWeight: '700',
+    lineHeight: 76,
+    fontWeight: '800',
+    marginTop: spacing.xs,
   },
   footer: {
     gap: spacing.sm,
