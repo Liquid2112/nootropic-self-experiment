@@ -2,7 +2,7 @@
 
 _Last updated: November 25, 2026_
 
-This policy explains what the Nootropic Self-Experiment app ("the app", "we") does with your information. The short version: **your experiment data stays on your phone.** We don't run accounts, we don't have a server that stores your results, and we don't sell or share your data for advertising.
+This policy explains what the Placebo app ("the app", "we") does with your information. The short version: **your experiment data stays on your phone.** We don't run accounts, we don't have a server that stores your results, and we don't sell or share your data for advertising.
 
 ## What stays on your device
 
@@ -19,7 +19,7 @@ We can't see any of this. If you delete the app, this data is deleted with it. W
 
 ## Purchases
 
-Subscriptions are handled by Apple (App Store) or Google (Google Play) and by **RevenueCat**, the service we use to manage subscriptions. To check whether you have an active subscription, RevenueCat receives an anonymous app user ID, your purchase and subscription history, and basic device information (such as device type, OS version, and country). It does **not** receive your experiment data or results. See [RevenueCat's privacy policy](https://www.revenuecat.com/privacy/).
+Subscriptions are handled by Apple (App Store) or Google (Google Play) and by **RevenueCat**, the service we use to manage subscriptions. To check whether you have an active subscription, RevenueCat receives an anonymous app user ID, your purchase and subscription history, and basic device information (such as device type, OS version, and country). If you use a referral or creator code, RevenueCat also stores your own referral code, the code you entered, and who referred you, so we can credit free months and pay creators. It does **not** receive your experiment data or results. See [RevenueCat's privacy policy](https://www.revenuecat.com/privacy/).
 
 We never see or store your payment card details. Apple or Google processes payments under their own privacy policies.
 
