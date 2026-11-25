@@ -8,12 +8,12 @@ export function slideCard(S,m,t,t0,t1,pos=[.25,1.3,2.2],sc=.78){
   m.rotation.y=lerp(-1.2,-.1,pin);
   m.scale.setScalar(lerp(.4,sc,pin));
 }
-export function camKeys(S,t,keys){ // keys: [t,x,y,z,lx,ly], eased between; key with cut:true jumps
+export function camKeys(S,t,keys,useLx){ // keys: [t,x,y,z,lx,ly], eased between; key with cut:true jumps
   const {lerp,ease}=S;let a=keys[0],b=keys[0];
   for(let i=0;i<keys.length;i++){if(t>=keys[i][0]){a=keys[i];b=keys[i+1]||keys[i];}}
   const span=Math.max(.001,b[0]-a[0]);const u=b===a?0:ease((t-a[0])/span);
   const v=i=>lerp(a[i],b[i],u);
-  S.cam.position.set(v(1),v(2),v(3));S.cam.lookAt(v(1)*.5,v(5),0);
+  S.cam.position.set(v(1),v(2),v(3));S.cam.lookAt(useLx?v(4):v(1)*.5,v(5),0);
 }
 export function drawVerdict(g,W,H,stamp,blur){
   g.fillStyle='#14121c';g.beginPath();g.roundRect(4,4,W-8,H-8,36);g.fill();g.strokeStyle='#2c2840';g.lineWidth=5;g.stroke();
@@ -58,7 +58,7 @@ export function drawChart(g,W,H,prog,title='YOUR REACTION TIME'){
 }
 export function drawBanner(g,W,H,big,small,bg='#FF5A36',fg='#15131C'){
   g.fillStyle=bg;g.beginPath();g.roundRect(4,4,W-8,H-8,30);g.fill();
-  g.fillStyle=fg;g.textAlign='center';g.font='900 '+Math.round(H*.36)+'px Inter';g.fillText(big,W/2,H*.56);
+  g.fillStyle=fg;g.textAlign='center';let fs=Math.round(H*.36);g.font='900 '+fs+'px Inter';while(fs>10&&g.measureText(big).width>W-60){fs-=2;g.font='900 '+fs+'px Inter';}g.fillText(big,W/2,H*.56);
   if(small){g.font='800 '+Math.round(H*.15)+'px Inter';g.fillText(small,W/2,H*.83);}g.textAlign='left';
 }
 export function wrapText(g,txt,x,y,maxW,lh){const words=txt.split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){g.fillText(line,x,y);y+=lh;line=w;}else line=t;}if(line)g.fillText(line,x,y);return y+lh;}

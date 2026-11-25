@@ -67,7 +67,7 @@ function face(head,z,opts={}){
  const mouth=box(.34,.08,.05,M(INK),0,-.3,z+.005,head);
  return {eyes,brows,mouth};
 }
-function makeChar(kind){
+function makeChar(kind,opt={}){
  const g=new THREE.Group();scene.add(g);
  let bodyCol=PAPER,h=1.25,hw=1.1;
  const C={g,kind,talking:false};
@@ -75,6 +75,10 @@ function makeChar(kind){
  if(kind==='benny')bodyCol=0x6b4226;
  if(kind==='tea')bodyCol=0x3fae5a;
  if(kind==='brick')bodyCol=0xf2f2f2;
+ if(kind==='shroom')bodyCol=0xeee2c8;
+ if(kind==='teacher')bodyCol=0x3b4f8a;
+ if(kind==='grandma')bodyCol=0xd77fb0;
+ if(kind==='npc')bodyCol=opt.color||0x888888;
  const bm=M(bodyCol);
  box(1.5,1.7,.85,bm,0,-1.1,0,g);
  if(kind==='brian'){box(.42,1.2,.04,M(INK),0,-.8,.44,g);box(.12,.9,.03,M(TANG),0,-.75,.465,g);box(.35,.12,.05,M(LIL),.45,-.6,.45,g);}
@@ -103,6 +107,10 @@ function makeChar(kind){
   if(kind==='tea'){box(1.2,.28,1.2,M(0x5a3a22),0,.62,0,head);box(.08,.5,.08,M(0x2f8a45),0,1.0,0,head);
    const l1=box(.5,.08,.28,M(0x58d46e),.25,1.25,0,head);l1.rotation.z=.4;const l2=box(.5,.08,.28,M(0x58d46e),-.25,1.2,0,head);l2.rotation.z=-.4;}
   if(kind==='brick'){box(1.2,.18,1.2,M(0x1c1410),0,.62,0,head);g.scale.setScalar(1.18);}
+  if(kind==='shroom'){box(1.35,.55,1.35,M(0xeee2c8),0,.55,-.05,head);box(1.35,1.0,.2,M(0xeee2c8),0,.1,-.62,head);C.eyes&&C.eyes.forEach(e=>e.scale.y=.4);}
+  if(kind==='teacher'){box(1.2,.22,1.2,M(0x3a2a1a),0,.62,0,head);[-.28,.28].forEach(x=>{const f=box(.38,.36,.04,M(0x111111),x,.12,.64,head);f.material.transparent=true;f.material.opacity=.55;});box(.2,.05,.04,M(0x111111),0,.16,.65,head);}
+  if(kind==='grandma'){box(1.22,.3,1.22,M(0xdddddd),0,.6,0,head);box(.55,.45,.55,M(0xdddddd),0,.95,-.2,head);}
+  if(kind==='npc'){box(1.2,.24,1.2,M(opt.hair||0x2a1a10),0,.62,0,head);}
  }
  C.update=(t)=>{
   const talk=C.talking;
