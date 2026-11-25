@@ -4,6 +4,8 @@ import {
   loadNotificationsAdapter,
   noopNotificationsAdapter,
   scheduleDailyReminders,
+  scheduleOneOff,
+  type OneOffReminder,
   type NotificationsAdapter,
   type ReminderPlan,
 } from '..';
@@ -134,5 +136,41 @@ describe('loadNotificationsAdapter', () => {
     expect(typeof adapter.requestPermissions).toBe('function');
     expect(typeof adapter.schedule).toBe('function');
     expect(typeof adapter.cancelAll).toBe('function');
+  });
+});
+
+describe('one-off reminders', () => {
+  const future: OneOffReminder = { id: 'trial-billing-reminder', title: 't', body: 'b', date: new Date(Date.now() + 86_400_000) };
+
+  it('keeps a one-off reminder when the daily ones are rescheduled', async () => {
+    const live = new Set<string>();
+    const adapter: NotificationsAdapter = {
+      async requestPermissions() {
+        return true;
+      },
+      async cancelAll() {
+        live.clear();
+      },
+      async cancel(id) {
+        live.delete(id);
+      },
+      async schedule(plan) {
+        live.add(plan.id);
+      },
+      async scheduleAt(r) {
+        live.add(r.id);
+      },
+    };
+    expect(await scheduleOneOff(future, adapter)).toBe(true);
+    await scheduleDailyReminders({ window: WINDOW, morningInstruction: 'x' }, adapter);
+    expect([...live].sort()).toEqual(['daily-check-in', 'daily-dose-instruction', 'trial-billing-reminder']);
+  });
+
+  it('skips past dates, denied permission and adapters that cannot schedule by date', async () => {
+    const granted: NotificationsAdapter = { ...noopNotificationsAdapter, requestPermissions: async () => true };
+    expect(await scheduleOneOff({ ...future, date: new Date(Date.now() - 1000) }, granted)).toBe(false);
+    expect(await scheduleOneOff(future, noopNotificationsAdapter)).toBe(false);
+    expect(await scheduleOneOff(future, { ...granted, scheduleAt: undefined })).toBe(false);
+    expect(await scheduleOneOff(future, granted)).toBe(true);
   });
 });
