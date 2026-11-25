@@ -80,6 +80,7 @@ describe('schema migrations', () => {
       )
       .map((row) => row.name);
     expect(tables).toEqual([
+      'app_state',
       'experiment',
       'quick_test',
       'result',

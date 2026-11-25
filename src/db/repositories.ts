@@ -189,6 +189,12 @@ export const scheduleDays = {
       .all('SELECT * FROM schedule_day WHERE experiment_id = ? ORDER BY day_index', [experimentId])
       .map(rowToScheduleDay);
   },
+  /** Every dose marked taken, across all experiments (for streaks / XP). */
+  listAllTaken(db: SqlDriver): ScheduleDay[] {
+    return db
+      .all('SELECT * FROM schedule_day WHERE taken = 1 ORDER BY date')
+      .map(rowToScheduleDay);
+  },
   markTaken(db: SqlDriver, experimentId: string, dayIndex: number, takenAt: string): void {
     db.run(
       'UPDATE schedule_day SET taken = 1, taken_at = ? WHERE experiment_id = ? AND day_index = ?',
@@ -255,6 +261,16 @@ export const testSessions = {
     return db
       .all('SELECT * FROM test_session WHERE experiment_id = ? ORDER BY day_index', [experimentId])
       .map(rowToTestSession);
+  },
+  /**
+   * When each check-in happened, across all experiments. Deliberately returns
+   * only timestamps: gamification needs to know a check-in was done, never its
+   * scores, so nothing here can leak a result during a blinded run.
+   */
+  listAllStartedAt(db: SqlDriver): string[] {
+    return db
+      .all('SELECT started_at FROM test_session ORDER BY started_at')
+      .map((row) => requireText(row.started_at, 'started_at'));
   },
 };
 
@@ -330,9 +346,29 @@ export const quickTests = {
       .all('SELECT * FROM quick_test ORDER BY taken_at DESC LIMIT ?', [limit])
       .map(rowToQuickTest);
   },
+  /** Every run, oldest first (for streaks / XP / badges). */
+  listAll(db: SqlDriver): QuickTest[] {
+    return db.all('SELECT * FROM quick_test ORDER BY taken_at').map(rowToQuickTest);
+  },
   /** Fastest median ever recorded, or undefined before the first run. */
   best(db: SqlDriver): QuickTest | undefined {
     const row = db.get('SELECT * FROM quick_test ORDER BY median_ms ASC LIMIT 1');
     return row ? rowToQuickTest(row) : undefined;
+  },
+};
+
+// --- app_state -------------------------------------------------------------
+
+export const appState = {
+  get(db: SqlDriver, key: string): string | undefined {
+    const row = db.get('SELECT value FROM app_state WHERE key = ?', [key]);
+    return row ? requireText(row.value, 'value') : undefined;
+  },
+  set(db: SqlDriver, key: string, value: string): void {
+    db.run(
+      `INSERT INTO app_state (key, value) VALUES (?, ?)
+       ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+      [key, value],
+    );
   },
 };

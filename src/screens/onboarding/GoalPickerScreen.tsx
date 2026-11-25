@@ -15,6 +15,7 @@ import {
   radius,
   spacing,
 } from '@/ui';
+import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
 
 /**
@@ -47,6 +48,7 @@ export function GoalPickerScreen() {
   const showOther = trimmedQuery.length > 0;
 
   function selectGoal(goal: Goal) {
+    tapLight();
     update({ goal });
   }
 
@@ -57,6 +59,7 @@ export function GoalPickerScreen() {
       type: s.type,
       name: s.name,
     };
+    tapLight();
     update({ supplement: choice });
   }
 
@@ -83,7 +86,15 @@ export function GoalPickerScreen() {
         />
       }
     >
-      <View>
+      <View style={styles.stepHeader}>
+        <View style={styles.stepPill}>
+          <Text style={styles.stepPillText}>STEP 1 OF 2</Text>
+        </View>
+        <Text style={styles.title}>🎯 Pick your mission</Text>
+        <Text style={styles.subtitle}>Choose a goal and the supplement you want to put to the test.</Text>
+      </View>
+
+      <View style={styles.block}>
         <SectionHeader title="What are you hoping to improve?" />
         <View style={styles.chipRow}>
           {GOALS.map((goal) => (
@@ -107,7 +118,7 @@ export function GoalPickerScreen() {
           testID="supplement-search"
           value={query}
           onChangeText={setQuery}
-          placeholder="Search supplements"
+          placeholder="🔍  Search supplements"
           placeholderTextColor={colors.textMuted}
           autoCorrect={false}
           style={styles.search}
@@ -144,6 +155,36 @@ export function GoalPickerScreen() {
 }
 
 const styles = StyleSheet.create({
+  stepHeader: {
+    gap: spacing.xs,
+  },
+  stepPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.cautionSurface,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+  },
+  stepPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: colors.accent,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  subtitle: {
+    fontSize: fontSize.callout,
+    color: colors.textSecondary,
+  },
+  block: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: spacing.lg,
+  },
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -153,9 +194,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   search: {
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     fontSize: fontSize.body,
@@ -163,10 +204,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   list: {
-    borderRadius: radius.lg,
+    borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   empty: {
     padding: spacing.lg,

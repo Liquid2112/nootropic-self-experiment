@@ -10,7 +10,8 @@ import {
   type Plan,
   type PurchasesAdapter,
 } from '@/features/paywall';
-import { Button, Card, Scaffold, Text, colors, radius, spacing } from '@/ui';
+import { Button, Card, Scaffold, Text, colors, gameColors, radius, spacing } from '@/ui';
+import { tapLight } from '@/components/game';
 
 const PERIOD_TITLE: Record<Plan['period'], string> = {
   annual: 'Yearly',
@@ -19,15 +20,15 @@ const PERIOD_TITLE: Record<Plan['period'], string> = {
   other: 'Plan',
 };
 
-const BENEFITS = [
-  'Blinded on/off experiments on any supplement you own',
-  'A daily 90-second brain test that tracks real performance',
-  'A verdict with an effect size, not a vibe',
-  'Unlimited experiments and a shareable result card',
+const BENEFITS: { emoji: string; text: string }[] = [
+  { emoji: '🙈', text: 'Blinded on/off experiments on any supplement you own' },
+  { emoji: '🧠', text: 'A daily 90-second brain test that tracks real performance' },
+  { emoji: '📊', text: 'A verdict with an effect size, not a vibe' },
+  { emoji: '🏆', text: 'Unlimited experiments and a shareable result card' },
 ];
 
 /**
- * Pro paywall, shown when "Confirm & start" is tapped on Experiment setup by a
+ * Pro paywall, shown when "Start my experiment" is tapped on Experiment setup by a
  * user without Pro. Plans come from the current RevenueCat offering; the store
  * product carries the free trial. On success it returns to setup, which then
  * creates the experiment.
@@ -122,14 +123,22 @@ export default function PaywallScreen() {
         </View>
       }
     >
-      <View style={styles.header}>
-        <Text variant="largeTitle">Find out if it actually works</Text>
-        <Text tone="secondary">Start your experiment with Pro.</Text>
+      <View style={styles.hero}>
+        <View style={styles.proPill}>
+          <Text style={styles.proPillText}>⚡ PRO</Text>
+        </View>
+        <Text style={styles.heroTitle}>Find out if it actually works</Text>
+        <Text style={styles.heroSubtitle}>Start your experiment with Pro.</Text>
       </View>
 
-      <Card>
+      <Card radius="xl" style={styles.benefits}>
         {BENEFITS.map((b) => (
-          <Text key={b} style={styles.benefit}>{`✓  ${b}`}</Text>
+          <View key={b.text} style={styles.benefitRow}>
+            <View style={styles.benefitIcon}>
+              <Text style={styles.benefitEmoji}>{b.emoji}</Text>
+            </View>
+            <Text style={styles.benefit}>{b.text}</Text>
+          </View>
         ))}
       </Card>
 
@@ -142,15 +151,23 @@ export default function PaywallScreen() {
             return (
               <Pressable
                 key={plan.id}
-                onPress={() => setSelectedId(plan.id)}
+                onPress={() => {
+                  tapLight();
+                  setSelectedId(plan.id);
+                }}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: isSelected }}
                 style={[styles.plan, isSelected ? styles.planSelected : null]}
               >
                 <View style={styles.planRow}>
-                  <Text variant="headline">{PERIOD_TITLE[plan.period]}</Text>
+                  <View style={[styles.radio, isSelected ? styles.radioOn : null]}>
+                    {isSelected ? <Text style={styles.radioCheck}>✓</Text> : null}
+                  </View>
+                  <Text variant="headline" style={styles.planTitle}>{PERIOD_TITLE[plan.period]}</Text>
                   {plan.period === 'annual' && savings !== null && (
-                    <Text variant="caption" tone="accent">{`SAVE ${savings}%`}</Text>
+                    <View style={styles.saveTag}>
+                      <Text style={styles.saveText}>{`SAVE ${savings}%`}</Text>
+                    </View>
                   )}
                 </View>
                 <Text tone="secondary">
@@ -174,29 +191,109 @@ export default function PaywallScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  hero: {
+    backgroundColor: colors.accent,
+    borderRadius: 24,
+    padding: spacing.xl,
     gap: spacing.sm,
   },
+  proPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: gameColors.xp,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+  },
+  proPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: gameColors.violetDeep,
+  },
+  heroTitle: {
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  benefits: {
+    gap: spacing.md,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  benefitIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.cautionSurface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitEmoji: {
+    fontSize: 20,
+  },
   benefit: {
-    paddingVertical: spacing.xs,
+    flex: 1,
+    fontWeight: '600',
+  },
+  saveTag: {
+    backgroundColor: gameColors.mint,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+  },
+  saveText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOn: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  radioCheck: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  planTitle: {
+    flex: 1,
   },
   plans: {
     gap: spacing.md,
   },
   plan: {
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: 20,
+    padding: spacing.lg,
     gap: spacing.xs,
+    backgroundColor: colors.surface,
   },
   planSelected: {
     borderColor: colors.accent,
+    backgroundColor: colors.cautionSurface,
   },
   planRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.sm,
   },
   footer: {
     gap: spacing.sm,

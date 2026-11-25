@@ -26,6 +26,7 @@ import {
   radius,
   spacing,
 } from '@/ui';
+import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
 
 /**
@@ -171,7 +172,7 @@ export function ExperimentSetupScreen() {
       testID="experiment-setup-screen"
       footer={
         <Button
-          label="Confirm & start"
+          label="🚀 Start my experiment"
           testID="setup-confirm"
           onPress={() => void onConfirm()}
           disabled={!canConfirm}
@@ -180,17 +181,21 @@ export function ExperimentSetupScreen() {
       }
     >
       {state.goal && state.supplement ? (
-        <Card>
+        <View style={styles.hero}>
+          <View style={styles.stepPill}>
+            <Text style={styles.stepPillText}>STEP 2 OF 2</Text>
+          </View>
+          <Text style={styles.heroTitle}>🧪 Design your experiment</Text>
           <Text style={styles.summary}>
             {goalLabel(state.goal)} · {state.supplement.name} ·{' '}
             {state.supplement.type === 'acute' ? 'acute' : 'cumulative'} design
           </Text>
-        </Card>
+        </View>
       ) : null}
 
-      <View>
+      <View style={styles.block}>
         <SectionHeader
-          title="How long?"
+          title="⏳ How long?"
           caption={`A longer run gives a clearer answer. It starts with a ${BASELINE_DAYS}-day baseline: just the daily test, no supplement, so practice effects settle first.`}
         />
         <View style={styles.chipRow} testID="length-slider">
@@ -200,15 +205,18 @@ export function ExperimentSetupScreen() {
               testID={`length-${option.value}`}
               label={option.label}
               selected={state.lengthDays === option.value}
-              onPress={() => update({ lengthDays: option.value })}
+              onPress={() => {
+                tapLight();
+                update({ lengthDays: option.value });
+              }}
             />
           ))}
         </View>
       </View>
 
-      <View>
+      <View style={styles.block}>
         <SectionHeader
-          title="Blinding"
+          title="🙈 Blinding"
           caption="Blinding keeps your expectations out of the result."
         />
         <View style={styles.chipRow}>
@@ -218,11 +226,14 @@ export function ExperimentSetupScreen() {
               testID={`blinding-${option.mode}`}
               label={option.label}
               selected={state.blindingMode === option.mode}
-              onPress={() => update({ blindingMode: option.mode })}
+              onPress={() => {
+                tapLight();
+                update({ blindingMode: option.mode });
+              }}
             />
           ))}
         </View>
-        <Card style={styles.instructionsCard}>
+        <Card style={styles.instructionsCard} elevation="none" radius="xl">
           <Text style={styles.instructions}>{selectedBlinding.instructions}</Text>
         </Card>
         {state.blindingMode === 'sealed' ? (
@@ -246,9 +257,9 @@ export function ExperimentSetupScreen() {
         ) : null}
       </View>
 
-      <View>
+      <View style={styles.block}>
         <SectionHeader
-          title="Daily test time"
+          title="⏰ Daily test time"
           caption="Test at the same time each day for a fair comparison."
         />
         <View style={styles.chipRow} testID="test-window-slider">
@@ -258,7 +269,10 @@ export function ExperimentSetupScreen() {
               testID={`test-window-${w.id}`}
               label={w.label}
               selected={state.testWindow === w.id}
-              onPress={() => update({ testWindow: w.id })}
+              onPress={() => {
+                tapLight();
+                update({ testWindow: w.id });
+              }}
             />
           ))}
         </View>
@@ -268,10 +282,39 @@ export function ExperimentSetupScreen() {
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    backgroundColor: colors.accent,
+    borderRadius: 24,
+    padding: spacing.xl,
+    gap: spacing.sm,
+  },
+  stepPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+  },
+  stepPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: '#FFFFFF',
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
   summary: {
-    fontSize: fontSize.footnote,
-    fontWeight: fontWeight.medium,
-    color: colors.text,
+    fontSize: fontSize.callout,
+    fontWeight: fontWeight.semibold,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  block: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: spacing.lg,
   },
   chipRow: {
     flexDirection: 'row',
@@ -280,11 +323,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   instructionsCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.cautionSurface,
   },
   instructions: {
     fontSize: fontSize.footnote,
-    color: colors.textSecondary,
+    color: colors.text,
     lineHeight: 21,
   },
   passphraseBlock: {
@@ -293,13 +336,13 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.footnote,
-    fontWeight: fontWeight.medium,
+    fontWeight: fontWeight.bold,
     color: colors.text,
   },
   input: {
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     fontSize: fontSize.body,
