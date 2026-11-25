@@ -36,6 +36,8 @@ import { Icon, Brian } from '@/brand';
 import { Card, Scaffold, Slider, brand, fonts, radius, spacing } from '@/ui';
 import { BASELINE_DAYS } from '@/engines/experiment';
 import { runPosition, track, trackOnce } from '@/features/analytics';
+import { measuredSleepSource } from '@/features/health/store';
+import { localDay } from '@/features/gamification';
 
 type Phase = 'context' | 'pvt' | 'nback' | 'ratings' | 'saved' | 'no-experiment';
 
@@ -74,6 +76,15 @@ export default function DailyTestScreen() {
 
   // Context capture.
   const [context, setContext] = useState<DailyContext>(emptyContext());
+  // Last night's sleep already synced from Health: skip asking for it. The
+  // verdict reads the measured hours for this day when sleepHours stays null.
+  const [sleepSource] = useState<string | null>(() => {
+    try {
+      return measuredSleepSource(getDatabase(), localDay(new Date()));
+    } catch {
+      return null;
+    }
+  });
 
   // PVT schedule + collected RTs.
   const [pvtSchedule] = useState(() =>
@@ -159,6 +170,7 @@ export default function DailyTestScreen() {
       <ContextStep
         context={context}
         onChange={setContext}
+        sleepSource={sleepSource}
         onStart={() => {
           rtRef.current = [];
           setPhase('pvt');
@@ -334,22 +346,42 @@ function StepHeader({ step, title, subtitle }: { step: number; title: string; su
 function ContextStep({
   context,
   onChange,
+  sleepSource,
   onStart,
 }: {
   context: DailyContext;
   onChange: (c: DailyContext) => void;
+  /** "Apple Health" when last night's sleep already synced, else null. */
+  sleepSource: string | null;
   onStart: () => void;
 }) {
+  const [askSleep, setAskSleep] = useState(sleepSource === null);
   return (
     <Scaffold inverse>
-      <StepHeader step={1} title="Before you start" subtitle="Three quick taps so the analysis can account for your day." />
+      <StepHeader
+        step={1}
+        title="Before you start"
+        subtitle={
+          askSleep
+            ? 'Three quick taps so the analysis can account for your day.'
+            : 'Two quick taps so the analysis can account for your day.'
+        }
+      />
 
       <View style={styles.darkCard}>
         <View style={styles.labelRow}>
           <Icon name="moon" size={18} color={brand.lilac} />
           <Text style={styles.invLabel}>Hours slept last night</Text>
         </View>
-        <View style={styles.chipRow}>
+        {askSleep ? null : (
+          <View style={styles.sleepSyncedRow}>
+            <Text style={styles.invMuted}>Measured by {sleepSource}. Nothing to tap.</Text>
+            <Pressable accessibilityRole="button" onPress={() => setAskSleep(true)} hitSlop={8}>
+              <Text style={styles.sleepOverride}>Enter it myself</Text>
+            </Pressable>
+          </View>
+        )}
+        <View style={[styles.chipRow, askSleep ? null : styles.hidden]}>
           {SLEEP_HOUR_OPTIONS.map((h) => (
             <Chip
               key={h}
@@ -503,6 +535,9 @@ const styles = StyleSheet.create({
     color: brand.white,
   },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  sleepSyncedRow: { gap: spacing.xs },
+  sleepOverride: { fontSize: 15, fontFamily: fonts.semibold, color: brand.lilac },
+  hidden: { display: 'none' },
   darkCard: {
     backgroundColor: brand.ink2,
     borderRadius: 20,

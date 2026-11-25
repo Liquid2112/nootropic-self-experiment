@@ -118,3 +118,20 @@ conventions that keep the data layer testable.
 - Still needed before submitting: RevenueCat project + keys, the final bundle
   ID, a contact email in the privacy policy, App Store screenshots, and a pass
   on real devices.
+
+### Health and widget setup once the Apple Developer account exists
+
+Both features are configured in `app.json` and need a dev build (`eas build
+--profile development`); Expo Go can't load them. On the Apple side:
+
+- **HealthKit:** enable the HealthKit capability on the App ID
+  `com.liquid2112.nootropicexperiment`. EAS adds the entitlement on the next
+  build. Read-only access (sleep, resting heart rate, HRV); nothing is written.
+- **Widget and Live Activity:** register the App Group
+  `group.com.liquid2112.nootropicexperiment` and add it to both the app and the
+  widget extension's App IDs. The widget reads its timeline from that group.
+- **Android:** Health Connect permissions are in `app.json`. Google Play asks
+  for a Health Connect declaration form before release.
+
+When Health is connected and last night's sleep has synced, the daily check-in
+skips the sleep question and the verdict adjusts for the measured hours instead.
