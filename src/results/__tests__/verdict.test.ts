@@ -2,7 +2,7 @@ import { createMemoryDriver } from '@/db/__tests__/memoryDriver';
 import { migrate } from '@/db/schema';
 import { experiments, results, scheduleDays, supplements, testSessions } from '@/db/repositories';
 import type { Experiment, ScheduleDay, TestSession } from '@/db/types';
-import { applyBlinding } from '@/engines/experiment';
+import { applyBlinding, selfBlindPassphrase } from '@/engines/experiment';
 import type { SqlDriver } from '@/db/driver';
 import { computeExperimentVerdict } from '../verdict';
 
@@ -45,6 +45,7 @@ function makeExperiment(overrides: Partial<Experiment> = {}): Experiment {
     startDate: '2026-01-01',
     status: 'completed',
     sealedKey: null,
+    seed: null,
     ...overrides,
   };
 }
@@ -282,6 +283,93 @@ describe('computeExperimentVerdict — blinding', () => {
     expect(() =>
       computeExperimentVerdict(db, { experiment: exp, schedule, sessions }),
     ).toThrow(/passphrase/i);
+  });
+
+  it('unblinds a self-blinded run from the passphrase derived from the stored seed (finding 1)', () => {
+    const db = freshDb();
+    const trueArms = Array.from({ length: LENGTH }, (_, i) => (i % 2 === 0 ? 'ON' : 'OFF') as 'ON' | 'OFF');
+    const seed = 'self-seed-xyz';
+    const blinding = applyBlinding(trueArms, 'self_blind', seed);
+    const exp = makeExperiment({ blindingMode: 'self_blind', sealedKey: blinding.sealedKey, seed });
+    seedParents(db, exp);
+    const schedule: ScheduleDay[] = blinding.storedArms.map((arm, i) => ({
+      experimentId: exp.id,
+      dayIndex: i,
+      date: `2026-01-${String(i + 1).padStart(2, '0')}`,
+      arm,
+      taken: i >= BASELINE,
+      takenAt: null,
+    }));
+    const sessions = makeSessions(exp.id, () => true);
+
+    const vm = computeExperimentVerdict(db, {
+      experiment: exp,
+      schedule,
+      sessions,
+      // The screen derives this from experiment.seed via selfBlindPassphrase.
+      unsealPassphrase: selfBlindPassphrase(exp.seed!),
+    });
+    expect(vm.blindingState).toBe('blinded');
+    expect(vm.revealedMapping).not.toBeNull();
+    expect(vm.primary.verdictSentence).toContain('Measurable improvement');
+  });
+});
+
+describe('computeExperimentVerdict — covariate guard (finding 2)', () => {
+  it('still produces a verdict when caffeine is constant and sleep is never logged', () => {
+    const { db, exp } = setup();
+    const schedule = makeSchedule(exp.id, () => true);
+    // Degenerate covariates: caffeine always true, sleep always 0. Pre-fix this
+    // made the design singular and every metric fell back to not-enough-data.
+    const sessions = makeSessions(exp.id, () => true).map((s) => ({
+      ...s,
+      caffeine: true,
+      sleepHours: 0,
+    }));
+    const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
+    expect(vm.adherenceMet).toBe(true);
+    expect(vm.primary.analyzed).toBe(true);
+    expect(vm.primary.verdictSentence).toContain('Measurable improvement');
+  });
+});
+
+describe('computeExperimentVerdict — cumulative power note (finding 4)', () => {
+  it('appends the limited-power note on a cumulative run verdict', () => {
+    // A block design: first half ON, second half OFF, with a clear effect.
+    const { db, exp } = setup({ design: 'cumulative' });
+    const schedule: ScheduleDay[] = Array.from({ length: LENGTH }, (_, i) => ({
+      experimentId: exp.id,
+      dayIndex: i,
+      date: `2026-01-${String(i + 1).padStart(2, '0')}`,
+      arm: i < LENGTH / 2 ? 'ON' : 'OFF',
+      taken: i >= BASELINE,
+      takenAt: null,
+    }));
+    const sessions: TestSession[] = Array.from({ length: LENGTH }, (_, i) => {
+      const on: 0 | 1 = i < LENGTH / 2 ? 1 : 0;
+      return {
+        id: `c${i}`,
+        experimentId: exp.id,
+        dayIndex: i,
+        startedAt: `2026-01-${String(i + 1).padStart(2, '0')}T09:00:00Z`,
+        deviceModel: null,
+        pvtMedianMs: 300 - (on ? 25 : 0) + Math.sin(i) * 2,
+        pvtLapses: null,
+        nbackAccuracy: null,
+        nbackDprime: null,
+        focus: null,
+        energy: null,
+        mood: null,
+        sleepHours: 7,
+        caffeine: false,
+        note: null,
+        valid: true,
+      };
+    });
+    const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
+    if (vm.primary.analyzed) {
+      expect(vm.primary.verdictSentence.toLowerCase()).toContain('cumulative run');
+    }
   });
 });
 

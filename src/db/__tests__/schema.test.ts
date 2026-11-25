@@ -45,6 +45,43 @@ describe('schema migrations', () => {
     expect(() => migrate(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(latestSchemaVersion());
   });
+
+  it('adds the experiment.seed column (migration v2) so blinding is unsealable', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    const cols = db.all('PRAGMA table_info(experiment)').map((r) => r.name);
+    expect(cols).toContain('seed');
+  });
+});
+
+describe('experiment.seed round-trip', () => {
+  it('stores and reads back a non-null seed', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    supplements.insert(db, {
+      id: 's',
+      name: 'S',
+      type: 'acute',
+      evidenceSummary: 'x',
+      evidenceLinks: [],
+      excluded: false,
+    });
+    const exp: Experiment = {
+      id: 'e-seed',
+      supplementId: 's',
+      goal: 'focus',
+      primaryMetric: 'pvt_median_ms',
+      design: 'acute',
+      blindingMode: 'self_blind',
+      lengthDays: 28,
+      startDate: '2026-01-01',
+      status: 'active',
+      sealedKey: 'v1:deadbeef:00',
+      seed: 'the-seed',
+    };
+    experiments.insert(db, exp);
+    expect(experiments.getById(db, 'e-seed')!.seed).toBe('the-seed');
+  });
 });
 
 describe('repositories round-trip', () => {
@@ -97,6 +134,7 @@ describe('repositories round-trip', () => {
       startDate: '2026-01-01',
       status: 'active',
       sealedKey: null,
+      seed: null,
     };
     experiments.insert(db, experiment);
     expect(experiments.getById(db, 'exp-1')).toEqual(experiment);

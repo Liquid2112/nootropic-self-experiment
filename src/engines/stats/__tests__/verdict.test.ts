@@ -34,14 +34,29 @@ describe('blockMeanDifference', () => {
 });
 
 describe('formatEffect', () => {
-  it('reads a reaction-time decrease as "faster" with a unit range', () => {
+  it('reads a reaction-time decrease as "faster" with a signed range', () => {
     const s = formatEffect(METRICS.pvtMedianMs, -18, { low: -32, high: -4 });
-    expect(s).toBe('reaction time 18 ms faster (range 4-32 ms)');
+    // Both bounds are improvements (negative = faster): one word, ascending.
+    expect(s).toBe('reaction time 18 ms faster (range 4 to 32 ms faster)');
   });
 
   it('reads a reaction-time increase as "slower"', () => {
     const s = formatEffect(METRICS.pvtMedianMs, 12, { low: 3, high: 21 });
     expect(s).toContain('slower');
+  });
+
+  it('preserves the sign when the interval straddles zero (finding 5)', () => {
+    // 30 ms faster to 10 ms slower must NOT collapse to a one-sided "faster".
+    const s = formatEffect(METRICS.pvtMedianMs, -10, { low: -30, high: 10 });
+    expect(s).toBe('reaction time 10 ms faster (range 30 ms faster to 10 ms slower)');
+    expect(s).toContain('faster to');
+    expect(s).toContain('slower');
+  });
+
+  it('a straddling higher-is-better interval names both directions', () => {
+    // focus: +2 higher to -1 lower.
+    const s = formatEffect(METRICS.focus, 0.5, { low: -1, high: 2 });
+    expect(s).toBe('focus rating 0.5 higher (range 2 higher to 1 lower)');
   });
 
   it('reads fewer lapses as an improvement word', () => {
@@ -102,7 +117,7 @@ describe('classifyVerdict', () => {
     expect(v).toBe('measured_worse');
   });
 
-  it('no meaningful effect: CI includes zero but is narrow', () => {
+  it('no meaningful effect: CI includes zero but is narrower than the width bar', () => {
     const v = classifyVerdict(
       { estimate: 0.05, ci: { low: -0.1, high: 0.2 }, effectSize: 0.05, direction: 'higher' },
       resid,
@@ -110,9 +125,21 @@ describe('classifyVerdict', () => {
     expect(v).toBe('no_meaningful_effect');
   });
 
-  it('not enough data: CI includes zero and is wide', () => {
+  it('no meaningful effect: a realistic-width null CI (finding 3)', () => {
+    // A ~1.2 SD-wide interval straddling zero is the typical 28-day true-null
+    // shape. Under the recalibrated 1.4 width bar it is declared "no meaningful
+    // effect" rather than the old "extend 2 weeks".
     const v = classifyVerdict(
       { estimate: 0.1, ci: { low: -0.5, high: 0.7 }, effectSize: 0.1, direction: 'higher' },
+      resid,
+    );
+    expect(v).toBe('no_meaningful_effect');
+  });
+
+  it('not enough data: CI includes zero and is wider than the width bar', () => {
+    // Width 1.6 SD > 1.4 -> genuinely under-powered, still "not enough data".
+    const v = classifyVerdict(
+      { estimate: 0.1, ci: { low: -0.8, high: 0.8 }, effectSize: 0.1, direction: 'higher' },
       resid,
     );
     expect(v).toBe('not_enough_data');

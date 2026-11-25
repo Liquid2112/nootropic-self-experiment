@@ -18,6 +18,7 @@ function makeExperiment(overrides: Partial<Experiment> = {}): Experiment {
     startDate: '2026-01-01',
     status: 'active',
     sealedKey: null,
+    seed: null,
     ...overrides,
   };
 }

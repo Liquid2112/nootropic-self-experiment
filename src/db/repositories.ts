@@ -119,6 +119,7 @@ function rowToExperiment(row: SqlRow): Experiment {
     startDate: requireText(row.start_date, 'start_date'),
     status,
     sealedKey: toText(row.sealed_key),
+    seed: toText(row.seed),
   };
 }
 
@@ -126,8 +127,8 @@ export const experiments = {
   insert(db: SqlDriver, e: Experiment): void {
     db.run(
       `INSERT INTO experiment
-        (id, supplement_id, goal, primary_metric, design, blinding_mode, length_days, start_date, status, sealed_key)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, supplement_id, goal, primary_metric, design, blinding_mode, length_days, start_date, status, sealed_key, seed)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         e.id,
         e.supplementId,
@@ -139,6 +140,7 @@ export const experiments = {
         e.startDate,
         e.status,
         e.sealedKey,
+        e.seed,
       ],
     );
   },

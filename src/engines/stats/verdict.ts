@@ -24,6 +24,16 @@ export const VERDICT_SENTENCE: Record<VerdictState, string> = {
 };
 
 /**
+ * Appended to a cumulative run's verdict sentence. A block design has only a
+ * handful of independent units (the ON/OFF blocks), so it can declare a clear
+ * effect but has limited power to detect a small one — the user should know a
+ * "no meaningful effect" from a cumulative run is weaker evidence than from a
+ * day-by-day acute run.
+ */
+export const CUMULATIVE_POWER_NOTE =
+  'A cumulative run compares a few multi-day blocks, so it can miss small effects.';
+
+/**
  * Standardized effect size: b1 divided by the residual SD (a Cohen's-d-style
  * scale that makes metrics in different units comparable). Caller passes the
  * residual SD from residualSd(fit).
@@ -61,11 +71,12 @@ export function blockMeanDifference(y: number[], on: number[]): number {
 }
 
 /**
- * Plain-unit sentence, e.g. "reaction time 18 ms faster (range 4-32 ms)".
- * Reports the magnitude in the metric's own units, the improvement direction
- * as a word, and the 90% CI as a range. For "lower is better" metrics a
- * negative delta reads as "faster"/"fewer"; for "higher is better" a positive
- * delta reads as "higher".
+ * Plain-unit sentence, e.g. "reaction time 18 ms faster (range 4 to 32 ms faster)".
+ * Reports the point estimate's magnitude in the metric's own units and the
+ * improvement direction as a word, then the 90% CI as a signed range so an
+ * interval that straddles zero reads honestly — e.g. "30 ms faster to 10 ms
+ * slower" — instead of being collapsed to a one-sided "faster". The range words
+ * follow the same per-metric vocabulary as the point estimate.
  */
 export function formatEffect(
   spec: MetricSpec,
@@ -76,12 +87,40 @@ export function formatEffect(
   const verb = improvementWord(spec, improved);
   const mag = Math.abs(estimate);
   const unit = spec.unit ? ` ${spec.unit}` : '';
-  const lo = Math.min(Math.abs(ci.low), Math.abs(ci.high));
-  const hi = Math.max(Math.abs(ci.low), Math.abs(ci.high));
-  const rangeUnit = spec.unit ? ` ${spec.unit}` : '';
+  const range = formatSignedRange(spec, ci);
+  return `${spec.label} ${round(mag)}${unit} ${verb} (range ${range})`;
+}
+
+/**
+ * Format a CI as a signed range in the metric's own direction words. When both
+ * bounds point the same way the direction word is printed once with the
+ * magnitudes ascending ("4 to 32 ms faster"); when the interval straddles zero
+ * each side keeps its own word, improvement side first ("30 ms faster to 10 ms
+ * slower"), so a crossing interval never reads as a one-sided win.
+ */
+function formatSignedRange(spec: MetricSpec, ci: ConfidenceInterval): string {
+  const lo = Math.min(ci.low, ci.high);
+  const hi = Math.max(ci.low, ci.high);
+  const unit = spec.unit ? ` ${spec.unit}` : '';
+  const loImproved = isImprovement(spec.betterDirection, lo);
+  const hiImproved = isImprovement(spec.betterDirection, hi);
+
+  if (loImproved === hiImproved) {
+    // Same direction: one word, magnitudes ascending.
+    const word = improvementWord(spec, loImproved);
+    const a = Math.min(Math.abs(lo), Math.abs(hi));
+    const b = Math.max(Math.abs(lo), Math.abs(hi));
+    return `${round(a)} to ${round(b)}${unit} ${word}`;
+  }
+
+  // Straddles zero: name the improvement end first, then the regression end.
+  const improvingBound = spec.betterDirection === 'lower' ? lo : hi;
+  const regressingBound = spec.betterDirection === 'lower' ? hi : lo;
+  const improvingWord = improvementWord(spec, true);
+  const regressingWord = improvementWord(spec, false);
   return (
-    `${spec.label} ${round(mag)}${unit} ${verb} ` +
-    `(range ${round(lo)}-${round(hi)}${rangeUnit})`
+    `${round(Math.abs(improvingBound))}${unit} ${improvingWord} to ` +
+    `${round(Math.abs(regressingBound))}${unit} ${regressingWord}`
   );
 }
 
@@ -132,11 +171,19 @@ export type VerdictInput = {
 
 /**
  * Width threshold: a CI that spans more than this many effect-size units
- * (relative to the residual scale) is "wide" -> not enough data. 0.6 is twice
- * the 0.3 meaningful-effect bar, so an interval wider than a meaningful effect
- * in each direction is judged uninformative.
+ * (relative to the residual scale) is "wide" -> not enough data.
+ *
+ * Recalibrated for realistic run lengths. The original 0.6 (twice the 0.3
+ * meaningful bar) was unreachable: at 28 days a true-null 90% HAC interval is
+ * ~1.2 SD wide, so a do-nothing supplement almost always failed the width test
+ * and was told to "extend 2 weeks" (about 82% of simulated null runs) instead
+ * of the honest "no meaningful effect" (about 0.2%). Reaching <0.6 SD would
+ * need ~120 days. 1.4 SD sits just above the typical true-null width at 21-28
+ * days, so a genuine null that has run its course lands on "no meaningful
+ * effect" while a truly under-powered run (a far wider interval) still reads as
+ * not-enough-data. See the simulation harness for the before/after rates.
  */
-export const WIDE_CI_EFFECT_WIDTH = 0.6;
+export const WIDE_CI_EFFECT_WIDTH = 1.4;
 
 /** The meaningful standardized-effect threshold from the spec. */
 export const MEANINGFUL_EFFECT_SIZE = 0.3;

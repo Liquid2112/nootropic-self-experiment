@@ -238,6 +238,8 @@ export function computeExperimentVerdict(
   const goal = experiment.goal as Goal;
   const { primary, secondary } = selectPrimaryMetric(goal);
   const metricOrder: MetricKey[] = [primary, ...secondary];
+  const design: 'acute' | 'cumulative' =
+    experiment.design === 'cumulative' ? 'cumulative' : 'acute';
 
   const computedAt = new Date().toISOString();
   const verdicts = new Map<MetricKey, MetricVerdict>();
@@ -246,7 +248,7 @@ export function computeExperimentVerdict(
     const days = observationsFor(metric, sessions, onByDay);
     let verdict: MetricVerdict;
     try {
-      const analysis = analyzeMetric(metric, days, { adherence: adherenceInput });
+      const analysis = analyzeMetric(metric, days, { adherence: adherenceInput, design });
       verdict = fromAnalysis(analysis);
     } catch {
       // A metric that can't be fit (too few days, collinear columns, or a
