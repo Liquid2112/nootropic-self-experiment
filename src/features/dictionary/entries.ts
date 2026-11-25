@@ -337,9 +337,9 @@ export const OTC_ENTRIES: DictionaryEntry[] = [
         url: pubmed('Singh 2023 taurine deficiency as a driver of aging Science'),
       },
       {
-        citation: 'Giles et al., 2012, Psychopharmacology',
+        citation: 'Giles et al., 2012, Pharmacol Biochem Behav',
         finding: 'Caffeine, not taurine, drove the attention effects of an energy-drink combination.',
-        url: pubmed('Giles 2012 caffeine taurine energy drink cognition mood Psychopharmacology'),
+        url: pubmed('Giles 2012 caffeine taurine cognition mood Pharmacol Biochem Behav'),
       },
     ],
     supplementId: 'taurine',
@@ -537,7 +537,7 @@ export const OTC_ENTRIES: DictionaryEntry[] = [
     safety: 'Long-term very high B6 can cause nerve damage. Turns urine bright yellow (harmless).',
     studies: [
       {
-        citation: 'Kennedy et al., 2010, Hum Psychopharmacol',
+        citation: 'Kennedy et al., 2010, Psychopharmacology',
         finding: 'High-dose B-complex improved stress ratings and some cognitive performance in men over 33 days.',
         url: pubmed('Kennedy 2010 effects of high-dose B vitamin complex vitamin C minerals mood performance'),
       },
@@ -910,7 +910,7 @@ export const UNREGULATED_ENTRIES: DictionaryEntry[] = [
       'Positive allosteric modulator of Trk receptors (the receptors for NGF, BDNF and NT-3), amplifying the brain’s own growth-factor signaling.',
     claims: ['Memory', 'Mood and resilience', 'Neuroplasticity'],
     research:
-      'Being developed by AlzeCure Pharma for Alzheimer’s and depression. Phase 1 studies in healthy volunteers looked at safety and how the body handles it, not at whether it improves cognition. Efficacy in people is unproven.',
+      'Being developed by AlzeCure Pharma for Alzheimer’s and depression. Phase 1 studies in healthy volunteers looked at safety and how the body handles it, and a Phase 2 trial has begun. Efficacy in people is unproven.',
     evidence: 'preclinical',
     safety: 'Only short-term safety in small healthy-volunteer groups is known. Gray-market products are unverified and may not contain what they claim.',
     status: 'Investigational drug. Not approved anywhere; not a legal dietary supplement.',
@@ -942,7 +942,7 @@ export const UNREGULATED_ENTRIES: DictionaryEntry[] = [
       'Originated at Takeda and now in development for major depression. Animal studies show cognitive effects, and a human study measured increased cortical excitability. It has not been shown to enhance cognition in healthy people.',
     evidence: 'preclinical',
     safety: 'AMPA potentiation carries theoretical seizure risk at high exposure. Gray-market products are unverified.',
-    status: 'Investigational drug in clinical trials. Not approved; not a legal dietary supplement.',
+    status: 'Investigational drug, in Phase 3 trials for depression (as osavampator) since 2025. Not approved; not a legal dietary supplement.',
     studies: [
       {
         citation: 'Takeda preclinical study, 2021, Sci Rep',
@@ -969,7 +969,7 @@ export const UNREGULATED_ENTRIES: DictionaryEntry[] = [
     research: 'Studied in Russia for asthenia (fatigue and weakness). Trials are mostly open-label and published in Russian; no rigorous Western trials.',
     evidence: 'limited',
     safety: 'Long-term safety outside Russian clinical use is unknown. Reported insomnia and headache.',
-    status: 'Prescription drug in Russia for asthenia. Not FDA-approved. Banned by WADA since the 1996 Olympics.',
+    status: 'Prescription drug in Russia for asthenia. Not FDA-approved. Banned in sport since the 1996 Atlanta Olympics doping cases, and now on the WADA prohibited list as a stimulant.',
     studies: [
       {
         citation: 'PubMed: clinical studies of Ladasten',
@@ -1049,7 +1049,7 @@ export const UNREGULATED_ENTRIES: DictionaryEntry[] = [
     status: 'Never approved anywhere. Research chemical only.',
     studies: [
       {
-        citation: 'Hansl & Mead, 1978, Drug Dev Res',
+        citation: 'Hansl & Mead, 1978, Psychopharmacology',
         finding: 'Single study in healthy volunteers reporting improved word recall; never replicated.',
         url: pubmed('Hansl Mead PRL-8-53 memory'),
       },
