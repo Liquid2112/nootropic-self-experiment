@@ -6,13 +6,21 @@ import {
   testWindowById,
 } from '../derive';
 import { GOALS } from '../types';
+import { selectPrimaryMetric } from '@/engines/stats/metrics';
 
 describe('primaryMetricForGoal', () => {
   it('maps each goal to a distinct test_session metric column', () => {
     const metrics = GOALS.map(primaryMetricForGoal);
-    expect(metrics).toEqual(['pvt_median_ms', 'nback_dprime', 'mood', 'sleep_hours']);
+    expect(metrics).toEqual(['pvt_median_ms', 'nback_dprime', 'mood', 'energy']);
     // All distinct so each goal is judged on its own column.
     expect(new Set(metrics).size).toBe(GOALS.length);
+  });
+
+  it('stores the same metric the verdict judges on', () => {
+    const toColumn = (key: string) => key.replace(/[A-Z]/g, (ch) => `_${ch.toLowerCase()}`);
+    for (const goal of GOALS) {
+      expect(primaryMetricForGoal(goal)).toBe(toColumn(selectPrimaryMetric(goal).primary));
+    }
   });
 });
 
