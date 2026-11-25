@@ -6,6 +6,7 @@ import { Icon, Logo, Brian, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
+import { track } from '@/features/analytics';
 
 /**
  * Screen 1 — Welcome + disclaimer.
@@ -25,6 +26,7 @@ export function WelcomeScreen() {
 
   function onContinue() {
     update({ acknowledgedDisclaimer: true });
+    track('onboarding_started');
     router.push('/quiz');
   }
 

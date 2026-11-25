@@ -13,6 +13,7 @@ Everything you enter or measure in the app is stored only in a database on your 
 - your daily test results (reaction times, memory-task scores), your focus, energy and mood ratings, sleep hours, caffeine, notes, and your phone model (used to keep timing comparable)
 - your free reaction-test scores
 - your verdicts
+- any bad reaction you log, and whether you paused, resumed or ended the run
 
 We can't see any of this. If you delete the app, this data is deleted with it. We don't back it up.
 
@@ -32,7 +33,11 @@ If you tap a share button, the app creates an image or text with your result and
 
 ## Analytics and advertising
 
-The app does not include advertising and does not track you across other apps or websites. If we add product analytics in a future version (for example, counting how many people finish onboarding), we will update this policy first, and it will never include your experiment data or health-related answers.
+The app does not include advertising and does not track you across other apps or websites.
+
+We use PostHog for product analytics, to count how many people reach each step: starting onboarding, finishing the quiz, opening the paywall, starting a trial, starting an experiment, finishing the baseline, reaching a verdict and sharing it, and which day of the run you're on when you open the app or log a dose or check-in. Each event carries only the step, a random install ID that isn't linked to your name, email, Apple or Google account, or device ID, your phone's operating system, and in some cases a small number or label such as the day number, the run length (21 or 28 days), the blinding mode, or the subscription plan period.
+
+Analytics never includes your test scores, ratings, notes, Apple Health or Health Connect data, quiz answers, goal, which supplement you're testing, your verdict, or any bad reaction you log. We ask PostHog not to build a profile of you and not to look up your location from your IP address. See [PostHog's privacy policy](https://posthog.com/privacy).
 
 ## Health information
 

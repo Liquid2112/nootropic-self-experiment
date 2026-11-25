@@ -22,6 +22,7 @@ import {
 import { Button, Scaffold, brand, fonts } from '@/ui';
 import { Brian, Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
+import { track } from '@/features/analytics';
 
 const PERIOD_TITLE: Record<Plan['period'], string> = {
   annual: 'Yearly',
@@ -66,6 +67,7 @@ export default function PaywallScreen() {
   const [today] = useState(() => new Date());
 
   useEffect(() => {
+    track('paywall_viewed');
     let cancelled = false;
     void (async () => {
       const a = await loadPurchasesAdapter(Platform.OS);
@@ -95,6 +97,7 @@ export default function PaywallScreen() {
       const outcome = await adapter.purchase(plan.id);
       setBusy(false);
       if (outcome === 'purchased') {
+        track('trial_started', { plan_period: plan.period, trial_days: plan.trialDays ?? 0 });
         // Keep the promise on the timeline: remind before the trial converts.
         const reminder = billingReminder(plan, new Date());
         if (reminder) {

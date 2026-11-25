@@ -18,7 +18,7 @@ import { BASELINE_DAYS, addDays, baselineDayIndex } from '@/engines/experiment';
 import { findDayForDate, type CheckInWindow } from '@/features/daily-loop';
 
 /** Which part of the run the user is in. */
-export type WidgetPhase = 'empty' | 'baseline' | 'run' | 'between' | 'ready';
+export type WidgetPhase = 'empty' | 'baseline' | 'run' | 'between' | 'ready' | 'paused';
 
 /**
  * Props handed to the native widget. Plain JSON (numbers, strings, booleans)
@@ -107,6 +107,29 @@ export function shortInstruction(blindingMode: BlindingMode, day: ScheduleDay): 
     return `Cup ${day.arm}`;
   }
   return day.arm === 'A' || day.arm === 'ON' ? 'Cup A' : 'Cup B';
+}
+
+/**
+ * What the widget shows while the run is paused after a logged bad reaction.
+ * Deliberately vague: the widget sits on the lock screen where others can see
+ * it, so it never mentions the reaction.
+ */
+export function pausedSnapshot(): WidgetSnapshot {
+  return {
+    phase: 'paused',
+    headline: 'Run paused',
+    instruction: 'No dose',
+    nudge: 'Open Placebo for details',
+    doseDone: false,
+    checkInDone: false,
+    streak: 0,
+    daysToVerdict: 0,
+    verdictDateLabel: '',
+    progress: 0,
+    windowStartMs: 0,
+    windowEndMs: 0,
+    url: WIDGET_LINKS.today,
+  };
 }
 
 /** Build the snapshot the widget renders for one day. */

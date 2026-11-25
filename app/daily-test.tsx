@@ -34,6 +34,8 @@ import { claimProgress, type GameState, type ProgressDelta } from '@/features/ga
 import { Celebration } from '@/components/game';
 import { Icon, Brian } from '@/brand';
 import { Card, Scaffold, Slider, brand, fonts, radius, spacing } from '@/ui';
+import { BASELINE_DAYS } from '@/engines/experiment';
+import { runPosition, track, trackOnce } from '@/features/analytics';
 
 type Phase = 'context' | 'pvt' | 'nback' | 'ratings' | 'saved' | 'no-experiment';
 
@@ -130,6 +132,12 @@ export default function DailyTestScreen() {
       note: note.trim().length > 0 ? note.trim() : null,
     });
     testSessions.insert(db, { id: genNumericId(), ...result.session });
+    // Retention: which day of the run this check-in was. Never the scores.
+    const pos = runPosition(dayIndex, BASELINE_DAYS);
+    if (pos) track('check_in_completed', { run_day: pos.runDay, phase: pos.phase });
+    // Funnel: the baseline is done at its last day, or at the first run-day
+    // check-in when a baseline day was skipped.
+    if (dayIndex >= -1) trackOnce(`baseline:${experiment.id}`, 'baseline_completed');
     // XP and badges only count that a check-in happened, never its scores.
     setReward(claimProgress(db));
     setPhase('saved');

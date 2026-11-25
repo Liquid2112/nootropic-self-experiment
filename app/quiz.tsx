@@ -22,6 +22,7 @@ import { useOnboarding } from '@/screens/onboarding/OnboardingContext';
 import { Icon, Brian, type IconName } from '@/brand';
 import { celebrate, tapLight } from '@/components/game';
 import { Button, brand, fonts } from '@/ui';
+import { track } from '@/features/analytics';
 
 /** The run length the plan screen previews; setup can still change it. */
 const PLAN_LENGTH_DAYS = 28;
@@ -136,6 +137,7 @@ export default function QuizScreen() {
     const goal = quizGoal(answers);
     const testWindow = quizTestWindow(answers);
     update({ ...(goal ? { goal } : {}), ...(testWindow ? { testWindow } : {}), lengthDays: PLAN_LENGTH_DAYS });
+    track('quiz_completed');
     router.push('/goal-picker');
   }, [answers, update, router]);
 
