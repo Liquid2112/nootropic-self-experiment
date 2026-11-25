@@ -45,7 +45,11 @@ function TodayWidgetLayout(props: WidgetSnapshot) {
         </Text>
       </Row>
       <Text color={ink} style={{ fontSize: 12, fontWeight: '700' }}>
-        {props.phase === 'ready' ? 'Your verdict is ready' : `Verdict in ${countdown} · sealed until ${props.verdictDateLabel}`}
+        {props.phase === 'ready'
+          ? 'Your verdict is ready'
+          : props.phase === 'paused'
+            ? 'Run paused'
+            : `Verdict in ${countdown} · sealed until ${props.verdictDateLabel}`}
       </Text>
     </Column>
   );

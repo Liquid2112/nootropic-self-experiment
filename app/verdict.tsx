@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,6 +16,8 @@ import { useExperimentData } from '@/screens/useExperimentData';
 import { ShareCard, type ViewRef } from '@/screens/ShareCard';
 import { shareCard } from '@/screens/share';
 import { normalizeKey, referralMessage, referralState } from '@/features/referral';
+import { track, trackOnce } from '@/features/analytics';
+import { localDay } from '@/features/gamification';
 
 /**
  * Verdict screen: the payoff. It runs the stats engine over the finished run,
@@ -86,6 +88,19 @@ export default function VerdictScreen() {
     return null;
   }, [experiment, schedule, sessions, friendPassphrase]);
 
+  // Funnel: the run reached its verdict. Counts only, never the result.
+  const unlocked = vm !== null;
+  useEffect(() => {
+    if (!experiment || !unlocked) return;
+    const today = localDay(new Date());
+    if (schedule.length === 0 || !schedule.every((d) => d.date < today)) return;
+    const daysCheckedIn = new Set(sessions.filter((s) => s.dayIndex >= 0).map((s) => s.dayIndex)).size;
+    trackOnce(`completed:${experiment.id}`, 'experiment_completed', {
+      length_days: experiment.lengthDays,
+      days_checked_in: daysCheckedIn,
+    });
+  }, [experiment, unlocked, schedule, sessions]);
+
   // A friend-blinded run can't be unblinded until the friend enters the
   // passphrase. Show the entry step (not the permanent placeholder) so the run
   // can actually reach its verdict.
@@ -132,6 +147,7 @@ export default function VerdictScreen() {
   async function onShare() {
     const ok = await shareCard(shareRef, referralCode ? referralMessage(referralCode) : undefined);
     setShareNote(ok ? null : 'Sharing isn\u2019t available on this device.');
+    if (ok) track('verdict_shared');
   }
 
   return (

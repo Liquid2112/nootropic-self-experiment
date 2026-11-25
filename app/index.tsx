@@ -6,6 +6,7 @@ import {
   getDatabase,
   scheduleDays,
   supplements,
+  type AdverseEvent,
   type Experiment,
   type ScheduleDay,
 } from '@/db';
@@ -26,7 +27,10 @@ import {
   type ProgressDelta,
   type Quest,
 } from '@/features/gamification';
-import { loadNotificationsAdapter, scheduleDailyReminders } from '@/features/notifications';
+import { cancelDailyReminders, loadNotificationsAdapter, scheduleDailyReminders } from '@/features/notifications';
+import { RESUME_WARNING, activePause, endExperimentForSafety, resumeExperiment } from '@/features/safety';
+import { track, trackOnce } from '@/features/analytics';
+import { refreshWidgets } from '@/features/widget/useWidgetSync';
 import {
   ActionTile,
   Confetti,
@@ -45,6 +49,8 @@ type Loaded = {
   view: TodayView;
   supplementName: string;
   game: GameState;
+  /** Set while the run is paused after a logged bad reaction. */
+  pause: AdverseEvent | null;
 };
 
 function greeting(now: Date): string {
@@ -97,8 +103,18 @@ export default function TodayScreen() {
     }
     ensureSnapshot(db);
     const schedule = scheduleDays.listForExperiment(db, experiment.id);
-    const view = buildTodayView({ experiment, schedule, isoDate: localDay(new Date()) });
+    const isoDate = localDay(new Date());
+    const view = buildTodayView({ experiment, schedule, isoDate });
+    const pause = activePause(db, experiment.id);
+    // Retention: once per day the app is opened during the baseline or the run.
+    if (!pause && (view.isBaseline || view.hasDayForToday)) {
+      trackOnce(`active:${experiment.id}:${isoDate}`, 'run_day_active', {
+        run_day: view.dayNumber,
+        phase: view.isBaseline ? 'baseline' : 'run',
+      });
+    }
     setLoaded({
+      pause,
       experiment,
       schedule,
       view,
@@ -128,11 +144,12 @@ export default function TodayScreen() {
   );
 
   const markTaken = useCallback(() => {
-    if (!loaded || !loaded.view.hasDayForToday || loaded.view.taken) {
+    if (!loaded || loaded.pause || !loaded.view.hasDayForToday || loaded.view.taken) {
       return;
     }
     const db = getDatabase();
     scheduleDays.markTaken(db, loaded.experiment.id, loaded.view.dayNumber - 1, new Date().toISOString());
+    track('dose_logged', { run_day: loaded.view.dayNumber });
     const { delta } = claimProgress(db);
     celebrate();
     if (delta.newBadges.length > 0 || delta.levelUp !== null) {
@@ -155,8 +172,10 @@ export default function TodayScreen() {
   // Schedule the morning dose + check-in reminders for the active experiment.
   // Degrades to a no-op when notification permission is denied or the module is
   // unavailable (headless), so it never blocks the hub.
+  // While the run is paused after a bad reaction, the dose reminders stay off.
   const instruction = loaded?.view.instruction;
   const experimentId = loaded?.experiment.id;
+  const paused = loaded?.pause != null;
   useEffect(() => {
     if (!experimentId || !instruction) {
       return;
@@ -167,6 +186,10 @@ export default function TodayScreen() {
       if (cancelled) {
         return;
       }
+      if (paused) {
+        await cancelDailyReminders(adapter);
+        return;
+      }
       await scheduleDailyReminders(
         { window: DEFAULT_CHECK_IN_WINDOW, morningInstruction: instruction },
         adapter,
@@ -175,7 +198,23 @@ export default function TodayScreen() {
     return () => {
       cancelled = true;
     };
-  }, [experimentId, instruction]);
+  }, [experimentId, instruction, paused]);
+
+  const [confirm, setConfirm] = useState<'resume' | 'end' | null>(null);
+  const onResume = useCallback(() => {
+    if (!experimentId) return;
+    resumeExperiment(getDatabase(), experimentId);
+    setConfirm(null);
+    refreshWidgets();
+    load();
+  }, [experimentId, load]);
+  const onEnd = useCallback(() => {
+    if (!experimentId) return;
+    endExperimentForSafety(getDatabase(), experimentId);
+    setConfirm(null);
+    refreshWidgets();
+    load();
+  }, [experimentId, load]);
 
   const windowLabel = useMemo(
     () =>
@@ -197,6 +236,19 @@ export default function TodayScreen() {
   }
 
   const { view, game, experiment } = loaded;
+
+  if (loaded.pause) {
+    return (
+      <PausedToday
+        loggedAt={loaded.pause.loggedAt}
+        confirm={confirm}
+        onConfirm={setConfirm}
+        onResume={onResume}
+        onEnd={onEnd}
+        onShowHelp={() => router.push('/bad-reaction')}
+      />
+    );
+  }
   const quests = buildDailyQuests({
     doseScheduled: view.hasDayForToday,
     checkInScheduled: view.hasDayForToday || view.isBaseline,
@@ -340,6 +392,18 @@ export default function TodayScreen() {
           </View>
         )}
 
+        {(view.hasDayForToday || view.isBaseline) && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityHint="Pauses your experiment and shows where to get help"
+            onPress={() => router.push('/bad-reaction')}
+            style={styles.reactionRow}
+          >
+            <Icon name="alert" size={16} color={brand.muted} />
+            <Text style={styles.reactionText}>Feeling unwell? Log a bad reaction</Text>
+          </Pressable>
+        )}
+
         {checkInDue && (
           <Button label="Start today's check-in" onPress={() => router.push('/daily-test')} />
         )}
@@ -433,6 +497,65 @@ export default function TodayScreen() {
   );
 }
 
+type PausedProps = {
+  loggedAt: string;
+  confirm: 'resume' | 'end' | null;
+  onConfirm: (c: 'resume' | 'end' | null) => void;
+  onResume: () => void;
+  onEnd: () => void;
+  onShowHelp: () => void;
+};
+
+/**
+ * Today while the run is paused after a logged bad reaction: no dose, no
+ * quests, no streak pressure. Resuming asks for a doctor's OK first; ending
+ * closes the run without a verdict.
+ */
+function PausedToday({ loggedAt, confirm, onConfirm, onResume, onEnd, onShowHelp }: PausedProps) {
+  const date = new Date(loggedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return (
+    <Scaffold>
+      <View style={styles.topBar}>
+        <Logo size={22} />
+      </View>
+      <View style={styles.pausedCard}>
+        <View style={[styles.iconBubble, { backgroundColor: brand.tangSoft }]}>
+          <Icon name="alert" size={22} color={brand.rose} strokeWidth={2.4} />
+        </View>
+        <Text style={styles.cardTitle}>Your experiment is paused</Text>
+        <Text style={styles.body}>
+          {`You logged a bad reaction on ${date}. Don\u2019t take any more doses. Your dose reminders are off.`}
+        </Text>
+        <Pressable accessibilityRole="button" onPress={onShowHelp} style={styles.helpLink}>
+          <Text style={styles.helpLinkText}>See where to get help</Text>
+          <Icon name="arrowRight" size={16} color={brand.tangDeep} />
+        </Pressable>
+      </View>
+
+      {confirm === 'resume' ? (
+        <View style={styles.card}>
+          <Text style={styles.body}>{RESUME_WARNING}</Text>
+          <Button label="A doctor said it’s OK. Resume" onPress={onResume} />
+          <Button label="Not yet" variant="subtle" onPress={() => onConfirm(null)} />
+        </View>
+      ) : confirm === 'end' ? (
+        <View style={styles.card}>
+          <Text style={styles.body}>
+            End this experiment? What you’ve recorded stays on your phone, but there won’t be a verdict.
+          </Text>
+          <Button label="End experiment" onPress={onEnd} />
+          <Button label="Keep it paused" variant="subtle" onPress={() => onConfirm(null)} />
+        </View>
+      ) : (
+        <>
+          <Button label="End this experiment" variant="secondary" onPress={() => onConfirm('end')} />
+          <Button label="Resume experiment" variant="subtle" onPress={() => onConfirm('resume')} />
+        </>
+      )}
+    </Scaffold>
+  );
+}
+
 function formatHour(hour24: number): string {
   if (hour24 === 0 || hour24 === 24) {
     return '12am';
@@ -517,4 +640,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   toastText: { flex: 1, color: brand.white, fontSize: 15, fontFamily: fonts.semibold },
+  reactionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 6 },
+  reactionText: { fontSize: 14, fontFamily: fonts.medium, color: brand.muted, textDecorationLine: 'underline' },
+  pausedCard: {
+    backgroundColor: brand.white,
+    borderRadius: 28,
+    padding: 20,
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: brand.rose,
+  },
+  helpLink: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  helpLinkText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.tangDeep },
 });

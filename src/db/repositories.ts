@@ -1,5 +1,6 @@
 import type { SqlDriver, SqlRow, SqlValue } from './driver';
 import type {
+  AdverseEvent,
   Experiment,
   HealthNight,
   QuickTest,
@@ -413,5 +414,53 @@ export const healthNights = {
       toDate,
     ]);
     return row ? requireNumber(row.n, 'n') : 0;
+  },
+};
+
+// --- adverse_event -----------------------------------------------------------
+
+function rowToAdverseEvent(row: SqlRow): AdverseEvent {
+  const severity = requireText(row.severity, 'severity');
+  if (severity !== 'severe' && severity !== 'unwell') {
+    throw new Error(`Invalid reaction severity: ${severity}`);
+  }
+  const resolution = toText(row.resolution);
+  return {
+    id: requireText(row.id, 'id'),
+    experimentId: requireText(row.experiment_id, 'experiment_id'),
+    loggedAt: requireText(row.logged_at, 'logged_at'),
+    dayIndex: toInt(row.day_index),
+    severity,
+    resolvedAt: toText(row.resolved_at),
+    resolution: resolution === 'resumed' || resolution === 'ended' ? resolution : null,
+  };
+}
+
+export const adverseEvents = {
+  insert(db: SqlDriver, e: AdverseEvent): void {
+    db.run(
+      `INSERT INTO adverse_event (id, experiment_id, logged_at, day_index, severity, resolved_at, resolution)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [e.id, e.experimentId, e.loggedAt, e.dayIndex, e.severity, e.resolvedAt, e.resolution],
+    );
+  },
+  listForExperiment(db: SqlDriver, experimentId: string): AdverseEvent[] {
+    return db
+      .all('SELECT * FROM adverse_event WHERE experiment_id = ? ORDER BY logged_at', [experimentId])
+      .map(rowToAdverseEvent);
+  },
+  /** The unresolved event pausing this run, if any. */
+  open(db: SqlDriver, experimentId: string): AdverseEvent | undefined {
+    const row = db.get(
+      'SELECT * FROM adverse_event WHERE experiment_id = ? AND resolved_at IS NULL ORDER BY logged_at DESC LIMIT 1',
+      [experimentId],
+    );
+    return row ? rowToAdverseEvent(row) : undefined;
+  },
+  resolveAll(db: SqlDriver, experimentId: string, resolution: 'resumed' | 'ended', at: string): void {
+    db.run(
+      'UPDATE adverse_event SET resolved_at = ?, resolution = ? WHERE experiment_id = ? AND resolved_at IS NULL',
+      [at, resolution, experimentId],
+    );
   },
 };

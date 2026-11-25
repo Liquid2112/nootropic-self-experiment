@@ -20,6 +20,7 @@ export {
   quickTests,
   appState,
   healthNights,
+  adverseEvents,
 } from './repositories';
 export { MIGRATIONS, migrate, latestSchemaVersion, getSchemaVersion } from './schema';
 export { SEED_SUPPLEMENTS, seedSupplements } from './seed';

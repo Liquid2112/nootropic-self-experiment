@@ -206,6 +206,26 @@ export async function scheduleDailyReminders(
   return { scheduled: true, count: plans.length };
 }
 
+/** Ids of the two daily reminders (see buildDailyReminders). */
+export const DAILY_REMINDER_IDS = ['daily-dose-instruction', 'daily-check-in'] as const;
+
+/**
+ * Cancel the two daily reminders (used while a run is paused), leaving any
+ * one-off like the trial billing reminder in place. Needs no permission.
+ */
+export async function cancelDailyReminders(adapter: NotificationsAdapter): Promise<void> {
+  if (!adapter.cancel) {
+    return;
+  }
+  for (const id of DAILY_REMINDER_IDS) {
+    try {
+      await adapter.cancel(id);
+    } catch {
+      // Not supported here (web) or nothing to cancel.
+    }
+  }
+}
+
 /**
  * Request permission and schedule one one-off reminder. Returns false (and does
  * nothing) when permission is denied or the module can't schedule by date.

@@ -41,7 +41,11 @@ function TodayWidgetLayout(props: WidgetSnapshot, env: WidgetEnvironment) {
   if (family === 'accessoryInline') {
     return (
       <Text modifiers={[widgetURL(props.url)]}>
-        {props.phase === 'ready' ? 'Placebo: verdict ready' : `${props.instruction} · reveal in ${countdown}`}
+        {props.phase === 'ready'
+          ? 'Placebo: verdict ready'
+          : props.phase === 'paused'
+            ? 'Placebo: run paused'
+            : `${props.instruction} · reveal in ${countdown}`}
       </Text>
     );
   }
@@ -51,7 +55,7 @@ function TodayWidgetLayout(props: WidgetSnapshot, env: WidgetEnvironment) {
       <Gauge
         value={props.progress}
         modifiers={[widgetURL(props.url)]}
-        currentValueLabel={<Text>{props.phase === 'ready' ? '!' : `${props.daysToVerdict}`}</Text>}
+        currentValueLabel={<Text>{props.phase === 'ready' ? '!' : props.phase === 'paused' ? '–' : `${props.daysToVerdict}`}</Text>}
       >
         <Text>days</Text>
       </Gauge>
@@ -64,7 +68,11 @@ function TodayWidgetLayout(props: WidgetSnapshot, env: WidgetEnvironment) {
         <Text modifiers={[font({ size: 13, weight: 'bold' })]}>{props.instruction}</Text>
         <Text modifiers={[font({ size: 12 })]}>{props.nudge}</Text>
         <Text modifiers={[font({ size: 12 })]}>
-          {props.phase === 'ready' ? 'Verdict ready' : `Reveal in ${countdown} · ${props.streak}d streak`}
+          {props.phase === 'ready'
+            ? 'Verdict ready'
+            : props.phase === 'paused'
+              ? 'Run paused'
+              : `Reveal in ${countdown} · ${props.streak}d streak`}
         </Text>
       </VStack>
     );
@@ -112,10 +120,10 @@ function TodayWidgetLayout(props: WidgetSnapshot, env: WidgetEnvironment) {
   const reveal = (
     <VStack alignment="leading" spacing={2}>
       <Text modifiers={[font({ size: 11, weight: 'semibold' }), foregroundStyle(muted)]}>
-        {props.phase === 'ready' ? 'YOUR VERDICT' : 'VERDICT IN'}
+        {props.phase === 'ready' ? 'YOUR VERDICT' : props.phase === 'paused' ? 'YOUR RUN' : 'VERDICT IN'}
       </Text>
       <Text modifiers={[font({ size: 28, weight: 'heavy', design: 'rounded' }), foregroundStyle(ink)]}>
-        {props.phase === 'ready' ? 'Ready' : countdown}
+        {props.phase === 'ready' ? 'Ready' : props.phase === 'paused' ? 'Paused' : countdown}
       </Text>
       {props.verdictDateLabel ? (
         <HStack spacing={4}>
@@ -142,7 +150,7 @@ function TodayWidgetLayout(props: WidgetSnapshot, env: WidgetEnvironment) {
         <HStack spacing={4}>
           <Image systemName="lock.fill" size={10} color={muted} />
           <Text modifiers={[font({ size: 11, weight: 'semibold' }), foregroundStyle(muted)]}>
-            {props.phase === 'ready' ? 'Verdict ready' : `Reveal in ${countdown}`}
+            {props.phase === 'ready' ? 'Verdict ready' : props.phase === 'paused' ? 'Run paused' : `Reveal in ${countdown}`}
           </Text>
         </HStack>
       </VStack>

@@ -8,7 +8,8 @@ import { experiments, scheduleDays } from '@/db/repositories';
 import { DEFAULT_CHECK_IN_WINDOW, type CheckInWindow } from '@/features/daily-loop';
 import { loadGameState, localDay } from '@/features/gamification';
 import type { NativeWidgetBridge } from './bridge';
-import { buildTimeline, planLiveActivity, type LiveActivityPlan } from './model';
+import { activePause } from '@/features/safety/store';
+import { buildTimeline, pausedSnapshot, planLiveActivity, type LiveActivityPlan } from './model';
 
 function localMidnightMs(now: Date): number {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -26,6 +27,19 @@ export async function syncWidgets(
     return { entries: 0, liveActivity: 'none' };
   }
   const experiment = experiments.listByStatus(db, 'active')[0] ?? null;
+  if (experiment && activePause(db, experiment.id)) {
+    // Paused after a bad reaction: no dose, no check-in countdown.
+    bridge.setTimeline([{ dateMs: localMidnightMs(now), props: pausedSnapshot() }]);
+    if (bridge.runningActivityCount() > 0) {
+      try {
+        await bridge.endActivities();
+      } catch {
+        // Live Activities may be off; nothing to end.
+      }
+      return { entries: 1, liveActivity: 'end' };
+    }
+    return { entries: 1, liveActivity: 'none' };
+  }
   const schedule = experiment ? scheduleDays.listForExperiment(db, experiment.id) : [];
   const game = loadGameState(db, now);
   const entries = buildTimeline(

@@ -19,6 +19,7 @@ import { Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
 import { startKeyholderRun } from '@/features/referral';
+import { track } from '@/features/analytics';
 
 /**
  * Screen 3 — Experiment setup.
@@ -108,14 +109,18 @@ export function ExperimentSetupScreen() {
     try {
       const db = getDatabase();
       const deps = { experimentId: newExperimentId(), seed: newScheduleSeed() };
+      // Funnel: onboarding finished. Only the run's shape, never the supplement or goal.
+      const started = { blinding_mode: selections.blindingMode, length_days: selections.lengthDays };
       if (selections.blindingMode === 'sealed') {
         // Seal with a fresh key and hand it to a keyholder next.
         startKeyholderRun(db, selections, deps, state.keyholderFromName);
+        track('experiment_started', started);
         reset();
         router.replace('/keyholder-invite');
         return;
       }
       createExperiment(db, selections, deps);
+      track('experiment_started', started);
       reset();
       router.replace('/');
     } catch (err) {
