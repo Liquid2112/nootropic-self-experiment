@@ -3,7 +3,6 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import { useRouter } from 'expo-router';
 import { Card, Chip, Scaffold, Text, colors, radii, spacing } from '@/ui';
 import {
-  DICTIONARY_ENTRIES,
   DICTIONARY_FILTERS,
   EVIDENCE_LABELS,
   UNREGULATED_WARNING,
@@ -18,6 +17,9 @@ import { EvidencePill } from '@/features/dictionary/EvidencePill';
  * separate gray-market section behind a warning. Every row opens the entry's
  * detail page with mechanism, claims, research and citations.
  */
+const ALL = searchDictionary('');
+const TOTAL = ALL.supplements.length + ALL.unregulated.length;
+
 export default function DictionaryScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -32,7 +34,7 @@ export default function DictionaryScreen() {
       <View style={styles.header}>
         <Text variant="largeTitle">Library</Text>
         <Text tone="secondary">
-          {`${DICTIONARY_ENTRIES.length} nootropics: what they claim, and what the research actually shows.`}
+          {`${TOTAL} nootropics: what they claim, and what the research actually shows.`}
         </Text>
       </View>
 

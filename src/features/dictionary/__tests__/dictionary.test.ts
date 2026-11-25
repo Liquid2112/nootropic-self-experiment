@@ -101,3 +101,13 @@ describe('searchDictionary', () => {
     expect(getEntryForSupplement('dark-chocolate-flavanols')?.id).toBe('cocoa-flavanols');
   });
 });
+
+describe('gray-market kill switch', () => {
+  it('hides unregulated entries from search and lookup when off', () => {
+    const { unregulated, supplements } = searchDictionary('', 'all', DICTIONARY_ENTRIES, false);
+    expect(unregulated).toHaveLength(0);
+    expect(supplements.length).toBeGreaterThan(0);
+    expect(getDictionaryEntry('modafinil', false)).toBeUndefined();
+    expect(getDictionaryEntry('creatine', false)?.id).toBe('creatine');
+  });
+});

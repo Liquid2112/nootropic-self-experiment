@@ -18,4 +18,11 @@ export const TERMS_OF_USE_URL = 'https://www.apple.com/legal/internet-services/i
 export const AMAZON_ASSOCIATE_TAG = 'REPLACE_WITH_TAG-20';
 
 /** Required Amazon Associates disclosure, shown next to every affiliate link. */
-export const AMAZON_DISCLOSURE = 'As an Amazon Associate we earn from qualifying purchases.';
+export const AMAZON_DISCLOSURE = 'As an Amazon Associate I earn from qualifying purchases.';
+
+/**
+ * Kill switch for the gray-market / prescription section of the Library. Flip
+ * to false if App Review objects (guideline 1.4.3); the entries then disappear
+ * from search, filters and direct links.
+ */
+export const SHOW_UNREGULATED_ENTRIES = true;

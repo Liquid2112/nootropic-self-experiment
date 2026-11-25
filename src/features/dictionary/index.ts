@@ -1,3 +1,4 @@
+import { SHOW_UNREGULATED_ENTRIES } from '@/config/links';
 import { DICTIONARY_ENTRIES } from './entries';
 import type { DictionaryEntry, DictionaryGoal, EvidenceGrade } from './types';
 
@@ -8,7 +9,7 @@ export { amazonAffiliateUrl } from './affiliate';
 /** Filter chips on the dictionary list. 'all' and 'unregulated' are not goals. */
 export type DictionaryFilter = 'all' | DictionaryGoal | 'unregulated';
 
-export const DICTIONARY_FILTERS: { id: DictionaryFilter; label: string }[] = [
+const ALL_FILTERS: { id: DictionaryFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'focus', label: 'Focus' },
   { id: 'memory', label: 'Memory' },
@@ -18,6 +19,10 @@ export const DICTIONARY_FILTERS: { id: DictionaryFilter; label: string }[] = [
   { id: 'longevity', label: 'Longevity' },
   { id: 'unregulated', label: 'Gray market' },
 ];
+
+export const DICTIONARY_FILTERS = SHOW_UNREGULATED_ENTRIES
+  ? ALL_FILTERS
+  : ALL_FILTERS.filter((f) => f.id !== 'unregulated');
 
 export const EVIDENCE_LABELS: Record<EvidenceGrade, string> = {
   strong: 'Strong evidence',
@@ -67,16 +72,22 @@ export function searchDictionary(
   query: string,
   filter: DictionaryFilter = 'all',
   entries: DictionaryEntry[] = DICTIONARY_ENTRIES,
+  showUnregulated: boolean = SHOW_UNREGULATED_ENTRIES,
 ): { supplements: DictionaryEntry[]; unregulated: DictionaryEntry[] } {
-  const hits = entries.filter((e) => matchesQuery(e, query) && matchesFilter(e, filter));
+  const hits = entries.filter(
+    (e) => (showUnregulated || e.kind !== 'unregulated') && matchesQuery(e, query) && matchesFilter(e, filter),
+  );
   return {
     supplements: hits.filter((e) => e.kind === 'supplement').sort(byName),
     unregulated: hits.filter((e) => e.kind === 'unregulated').sort(byName),
   };
 }
 
-export function getDictionaryEntry(id: string): DictionaryEntry | undefined {
-  return DICTIONARY_ENTRIES.find((e) => e.id === id);
+export function getDictionaryEntry(
+  id: string,
+  showUnregulated: boolean = SHOW_UNREGULATED_ENTRIES,
+): DictionaryEntry | undefined {
+  return DICTIONARY_ENTRIES.find((e) => e.id === id && (showUnregulated || e.kind !== 'unregulated'));
 }
 
 /** Dictionary entry for a seeded experiment supplement, if one exists. */
