@@ -168,7 +168,7 @@ export function GoalPickerScreen() {
 
 const styles = StyleSheet.create({
   stepHeader: { gap: 6 },
-  step: { fontSize: 13, fontFamily: fonts.semibold, color: brand.tang },
+  step: { fontSize: 13, fontFamily: fonts.semibold, color: brand.tangInk },
   title: { fontSize: 30, lineHeight: 36, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.ink },
   subtitle: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 13,
     fontFamily: fonts.regular,
-    color: brand.faint,
+    color: brand.muted,
     textAlign: 'center',
   },
 });

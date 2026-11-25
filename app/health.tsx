@@ -176,5 +176,5 @@ const styles = StyleSheet.create({
   muted: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: brand.muted },
   big: { fontFamily: fonts.display, fontSize: 34, color: brand.ink },
   note: { fontFamily: fonts.medium, fontSize: 14, color: brand.ink, textAlign: 'center' },
-  fine: { fontFamily: fonts.regular, fontSize: 12, color: brand.faint, textAlign: 'center' },
+  fine: { fontFamily: fonts.regular, fontSize: 12, color: brand.muted, textAlign: 'center' },
 });

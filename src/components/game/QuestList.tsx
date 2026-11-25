@@ -60,6 +60,6 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
   titleDone: { color: brand.muted },
   xp: { backgroundColor: brand.sunSoft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
-  xpText: { fontSize: 12, fontFamily: fonts.bold, color: brand.sunDeep },
-  doneText: { fontSize: 13, fontFamily: fonts.semibold, color: brand.mint },
+  xpText: { fontSize: 12, fontFamily: fonts.bold, color: brand.sunInk },
+  doneText: { fontSize: 13, fontFamily: fonts.semibold, color: brand.mintInk },
 });

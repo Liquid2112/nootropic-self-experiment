@@ -302,7 +302,7 @@ function Section({
 
 const styles = StyleSheet.create({
   stepHeader: { gap: 6 },
-  step: { fontSize: 13, fontFamily: fonts.semibold, color: brand.tang },
+  step: { fontSize: 13, fontFamily: fonts.semibold, color: brand.tangInk },
   title: { fontSize: 30, lineHeight: 36, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.ink },
   summaryCard: {
     flexDirection: 'row',
@@ -350,5 +350,5 @@ const styles = StyleSheet.create({
     color: brand.ink,
     backgroundColor: brand.white,
   },
-  errorText: { fontSize: 12, fontFamily: fonts.medium, color: brand.rose },
+  errorText: { fontSize: 12, fontFamily: fonts.medium, color: brand.roseInk },
 });

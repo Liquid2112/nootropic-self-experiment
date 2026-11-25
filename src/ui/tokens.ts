@@ -38,7 +38,19 @@ export const brand = {
   sunSoft: '#FFF2CF',
   rose: '#E8384F',
   muted: '#6D6878',
-  faint: '#A9A3B3',
+  /** Icons, chevrons and borders only (3:1 non-text contrast). Never small text: use `muted`. */
+  faint: '#857F8F',
+  /*
+   * Text-safe partners of the signature colors. Tang, mint, sun and rose are
+   * fills; as small text on paper or white they fall under WCAG's 4.5:1. Use
+   * the `*Ink` variant whenever the color is the text itself (eyebrows, links,
+   * "Done", XP pills, errors). Each is >= 4.5:1 on paper, white and its own
+   * `*Soft` tint.
+   */
+  tangInk: '#BF3517',
+  mintInk: '#137A4A',
+  sunInk: '#8A5D00',
+  roseInk: '#C82640',
 } as const;
 
 /** Font family names, as registered by `useFonts` in the root layout. */
@@ -186,7 +198,8 @@ const lightColors: ThemeColors = {
   surfaceRaised: brand.white,
   textPrimary: brand.ink,
   textSecondary: brand.muted,
-  textTertiary: brand.faint,
+  // Tertiary text must still read at 4.5:1, so it shares `muted`; `faint` is for icons.
+  textTertiary: brand.muted,
   border: brand.line,
   accent: brand.tang,
   accentPressed: brand.tangDeep,
@@ -194,7 +207,7 @@ const lightColors: ThemeColors = {
   accentMuted: brand.tangSoft,
   success: brand.mint,
   warning: brand.sun,
-  danger: brand.rose,
+  danger: brand.roseInk,
   fill: brand.paperDeep,
   scrim: 'rgba(21, 19, 28, 0.5)',
 };

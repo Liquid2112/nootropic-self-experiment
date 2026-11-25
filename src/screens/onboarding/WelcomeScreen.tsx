@@ -35,6 +35,14 @@ export function WelcomeScreen() {
       testID="welcome-screen"
       footer={
         <View style={styles.footer}>
+          {!canContinue ? (
+            <View style={styles.gateHint} accessibilityLiveRegion="polite">
+              <Icon name="check" size={14} color={brand.muted} strokeWidth={2.6} />
+              <Text style={styles.gateHintText}>
+                {notMedical || adult ? 'One more box to tick above' : 'Tick the two boxes above to start'}
+              </Text>
+            </View>
+          ) : null}
           <Button
             label="Start my experiment"
             testID="welcome-continue"
@@ -184,6 +192,8 @@ function BenefitRow({ icon, tint, title, body, last }: BenefitRowProps) {
 }
 
 const styles = StyleSheet.create({
+  gateHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingBottom: 6 },
+  gateHintText: { fontSize: 13, lineHeight: 18, fontFamily: fonts.medium, color: brand.muted },
   footer: { gap: 4 },
   secondary: {
     flexDirection: 'row',
