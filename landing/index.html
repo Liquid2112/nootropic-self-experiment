@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Placebo Waitlist</title>
+<meta name="description" content="Placebo runs a blinded on/off experiment on the supplement you already take, and tells you if it actually works. Join the waitlist.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion, playful but honest: a lab result you can trust
+   IDEA a sealed 28-day lab schedule: two identical cups, days you can't peek at, one reveal
+   PICTURE Brian beside a 28-cell sealed calendar that unlocks on verdict day
+   COLOUR paper #F7F4EE ground, ink #15131C, tang #FF5A36 and lilac #B7A6FF (the brain's halves), mint for done
+   TYPE Bricolage Grotesque 800 (brand display) + Inter
+   LAYOUT laptop: title left, calendar card right; phone: title, Brian, calendar, form */
+:root{color-scheme:light dark;--bg:light-dark(#F7F4EE,#15131C);--ink:light-dark(#15131C,#F7F4EE);--card:light-dark(#FFFFFF,#201D29);--line:light-dark(#E7E1D6,#34303F);--muted:light-dark(#6D6878,#A9A3B3);--tang:#FF5A36;--tangdeep:light-dark(#E5431F,#FF7A5C);--lilac:#B7A6FF;--lilacsoft:light-dark(#EEEAFF,#2A2540);--mint:#1FAE6B;--seal:light-dark(#EFEAE1,#2A2733)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.02em;line-height:1.05;margin:0}
+h1{font-weight:800;font-size:clamp(40px,6.4vw,76px)}
+h2{font-weight:800;font-size:clamp(30px,4vw,46px)}
+h3{font-weight:700;font-size:21px}
+p{margin:0}
+a{color:inherit}
+.band{padding-block:clamp(36px,6vw,88px);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:calc(env(safe-area-inset-top,0px) + 18px);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px));max-width:calc(1180px + 10vw);margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px;font:800 26px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.03em;text-decoration:none}
+.navcta{font-weight:600;font-size:15px;text-decoration:none;border:1.5px solid var(--ink);border-radius:999px;padding:9px 16px;white-space:nowrap}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:center}
+.lede{font-size:clamp(18px,1.6vw,21px);color:var(--muted);margin-top:20px;max-width:34em}
+.form{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;max-width:520px}
+.form input{flex:1 1 220px;font:16px Inter,sans-serif;padding:15px 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+.form input:focus{outline:2px solid var(--lilac);outline-offset:1px}
+.btn{font:700 16px Inter,sans-serif;padding:15px 24px;border-radius:999px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--tangdeep);color:#fff}
+.btn:focus-visible{outline:2px solid var(--tang);outline-offset:2px}
+.fine{font-size:13px;color:var(--muted);margin-top:12px}
+.msg{font-weight:600;margin-top:12px}
+.msg.ok{color:var(--mint)}.msg.err{color:var(--tangdeep)}
+.lab{background:var(--card);border:1.5px solid var(--line);border-radius:28px;padding:clamp(18px,2.4vw,28px);position:relative}
+.labtop{display:flex;align-items:center;gap:14px}
+.labtop svg{flex:none}
+.labtitle{font:700 19px/1.2 "Bricolage Grotesque",sans-serif}
+.labsub{font-size:14px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:18px}
+.day{aspect-ratio:1;border-radius:10px;background:var(--seal);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--muted)}
+.day.done{background:color-mix(in srgb,var(--mint) 20%,var(--card));color:var(--mint)}
+.day.today{outline:2px solid var(--ink);color:var(--ink)}
+.day.base{background:var(--lilacsoft);color:var(--ink)}
+.day.reveal{background:var(--ink);color:var(--bg)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.seal{display:flex;align-items:center;gap:10px;margin-top:16px;padding:12px 14px;border-radius:14px;background:var(--lilacsoft);font-size:14px;font-weight:500}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:36px}
+.step{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:22px;display:grid;gap:10px;align-content:start}
+.step svg{width:100%;height:120px;display:block}
+.step p{color:var(--muted);font-size:16px}
+.when{font-size:14px;font-weight:600;color:var(--tangdeep)}
+.dark{background:#15131C;color:#F7F4EE}
+.verdict{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,64px);align-items:center}
+.vcard{background:#201D29;border-radius:28px;padding:26px;border:1.5px solid #34303F}
+.vrow{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #34303F;font-size:15px}
+.vrow b{white-space:nowrap}
+.vbig{font:800 clamp(44px,6vw,64px)/1 "Bricolage Grotesque",sans-serif;color:var(--tang);margin:8px 0 4px}
+.dark p.sub{color:#A9A3B3;margin-top:16px;font-size:18px}
+.dark ul{margin:20px 0 0;padding:0;list-style:none;display:grid;gap:12px}
+.dark li{display:flex;gap:12px;align-items:flex-start}
+.dark li::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--tang);margin-top:9px}
+.faq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 40px;margin-top:28px}
+.faq h3{font-size:19px;margin-bottom:6px}
+.faq p{color:var(--muted);font-size:16px}
+.close{text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
+footer{border-top:1.5px solid var(--line);font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between}
+footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
+@media(max-width:860px){.hero,.verdict{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:minmax(0,1fr)}.close{grid-template-columns:minmax(0,1fr)}.close svg{display:none}}
+@media(max-width:600px){.faq{grid-template-columns:minmax(0,1fr)}.grid{gap:4px}.day{border-radius:7px;font-size:11px}.navcta{padding:8px 13px;font-size:14px}}
+@media(prefers-reduced-motion:no-preference){.bob{animation:bob 3.2s ease-in-out infinite;transform-origin:60px 100px}@keyframes bob{50%{transform:translateY(-4px) rotate(2deg)}}}
+</style>
+<script>
+  // PostHog: page views and waitlist signups only. No autocapture, no session
+  // recording, no cookies (memory persistence), and never the email address.
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_sxBKZUfyEspSVe5wo2tmEmAobAoq8ZgtyTyyhHZdSi3X', {
+    api_host: 'https://us.i.posthog.com',
+    person_profiles: 'identified_only',
+    persistence: 'memory',
+    autocapture: false,
+    capture_pageview: true,
+    capture_pageleave: false,
+    disable_session_recording: true,
+  });
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="brian">
+      <ellipse cx="60" cy="104" rx="30" ry="4.5" fill="#15131C" opacity=".1"/>
+      <g class="bob"><g transform="rotate(-6 60 55)">
+        <path d="M44 88 q0 8 -8 8 h-4 M76 88 q0 8 8 8 h4" stroke="#15131C" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <path d="M60 14 C48 8 34 12 30 22 C18 22 10 34 14 44 C6 52 8 66 18 70 C18 82 32 90 44 86 C50 92 58 92 60 90 Z" fill="#FF5A36" stroke="#15131C" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M60 14 C72 8 86 12 90 22 C102 22 110 34 106 44 C114 52 112 66 102 70 C102 82 88 90 76 86 C70 92 62 92 60 90 Z" fill="#B7A6FF" stroke="#15131C" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M30 22 q6 6 2 14 M18 48 q8 -2 12 6 M90 22 q-6 6 -2 14 M102 48 q-8 -2 -12 6" stroke="#15131C" stroke-width="3" stroke-linecap="round" fill="none" opacity=".55"/>
+        <path d="M36 30 q6 -8 16 -9" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none" opacity=".6"/>
+        <ellipse cx="38" cy="62" rx="6" ry="3.5" fill="#fff" opacity=".35"/><ellipse cx="82" cy="62" rx="6" ry="3.5" fill="#fff" opacity=".45"/>
+        <ellipse cx="48" cy="52" rx="5" ry="6" fill="#15131C"/><circle cx="49.6" cy="49.6" r="1.7" fill="#fff"/>
+        <ellipse cx="72" cy="52" rx="5" ry="6" fill="#15131C"/><circle cx="73.6" cy="49.6" r="1.7" fill="#fff"/>
+        <path d="M52 64 q8 7 16 0" stroke="#15131C" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      </g></g>
+    </g>
+    <g id="mark"><path d="M48 16 C38 10 26 14 23 23 C13 24 7 34 10 43 C4 50 6 62 14 66 C14 77 26 85 37 81 C42 87 47 87 48 86 Z" fill="#FF5A36"/><path d="M52 16 C62 10 74 14 77 23 C87 24 93 34 90 43 C96 50 94 62 86 66 C86 77 74 85 63 81 C58 87 53 87 52 86 Z" fill="#B7A6FF"/></g>
+  </defs>
+</svg>
+
+<nav>
+  <a class="logo" href="#top"><svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><use href="#mark"/></svg>placebo</a>
+  <a class="navcta" href="#join">Join the waitlist</a>
+</nav>
+
+<main id="top">
+<section class="band">
+  <div class="wrap hero">
+    <div>
+      <h1>Does your supplement actually work?</h1>
+      <p class="lede">Placebo runs a blinded on/off experiment on the stack you already take. A 90-second brain check-in each day, results sealed until the end, and a real verdict in 4 weeks.</p>
+      <form class="form" id="join" novalidate>
+        <input id="email" type="email" name="email" autocomplete="email" placeholder="you@example.com" aria-label="Email address" required>
+        <button class="btn" type="submit">Get early access</button>
+      </form>
+      <p class="msg" id="msg" role="status" hidden></p>
+      <p class="fine">One email when the app is ready, nothing else. <a href="https://github.com/Liquid2112/nootropic-self-experiment/blob/main/docs/privacy-policy.md">Privacy policy</a></p>
+    </div>
+    <div class="lab" aria-label="A sample 4-week Placebo experiment">
+      <div class="labtop">
+        <svg width="76" height="70" viewBox="0 0 120 110" aria-hidden="true"><use href="#brian"/></svg>
+        <div><div class="labtitle">Your experiment, week 2</div><div class="labsub">Example run · Lion’s mane · focus</div></div>
+      </div>
+      <div class="grid" id="cal"></div>
+      <div class="legend"><span><i style="background:var(--lilacsoft)"></i>Baseline</span><span><i style="background:color-mix(in srgb,var(--mint) 20%,var(--card))"></i>Checked in</span><span><i style="background:var(--seal)"></i>Sealed</span><span><i style="background:var(--ink)"></i>Verdict</span></div>
+      <div class="seal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Which days were real is hidden from you until the reveal.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="wrap">
+    <h2>How the blind test works</h2>
+    <div class="steps">
+      <article class="step">
+        <svg viewBox="0 0 240 120" aria-hidden="true"><ellipse cx="120" cy="108" rx="90" ry="6" fill="var(--line)"/><path d="M58 30 h44 l-6 76 h-32 z" fill="var(--tang)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><path d="M138 30 h44 l-6 76 h-32 z" fill="var(--lilac)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><text x="80" y="76" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="26" fill="var(--ink)">A</text><text x="160" y="76" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="26" fill="var(--ink)">B</text></svg>
+        <div class="when">Day 1</div>
+        <h3>Two identical cups</h3>
+        <p>Fill one with your capsule and one with a look-alike, or have a friend do it. The app shuffles which cup you take each day.</p>
+      </article>
+      <article class="step">
+        <svg viewBox="0 0 240 120" aria-hidden="true"><rect x="40" y="14" width="160" height="96" rx="18" fill="#15131C"/><circle cx="150" cy="56" r="18" fill="var(--tang)"/><rect x="58" y="88" width="124" height="5" rx="2.5" fill="#34303F"/><rect x="58" y="88" width="74" height="5" rx="2.5" fill="var(--lilac)"/><text x="64" y="46" font-family="Inter" font-weight="700" font-size="15" fill="#F7F4EE">7 / 12</text></svg>
+        <div class="when">Every day</div>
+        <h3>A 90-second check-in</h3>
+        <p>Tap when the dot appears, hold a few things in mind, rate your mood and energy. Streaks and quests keep you going.</p>
+      </article>
+      <article class="step">
+        <svg viewBox="0 0 240 120" aria-hidden="true"><rect x="54" y="20" width="132" height="88" rx="16" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/><path d="M76 84 L102 66 L124 74 L162 42" stroke="var(--tang)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="162" cy="42" r="7" fill="var(--tang)"/><path d="M76 92 h88" stroke="var(--line)" stroke-width="3"/></svg>
+        <div class="when">Week 4</div>
+        <h3>The sealed verdict</h3>
+        <p>We unblind your days and compare them properly. You see whether it helped, by how much, and how sure we are.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="band dark">
+  <div class="wrap verdict">
+    <div>
+      <h2>An answer, not a vibe</h2>
+      <p class="sub">Feeling a supplement work isn’t the same as it working. Placebo is powerful, which is exactly why we named the app after it.</p>
+      <ul>
+        <li>Built on the method researchers use: randomized on and off days, blinded to you.</li>
+        <li>Your data stays on your phone. No account needed to run an experiment.</li>
+        <li>A shareable result card when you finish.</li>
+      </ul>
+    </div>
+    <div class="vcard" aria-label="Example verdict card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-weight:600;color:#A9A3B3">Example verdict</span><svg width="56" height="52" viewBox="0 0 120 110" aria-hidden="true"><use href="#brian"/></svg></div>
+      <div class="vbig">No clear effect</div>
+      <p style="color:#A9A3B3;margin-bottom:16px">On your capsule days, reaction time moved by less than the day-to-day noise.</p>
+      <div class="vrow"><span>Days logged</span><b>27 of 28</b></div>
+      <div class="vrow"><span>Reaction time, on vs off</span><b>−4 ms</b></div>
+      <div class="vrow"><span>Range we’re confident in</span><b>−15 to +7 ms</b></div>
+      <div class="vrow"><span>Money saved if you stop</span><b>$420 a year</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Questions</h2>
+    <div class="faq">
+      <div><h3>Which supplements can I test?</h3><p>Anything you take as a capsule or powder you can hide in a cup: lion’s mane, L-theanine, creatine, magnesium, and more. Effects that build over weeks get a longer design.</p></div>
+      <div><h3>Is it medical advice?</h3><p>No. Placebo measures how you perform on simple tests. It doesn’t diagnose or treat anything. Talk to a doctor before changing medication.</p></div>
+      <div><h3>What does it cost?</h3><p>The reaction test is free. Running experiments is a subscription with a free trial, and we remind you before the trial ends.</p></div>
+      <div><h3>When does it launch?</h3><p>Soon on iPhone and Android. Waitlist members get in first.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="wrap close lab">
+    <div>
+      <h2>Stop guessing</h2>
+      <p class="lede" style="margin-top:12px">Find out in 4 weeks whether your stack is worth the money.</p>
+      <form class="form" id="join2" novalidate>
+        <input id="email2" type="email" name="email" autocomplete="email" placeholder="you@example.com" aria-label="Email address" required>
+        <button class="btn" type="submit">Join the waitlist</button>
+      </form>
+      <p class="msg" id="msg2" role="status" hidden></p>
+    </div>
+    <svg width="180" height="165" viewBox="0 0 120 110" aria-hidden="true"><use href="#brian"/></svg>
+  </div>
+</section>
+</main>
+
+<footer class="band" style="padding-block:28px">
+  <div class="wrap">
+    <span>© 2026 Placebo</span>
+    <nav><a href="https://github.com/Liquid2112/nootropic-self-experiment/blob/main/docs/privacy-policy.md">Privacy policy</a><a href="#join">Waitlist</a></nav>
+  </div>
+</footer>
+
+<script>
+{
+  // Where signups go (Formspree). If emptied, the page
+  // then says plainly that nothing was saved. Formspree-style endpoints that
+  // accept a JSON POST work as is.
+  const FORM_ENDPOINT = 'https://formspree.io/f/xbgoqvkk';
+
+  const cal = document.getElementById('cal');
+  const today = 11;
+  cal.innerHTML = Array.from({ length: 28 }, (_, i) => {
+    const d = i + 1;
+    let cls = 'day';
+    if (d <= 3) cls += ' base';
+    else if (d < today) cls += ' done';
+    else if (d === today) cls += ' today';
+    if (d === 28) cls = 'day reveal';
+    const label = d === 28 ? 'Verdict' : d <= 3 ? 'Baseline' : 'Sealed';
+    return `<div class="${cls}" title="Day ${d}: ${label}">${d}</div>`;
+  }).join('');
+
+  const valid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+
+  function wire(formId, inputId, msgId) {
+    const form = document.getElementById(formId);
+    const input = document.getElementById(inputId);
+    const msg = document.getElementById(msgId);
+    const say = (text, ok) => { msg.textContent = text; msg.className = 'msg ' + (ok ? 'ok' : 'err'); msg.hidden = false; };
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = input.value.trim();
+      if (!valid(email)) { say('That email doesn’t look right. Check it and try again.', false); return; }
+      if (!FORM_ENDPOINT) { say('Preview only: signups aren’t connected yet, so nothing was saved.', false); return; }
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      try {
+        const res = await fetch(FORM_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ email, source: formId }) });
+        if (!res.ok) throw new Error(String(res.status));
+        form.hidden = true;
+        try { window.posthog?.capture('waitlist_signup', { form: formId }); } catch {}
+        say('You’re on the list. We’ll email you once, when Placebo is ready.', true);
+      } catch {
+        say('Couldn’t save that just now. Try again in a minute.', false);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+  wire('join', 'email', 'msg');
+  wire('join2', 'email2', 'msg2');
+}
+</script>
+</body>
+</html>
