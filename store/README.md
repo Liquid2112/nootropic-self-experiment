@@ -33,8 +33,32 @@ Developer account is approved.
   and the description's last line.
 - **Support URL** (required): the landing page, once it has a public address.
   Add it as `supportUrl` in `store.config.json`.
-- **placebo.app**: see app-review.md #8.
-- **Gray-market library section**: see app-review.md #2.
+- **Domain**: not bought yet. When it is, set `LINK_DOMAIN` in
+  `src/config/domain.ts` (everything else derives from it) and follow
+  "Domain setup" below.
+
+## Domain setup (about 20 minutes)
+
+1. **Buy the domain on Cloudflare** (dash.cloudflare.com > Domain
+   Registration > Register). Cloudflare sells at cost and the email step below
+   is then automatic. `.app` domains are HTTPS-only, which Vercel handles.
+2. **Point it at the landing page.** In Vercel, open the landing project >
+   Settings > Domains > add the domain. Vercel shows the DNS records to add;
+   add them in Cloudflare > DNS with the proxy turned **off** (grey cloud), or
+   Vercel can't issue the certificate.
+3. **Create support@ with Cloudflare Email Routing.** Cloudflare > the domain >
+   Email > Email Routing > Get started. Add the custom address `support`,
+   set the destination to your personal inbox, then click the verification
+   link Cloudflare emails you. Let it add the MX and SPF records it offers.
+   Send a test email to support@ and check it arrives. This only receives; to
+   reply *as* support@ later, add an SMTP sender (e.g. Gmail "Send mail as"
+   with a transactional mail service).
+4. **Tell Claude the domain.** Then: `LINK_DOMAIN` changes if it's not
+   placebo.app, the privacy policy gets the support email and a `/privacy`
+   page on the landing site, a `/support` page goes up, and
+   `store.config.json` gets `privacyPolicyUrl` and `supportUrl`.
+5. **After the Apple Developer account exists**: put the Team ID into
+   `landing/.well-known/apple-app-site-association` (see landing/README.md).
 
 ## Regenerating the screenshots
 

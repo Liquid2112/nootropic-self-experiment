@@ -28,7 +28,7 @@ rejection reason.
 |---|---|
 | Profanity or crude humor | None |
 | Horror or fear themes | None |
-| Alcohol, tobacco or drug use or references | **Infrequent/Mild** (library mentions nicotine gum, caffeine and prescription drugs like modafinil; becomes **Frequent** if the gray-market section ships, see app-review.md #2) |
+| Alcohol, tobacco or drug use or references | **Infrequent/Mild** (the library covers caffeine and supplements like kava; the prescription and gray-market section is hidden in 1.0. Re-answer, likely **Frequent**, when it's turned back on) |
 | Mature or suggestive themes | None |
 
 **Medical or wellness**
@@ -46,8 +46,8 @@ Apple computes something around 13+ or 16+ from these answers. Then set the
 
 ## Why 18+ and not the computed rating
 
-- Supplements and prescription stimulants aren't for minors, and the library
-  talks about both.
+- Supplements aren't for minors, and the gray-market section (prescription
+  stimulants, racetams) comes back in a later update.
 - The privacy policy already says 18+, and the rating should match it.
 - It costs us nothing: the target audience is college students and adults, and
   TikTok traffic under 18 would be users we shouldn't have anyway.

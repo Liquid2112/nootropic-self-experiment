@@ -8,13 +8,13 @@ needs a decision. Guideline numbers refer to the App Review Guidelines.
 | # | Risk | Guideline | Level | Status |
 |---|---|---|---|---|
 | 1 | Health or efficacy claims about supplements | 1.4.1, 2.3.1 | Medium | Handled in copy, keep it that way |
-| 2 | Library profiles of prescription and gray-market compounds | 1.4.3, 1.4.1 | **High** | **Needs a decision** |
+| 2 | Library profiles of prescription and gray-market compounds | 1.4.3, 1.4.1 | High | Hidden for 1.0 (decided) |
 | 3 | Reviewer can't reach the verdict (needs 21+ days) | 2.1 | Medium | Handled by review notes + attachments |
 | 4 | Subscription disclosure | 3.1.2 | Low | Paywall already compliant |
 | 5 | HealthKit use and disclosure | 2.5.1, 5.1.3 | Low | Handled |
 | 6 | Privacy label vs. what the app sends | 5.1.1, 5.1.2 | Low | See privacy-label.md; manifest updated in this PR |
 | 7 | Affiliate shopping links in the library | 3.1.1, 3.2.2 | Low | Fine for physical goods |
-| 8 | Universal links to placebo.app | 2.1 | Medium | **Needs a domain** |
+| 8 | Universal links need a domain we own | 2.1 | Medium | **Domain being bought**; link domain is now one constant |
 | 9 | iPad | 2.4.1 | Low | Made iPhone-only in this PR |
 
 ### 1. Health and efficacy claims (1.4.1, 2.3.1)
@@ -44,15 +44,20 @@ it's the most likely thing a reviewer flags: a health app that lists research
 chemicals can read as facilitating drug use, and it also pushes the age rating
 up (see age-rating.md).
 
-Options:
-- **A. Ship 1.0 without the gray-market section (recommended).** Hide the
+**Decision (Shubh, 2026-11-25): hidden for 1.0.** `SHOW_UNREGULATED_ENTRIES`
+in `src/config/links.ts` is now `false`, so the 29 entries are gone from search,
+filters and direct links. Turn it on in a later update, once approved, and
+update the age rating answers when you do.
+
+Options that were considered:
+- **A. Ship 1.0 without the gray-market section (chosen).** Hide the
   "unregulated" and "prescription" kinds behind a remote or build flag and turn
   them on in 1.1 once the app is approved and has a track record. Zero cost to
   the core loop; the 79 supplements are what people test.
 - B. Ship it as is and explain it in the review notes (below). Probably fine,
   but a rejection costs 1 to 3 days at launch.
 
-The review notes below are written to work for either choice.
+
 
 ### 3. Reviewer can't see the verdict (2.1)
 
@@ -100,14 +105,14 @@ in-app purchase. They open in the system browser and carry an affiliate
 disclosure. They must never appear on gray-market entries or verdicts (already
 enforced in `affiliate.ts`).
 
-### 8. placebo.app
+### 8. Link domain
 
-`app.json` declares `applinks:placebo.app` and the invite, keyholder and
-referral links use `https://placebo.app/...`. If we don't control that domain
-and serve an `apple-app-site-association` file there, every shared link breaks,
-and a reviewer who taps "Share my code" will see a dead link. Before
-submitting, either buy/confirm the domain and host the AASA file, or switch
-`SHARE_LINK_BASE` and the associated domain to a domain we own.
+Invite, keyholder and referral links, plus iOS universal links and Android app
+links, all come from `LINK_DOMAIN` in `src/config/domain.ts` (through
+`app.config.ts`). Shubh is buying the domain (2026-11-25). Until it serves
+`landing/.well-known/apple-app-site-association`, every shared link is dead,
+and a reviewer who taps "Share my code" sees that. Steps: store/README.md >
+Domain setup.
 
 ### 9. iPad
 
@@ -153,7 +158,6 @@ The Library is an educational reference: what each compound claims and what publ
 - [ ] Privacy contact email in docs/privacy-policy.md, policy hosted at a public URL
 - [ ] Support URL live (the landing page works)
 - [ ] placebo.app owned and serving AASA, or links switched
-- [ ] Decision on the gray-market library section
 - [ ] Privacy label entered (privacy-label.md), age rating questionnaire (age-rating.md)
 - [ ] Screenshots uploaded (store/screenshots/en-US, 6.9")
 - [ ] Verdict screen recording attached to App Review Information

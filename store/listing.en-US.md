@@ -74,7 +74,7 @@ APPLE HEALTH
 Connect Apple Health and Placebo reads your sleep, resting heart rate and heart rate variability, then compares each night to the dose the day before. Read-only: Placebo never writes to Health, and Health data never leaves your phone.
 
 THE LIBRARY
-Plain-English profiles of more than 100 popular nootropics and supplements: what they claim, what the research actually shows, safety notes, and links to the studies.
+Plain-English profiles of nearly 80 popular nootropics and supplements: what they claim, what the research actually shows, safety notes, and links to the studies.
 
 FREE REACTION TEST
 Not ready to run an experiment? The reaction test is free, no sign-up.
