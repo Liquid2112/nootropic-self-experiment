@@ -28,6 +28,7 @@ export default function ReactionTestScreen() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('intro');
   const [runKey, setRunKey] = useState(0);
+  const [schedule, setSchedule] = useState<number[]>([]);
   const [score, setScore] = useState<QuickTestScore | null>(null);
   const [comparison, setComparison] = useState<string | null>(null);
   const [history, setHistory] = useState<{ best: QuickTest | undefined; recent: QuickTest[] }>(() => {
@@ -38,11 +39,6 @@ export default function ReactionTestScreen() {
   const hasActiveExperiment = useMemo(
     () => experiments.listByStatus(getDatabase(), 'active').length > 0,
     [],
-  );
-
-  const schedule = useMemo(
-    () => generatePvtSchedule({ trials: PVT_DEFAULT_TRIALS, seed: (Date.now() + runKey) & 0xffff }),
-    [runKey],
   );
 
   const onDone = useCallback(
@@ -70,6 +66,7 @@ export default function ReactionTestScreen() {
   );
 
   const start = useCallback(() => {
+    setSchedule(generatePvtSchedule({ trials: PVT_DEFAULT_TRIALS, seed: Date.now() & 0xffff }));
     setRunKey((k) => k + 1);
     setPhase('test');
   }, []);

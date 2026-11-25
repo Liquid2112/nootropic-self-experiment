@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Button,
@@ -11,6 +11,7 @@ import {
   radius,
   spacing,
 } from '@/ui';
+import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
 
 /**
@@ -89,6 +90,16 @@ export function WelcomeScreen() {
           label="I am 18 years of age or older."
         />
       </View>
+
+      <Pressable
+        accessibilityRole="link"
+        testID="welcome-privacy"
+        onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+      >
+        <Text style={styles.privacyLink}>
+          Your data stays on this phone. Read the privacy policy.
+        </Text>
+      </Pressable>
     </Scaffold>
   );
 }
@@ -185,6 +196,10 @@ const styles = StyleSheet.create({
     color: colors.onAccent,
     fontSize: fontSize.footnote,
     fontWeight: fontWeight.bold,
+  },
+  privacyLink: {
+    fontSize: fontSize.footnote,
+    color: colors.accent,
   },
   ackLabel: {
     flex: 1,
