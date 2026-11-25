@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { AppText } from './AppText';
 import { useTheme } from './theme';
+import { lightTheme } from './tokens';
 
 export type ChipProps = {
   /** Chip label. */
@@ -19,7 +20,7 @@ export type ChipProps = {
 
 /**
  * Selectable pill, used for single- or multi-select pickers such as the goal
- * chooser. Selected chips fill with the muted accent and show accent text; the
+ * chooser. Selected chips fill with ink and show white text; the
  * press is exposed through `onPress` so the parent owns selection state.
  */
 export function Chip({ label, selected = false, disabled = false, onPress, testID, style }: ChipProps) {
@@ -40,15 +41,15 @@ export function Chip({ label, selected = false, disabled = false, onPress, testI
               borderRadius: theme.radius.pill,
               paddingVertical: theme.spacing.sm,
               paddingHorizontal: theme.spacing.lg,
-              backgroundColor: selected ? theme.colors.accentMuted : theme.colors.surface,
-              borderColor: selected ? theme.colors.accent : theme.colors.border,
+              backgroundColor: selected ? theme.colors.textPrimary : theme.colors.surface,
+              borderColor: selected ? theme.colors.textPrimary : theme.colors.border,
             },
             pressed && !selected ? { backgroundColor: theme.colors.fill } : null,
             disabled ? styles.disabled : null,
             style,
           ]}
         >
-          <AppText variant="subhead" color={selected ? 'accent' : 'textPrimary'}>
+          <AppText variant="subhead" color={selected ? 'onAccent' : 'textPrimary'} style={styles.label}>
             {label}
           </AppText>
         </View>
@@ -64,5 +65,8 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.4,
+  },
+  label: {
+    fontFamily: lightTheme.typography.headline.fontFamily,
   },
 });

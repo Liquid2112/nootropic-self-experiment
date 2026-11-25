@@ -36,7 +36,8 @@ import {
   celebrate,
   tapLight,
 } from '@/components/game';
-import { Button, Card, ProgressRing, Scaffold, gameColors, lightTheme } from '@/ui';
+import { Icon, Logo, Noodle } from '@/brand';
+import { Button, ProgressRing, Scaffold, brand, fonts } from '@/ui';
 
 type Loaded = {
   experiment: Experiment;
@@ -202,7 +203,7 @@ export default function TodayScreen() {
     game,
     // Only an open (unblinded) run ever says "No capsule today"; logging that
     // day still counts as following the plan.
-    doseTitle: view.instruction.startsWith('No capsule') ? 'Log your no-capsule day' : undefined,
+    doseTitle: view.instruction.startsWith('No capsule') ? 'Log your off day' : undefined,
   });
   const goal = dailyGoalProgress(quests);
   const goalDone = quests.filter((q) => !q.bonus && q.done).length;
@@ -220,135 +221,173 @@ export default function TodayScreen() {
   return (
     <View style={styles.root}>
       <Scaffold>
-        {/* Greeting + streak */}
-        <View style={styles.topRow}>
-          <View style={styles.flex}>
-            <Text style={styles.greeting}>{greeting(new Date())}</Text>
-            <Text style={styles.subGreeting} numberOfLines={1}>
-              Testing {loaded.supplementName}
-            </Text>
-          </View>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/achievements')}>
+        {/* Top bar */}
+        <View style={styles.topBar}>
+          <Logo size={22} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Streak and achievements"
+            onPress={() => router.push('/achievements')}
+          >
             <StreakFlame count={game.streak.current} atRisk={game.streak.atRisk} />
           </Pressable>
         </View>
 
+        <View style={styles.greetingBlock}>
+          <Text style={styles.greeting}>{greeting(new Date())}</Text>
+          <Text style={styles.subGreeting} numberOfLines={1}>
+            {`Testing ${loaded.supplementName}`}
+          </Text>
+        </View>
+
         {game.streak.atRisk ? (
           <View style={styles.riskBanner}>
+            <Icon name="flame" size={18} color={brand.tang} strokeWidth={2.4} />
             <Text style={styles.riskText}>
-              🔥 Your {game.streak.current}-day streak ends at midnight. Do one thing today to keep it.
+              {`Your ${game.streak.current}-day streak ends at midnight. One quest keeps it alive.`}
             </Text>
           </View>
         ) : null}
 
-        {/* Hero: run progress + verdict countdown */}
+        {/* Hero: verdict countdown + run progress */}
         <View style={styles.hero}>
           <View style={styles.heroTop}>
             <View style={styles.flex}>
               <Text style={styles.heroEyebrow}>
-                {view.isBaseline ? 'BASELINE' : view.isFinished ? 'EXPERIMENT DONE' : 'EXPERIMENT'}
+                {view.isFinished ? 'YOUR EXPERIMENT IS DONE' : 'VERDICT UNLOCKS IN'}
               </Text>
-              <Text style={styles.heroTitle}>
-                {view.isBaseline
-                  ? `Baseline day ${view.dayNumber} of ${BASELINE_DAYS}`
-                  : view.hasDayForToday
-                    ? `Day ${view.dayNumber} of ${view.totalDays}`
-                    : view.isFinished
-                      ? 'Your verdict is ready'
-                      : 'Between days'}
-              </Text>
+              {view.isFinished ? (
+                <Text style={styles.heroBig}>Ready</Text>
+              ) : (
+                <View style={styles.heroBigRow}>
+                  <Text style={styles.heroBig}>{verdictIn}</Text>
+                  <Text style={styles.heroUnit}>{verdictIn === 1 ? 'day' : 'days'}</Text>
+                </View>
+              )}
             </View>
-            <View style={styles.lockBubble}>
-              <Text style={styles.lockEmoji}>{view.isFinished ? '🏆' : '🔒'}</Text>
+            <View style={styles.heroMascot}>
+              <Noodle size={96} mood={view.isFinished ? 'wow' : game.today.checkIn ? 'proud' : 'focused'} tilt={8} />
             </View>
           </View>
           <View style={styles.heroTrack}>
-            <View style={[styles.heroFill, { width: `${Math.round(runProgress * 100)}%` }]} />
+            <View style={[styles.heroFill, { width: `${Math.max(3, Math.round(runProgress * 100))}%` }]} />
+          </View>
+          <View style={styles.heroMeta}>
+            <Text style={styles.heroMetaText}>
+              {view.isBaseline
+                ? `Baseline day ${view.dayNumber} of ${BASELINE_DAYS}`
+                : view.hasDayForToday
+                  ? `Day ${view.dayNumber} of ${view.totalDays}`
+                  : view.isFinished
+                    ? `${experiment.lengthDays} of ${experiment.lengthDays} days`
+                    : 'Between days'}
+            </Text>
+            <View style={styles.heroSealed}>
+              <Icon name={view.isFinished ? 'sparkle' : 'lock'} size={13} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.heroMetaText}>{view.isFinished ? 'Unsealed' : 'Results sealed'}</Text>
+            </View>
           </View>
           {view.isFinished ? (
-            <Button label="Reveal my verdict" variant="secondary" onPress={() => router.push('/verdict')} />
-          ) : (
-            <Text style={styles.heroCaption}>
-              {`Verdict unlocks in ${verdictIn} day${verdictIn === 1 ? '' : 's'}. Results stay sealed until then so nothing sways your data.`}
-            </Text>
-          )}
+            <Pressable accessibilityRole="button" onPress={() => router.push('/verdict')} style={styles.heroButton}>
+              <Text style={styles.heroButtonText}>Reveal my verdict</Text>
+              <Icon name="arrowRight" size={18} color={brand.ink} />
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Daily quests */}
-        <Card style={styles.card}>
+        <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <ProgressRing progress={goal} size={44} thickness={6} color={goal >= 1 ? 'success' : 'accent'}>
-              <Text style={styles.ringText}>{goal >= 1 ? '✓' : `${goalDone}/${goalTotal}`}</Text>
-            </ProgressRing>
             <View style={styles.flex}>
               <Text style={styles.cardTitle}>Today&apos;s quests</Text>
               <Text style={styles.muted}>
-                {goal >= 1 ? 'Daily goal complete. Nice work!' : 'Finish them to grow your streak and level up.'}
+                {goal >= 1 ? 'Daily goal done. See you tomorrow.' : 'Finish them to keep your streak.'}
               </Text>
             </View>
+            <ProgressRing progress={goal} size={44} thickness={5} color={goal >= 1 ? 'success' : 'accent'}>
+              {goal >= 1 ? (
+                <Icon name="check" size={18} color={brand.mint} strokeWidth={2.8} />
+              ) : (
+                <Text style={styles.ringText}>{`${goalDone}/${goalTotal}`}</Text>
+              )}
+            </ProgressRing>
           </View>
           <QuestList quests={quests} onPressQuest={onQuest} />
-        </Card>
+        </View>
 
         {/* Dose instruction (blinded wording) */}
         {(view.hasDayForToday || view.isBaseline) && (
-          <Card style={styles.card}>
-            <Text style={styles.cardTitle}>{view.isBaseline ? '🧭 Baseline' : '💊 Today’s dose'}</Text>
+          <View style={styles.card}>
+            <View style={styles.doseHeader}>
+              <View style={[styles.iconBubble, { backgroundColor: brand.lilacSoft }]}>
+                <Icon name={view.isBaseline ? 'clock' : 'cups'} size={20} color={brand.lilacDeep} />
+              </View>
+              <View style={styles.flex}>
+                <Text style={styles.cardTitle}>{view.isBaseline ? 'Baseline' : 'Today\u2019s dose'}</Text>
+                {!view.isBaseline && <Text style={styles.muted}>{windowLabel}</Text>}
+              </View>
+            </View>
             <Text style={styles.body}>{view.instruction}</Text>
-            {!view.isBaseline && <Text style={styles.muted}>{windowLabel}</Text>}
             {view.hasDayForToday &&
               (view.taken ? (
-                <Text style={styles.takenText}>✓ Dose logged</Text>
+                <View style={styles.takenRow}>
+                  <Icon name="check" size={18} color={brand.mint} strokeWidth={2.6} />
+                  <Text style={styles.takenText}>Dose logged</Text>
+                </View>
               ) : (
                 <Button label="Mark taken" onPress={markTaken} accessibilityHint="Records that you took today's dose" />
               ))}
-          </Card>
+          </View>
         )}
 
         {checkInDue && (
-          <Button label="Start today's check-in  ·  90 sec" onPress={() => router.push('/daily-test')} />
+          <Button label="Start today's check-in" onPress={() => router.push('/daily-test')} />
         )}
 
         {/* Level */}
-        <Pressable accessibilityRole="button" onPress={() => router.push('/achievements')}>
-          <Card style={styles.card}>
-            <XpBar level={game.level} />
+        <Pressable accessibilityRole="button" onPress={() => router.push('/achievements')} style={styles.card}>
+          <XpBar level={game.level} />
+          <View style={styles.levelMeta}>
             <Text style={styles.muted}>
-              {`${game.badges.length} badge${game.badges.length === 1 ? '' : 's'} earned  ·  ${game.stats.totalXp} XP total  ·  tap for all`}
+              {`${game.badges.length} badge${game.badges.length === 1 ? '' : 's'} \u00b7 ${game.stats.totalXp} XP total`}
             </Text>
-          </Card>
+            <Icon name="chevronRight" size={16} color={brand.faint} />
+          </View>
         </Pressable>
 
         {/* Shortcuts */}
         <Text style={styles.section}>Explore</Text>
         <View style={styles.grid}>
           <ActionTile
-            emoji="⚡"
+            icon="bolt"
             title="Reaction test"
             subtitle="Beat your best time"
-            tint={gameColors.xpMuted}
+            tint={brand.sunSoft}
+            iconColor={brand.sunDeep}
             onPress={() => router.push('/reaction-test')}
           />
           <ActionTile
-            emoji="🗺️"
+            icon="map"
             title="Journey"
             subtitle="Your run, day by day"
-            tint={lightTheme.colors.accentMuted}
+            tint={brand.lilacSoft}
+            iconColor={brand.lilacDeep}
             onPress={() => router.push('/progress')}
           />
           <ActionTile
-            emoji="🏅"
+            icon="medal"
             title="Badges"
             subtitle={`${game.badges.length} unlocked`}
-            tint={gameColors.flameMuted}
+            tint={brand.tangSoft}
+            iconColor={brand.tang}
             onPress={() => router.push('/achievements')}
           />
           <ActionTile
-            emoji="📚"
+            icon="book"
             title="Library"
             subtitle="What each nootropic does"
-            tint={gameColors.mintMuted}
-            tag="NEW"
+            tint={brand.mintSoft}
+            iconColor={brand.mint}
             onPress={() => router.push('/dictionary')}
           />
         </View>
@@ -365,10 +404,11 @@ export default function TodayScreen() {
             },
           ]}
         >
+          <Icon name="sparkle" size={18} color={brand.sun} />
           <Text style={styles.toastText}>
-            {`+${toast.xpGained} XP  ·  🔥 ${toast.streak}`}
-            {toast.levelUp !== null ? `  ·  Level ${toast.levelUp}!` : ''}
-            {toast.newBadges.length ? `  ·  ${toast.newBadges.map((b) => `${b.emoji} ${b.title}`).join(', ')}` : ''}
+            {`+${toast.xpGained} XP \u00b7 ${toast.streak}-day streak`}
+            {toast.levelUp !== null ? ` \u00b7 Level ${toast.levelUp}` : ''}
+            {toast.newBadges.length ? ` \u00b7 ${toast.newBadges.map((b) => b.title).join(', ')}` : ''}
           </Text>
         </Animated.View>
       ) : null}
@@ -387,57 +427,78 @@ function formatHour(hour24: number): string {
   return hour24 < 12 ? `${hour24}am` : `${hour24 - 12}pm`;
 }
 
-const c = lightTheme.colors;
-
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: c.background },
+  root: { flex: 1, backgroundColor: brand.paper },
   flex: { flex: 1 },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  greeting: { fontSize: 28, fontWeight: '800', color: c.textPrimary },
-  subGreeting: { fontSize: 15, color: c.textSecondary },
-  riskBanner: { backgroundColor: gameColors.flameMuted, borderRadius: 14, padding: 12 },
-  riskText: { color: '#B5410F', fontWeight: '600', fontSize: 14 },
-  hero: {
-    backgroundColor: c.accent,
-    borderRadius: 24,
-    padding: 18,
-    gap: 12,
-    ...lightTheme.shadows.md,
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  greetingBlock: { gap: 2, marginTop: 4 },
+  greeting: { fontSize: 30, lineHeight: 36, fontFamily: fonts.display, letterSpacing: -0.8, color: brand.ink },
+  subGreeting: { fontSize: 15, fontFamily: fonts.regular, color: brand.muted },
+  riskBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: brand.tangSoft,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
-  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  heroEyebrow: { color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-  heroTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
-  lockBubble: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  riskText: { flex: 1, color: brand.tangDeep, fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19 },
+  hero: { backgroundColor: brand.ink, borderRadius: 28, padding: 20, gap: 14, overflow: 'hidden' },
+  heroTop: { flexDirection: 'row', alignItems: 'flex-start' },
+  heroEyebrow: { color: 'rgba(255,255,255,0.6)', fontSize: 11, fontFamily: fonts.bold, letterSpacing: 1.2 },
+  heroBigRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  heroBig: { color: brand.white, fontSize: 64, lineHeight: 70, fontFamily: fonts.display, letterSpacing: -2 },
+  heroUnit: { color: brand.white, fontSize: 22, fontFamily: fonts.displayBold },
+  heroMascot: { marginRight: -8, marginTop: -4 },
+  heroTrack: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
+  heroFill: { height: '100%', borderRadius: 4, backgroundColor: brand.tang },
+  heroMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  heroSealed: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  heroMetaText: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontFamily: fonts.medium },
+  heroButton: {
+    marginTop: 4,
+    backgroundColor: brand.white,
+    borderRadius: 999,
+    paddingVertical: 14,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
-  lockEmoji: { fontSize: 26 },
-  heroTrack: { height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
-  heroFill: { height: '100%', borderRadius: 6, backgroundColor: gameColors.xp },
-  heroCaption: { color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 19 },
-  card: { gap: 12 },
+  heroButtonText: { color: brand.ink, fontSize: 16, fontFamily: fonts.semibold },
+  card: {
+    backgroundColor: brand.white,
+    borderRadius: 24,
+    padding: 16,
+    gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+  },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary },
-  ringText: { fontSize: 12, fontWeight: '800', color: c.textPrimary },
-  body: { fontSize: 16, lineHeight: 22, color: c.textPrimary },
-  muted: { fontSize: 14, color: c.textSecondary },
-  takenText: { fontSize: 17, fontWeight: '700', color: c.success },
-  section: { fontSize: 20, fontWeight: '800', color: c.textPrimary, marginTop: 4 },
+  cardTitle: { fontSize: 19, lineHeight: 24, fontFamily: fonts.displayBold, color: brand.ink },
+  ringText: { fontSize: 12, fontFamily: fonts.bold, color: brand.ink },
+  doseHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  iconBubble: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  body: { fontSize: 16, lineHeight: 23, fontFamily: fonts.regular, color: brand.ink },
+  muted: { fontSize: 14, lineHeight: 19, fontFamily: fonts.regular, color: brand.muted },
+  takenRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  takenText: { fontSize: 16, fontFamily: fonts.semibold, color: brand.mint },
+  levelMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  section: { fontSize: 22, fontFamily: fonts.display, letterSpacing: -0.4, color: brand.ink, marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   toast: {
     position: 'absolute',
     left: 16,
     right: 16,
     bottom: 40,
-    backgroundColor: c.textPrimary,
-    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: brand.ink,
+    borderRadius: 18,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    ...lightTheme.shadows.lg,
   },
-  toastText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', textAlign: 'center' },
+  toastText: { flex: 1, color: brand.white, fontSize: 15, fontFamily: fonts.semibold },
 });

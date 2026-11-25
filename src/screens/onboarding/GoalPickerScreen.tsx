@@ -1,22 +1,27 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getDatabase, supplements, type Supplement } from '@/db';
 import type { Goal, SupplementChoice } from '@/engines/onboarding';
 import { GOALS, goalLabel } from '@/engines/onboarding';
-import {
-  Button,
-  Chip,
-  ListRow,
-  Scaffold,
-  SectionHeader,
-  colors,
-  fontSize,
-  radius,
-  spacing,
-} from '@/ui';
+import { Button, ListRow, Scaffold, brand, fonts } from '@/ui';
+import { Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
+
+const GOAL_ICON: Record<Goal, IconName> = {
+  focus: 'target',
+  memory: 'brain',
+  calm: 'smile',
+  sleep: 'moon',
+};
+
+const GOAL_HINT: Record<Goal, string> = {
+  focus: 'Faster, steadier attention',
+  memory: 'Hold more in mind',
+  calm: 'Less wired, better mood',
+  sleep: 'Wake up with more energy',
+};
 
 /**
  * Screen 2 — Goal + supplement picker.
@@ -87,42 +92,49 @@ export function GoalPickerScreen() {
       }
     >
       <View style={styles.stepHeader}>
-        <View style={styles.stepPill}>
-          <Text style={styles.stepPillText}>STEP 1 OF 2</Text>
-        </View>
-        <Text style={styles.title}>🎯 Pick your mission</Text>
-        <Text style={styles.subtitle}>Choose a goal and the supplement you want to put to the test.</Text>
+        <Text style={styles.step}>Step 1 of 2</Text>
+        <Text style={styles.title}>Pick your goal</Text>
+        <Text style={styles.subtitle}>Then choose the supplement you want to put to the test.</Text>
       </View>
 
-      <View style={styles.block}>
-        <SectionHeader title="What are you hoping to improve?" />
-        <View style={styles.chipRow}>
-          {GOALS.map((goal) => (
-            <Chip
+      <View style={styles.goalGrid}>
+        {GOALS.map((goal) => {
+          const on = state.goal === goal;
+          return (
+            <Pressable
               key={goal}
               testID={`goal-${goal}`}
-              label={goalLabel(goal)}
-              selected={state.goal === goal}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={goalLabel(goal)}
               onPress={() => selectGoal(goal)}
-            />
-          ))}
-        </View>
+              style={({ pressed }) => [styles.goal, on && styles.goalOn, pressed && styles.pressed]}
+            >
+              <View style={[styles.goalIcon, on && styles.goalIconOn]}>
+                <Icon name={GOAL_ICON[goal]} size={22} color={brand.ink} />
+              </View>
+              <Text style={[styles.goalTitle, on && styles.goalTitleOn]}>{goalLabel(goal)}</Text>
+              <Text style={[styles.goalHint, on && styles.goalHintOn]}>{GOAL_HINT[goal]}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <View style={styles.searchBlock}>
-        <SectionHeader
-          title="Pick a supplement"
-          caption="Search the list, or add your own with “Other”."
-        />
-        <TextInput
-          testID="supplement-search"
-          value={query}
-          onChangeText={setQuery}
-          placeholder="🔍  Search supplements"
-          placeholderTextColor={colors.textMuted}
-          autoCorrect={false}
-          style={styles.search}
-        />
+        <Text style={styles.sectionTitle}>Supplement</Text>
+        <Text style={styles.sectionCaption}>Search the list, or add your own with Other.</Text>
+        <View style={styles.search}>
+          <Icon name="search" size={18} color={brand.faint} />
+          <TextInput
+            testID="supplement-search"
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search supplements"
+            placeholderTextColor={brand.faint}
+            autoCorrect={false}
+            style={styles.searchInput}
+          />
+        </View>
       </View>
 
       <View style={styles.list}>
@@ -140,7 +152,7 @@ export function GoalPickerScreen() {
         {showOther ? (
           <ListRow
             testID="supplement-other"
-            title={`Other: “${trimmedQuery}”`}
+            title={`Other: ${trimmedQuery}`}
             subtitle="Not in the list. No evidence summary is shown."
             selected={selected?.kind === 'other'}
             onPress={selectOther}
@@ -155,64 +167,69 @@ export function GoalPickerScreen() {
 }
 
 const styles = StyleSheet.create({
-  stepHeader: {
-    gap: spacing.xs,
-  },
-  stepPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.cautionSurface,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xxs,
-  },
-  stepPillText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: colors.accent,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: fontSize.callout,
-    color: colors.textSecondary,
-  },
-  block: {
-    backgroundColor: colors.surface,
+  stepHeader: { gap: 6 },
+  step: { fontSize: 13, fontFamily: fonts.semibold, color: brand.tang },
+  title: { fontSize: 30, lineHeight: 36, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.ink },
+  subtitle: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
+  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  goal: {
+    flexBasis: '47%',
+    flexGrow: 1,
+    backgroundColor: brand.white,
     borderRadius: 20,
-    padding: spacing.lg,
+    borderWidth: 1.5,
+    borderColor: brand.line,
+    padding: 14,
+    gap: 4,
   },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+  goalOn: { backgroundColor: brand.ink, borderColor: brand.ink },
+  pressed: { opacity: 0.7 },
+  goalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: brand.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
-  searchBlock: {
-    gap: spacing.sm,
-  },
+  goalIconOn: { backgroundColor: brand.lilac },
+  goalTitle: { fontSize: 17, fontFamily: fonts.displayBold, color: brand.ink },
+  goalTitleOn: { color: brand.white },
+  goalHint: { fontSize: 12, lineHeight: 16, fontFamily: fonts.regular, color: brand.muted },
+  goalHintOn: { color: 'rgba(255,255,255,0.7)' },
+  searchBlock: { gap: 4, marginTop: 8 },
+  sectionTitle: { fontSize: 20, fontFamily: fonts.displayBold, color: brand.ink },
+  sectionCaption: { fontSize: 13, fontFamily: fonts.regular, color: brand.muted, marginBottom: 8 },
   search: {
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    fontSize: fontSize.body,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: brand.line,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    backgroundColor: brand.white,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 13,
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: brand.ink,
   },
   list: {
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    backgroundColor: brand.white,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
   },
   empty: {
-    padding: spacing.lg,
-    fontSize: fontSize.footnote,
-    color: colors.textMuted,
+    padding: 16,
+    fontSize: 13,
+    fontFamily: fonts.regular,
+    color: brand.faint,
     textAlign: 'center',
-    backgroundColor: colors.surface,
   },
 });

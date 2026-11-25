@@ -1,5 +1,6 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import type { ReactNode } from 'react';
+import Svg, { Circle } from 'react-native-svg';
 
 import { AppText } from './AppText';
 import { useTheme } from './theme';
@@ -22,10 +23,9 @@ export type ProgressRingProps = {
 };
 
 /**
- * Determinate circular progress indicator built only from Views — two rotating
- * half-ring layers over a full track — so it needs no SVG dependency. Used for
- * streak / completion progress. Pass a count or label as `children` to show it
- * in the center.
+ * Determinate circular progress indicator drawn with SVG: a full track circle
+ * and an arc whose dash length is the progress, starting at 12 o'clock with
+ * round caps. Pass a count or label as `children` to show it in the center.
  */
 export function ProgressRing({
   progress,
@@ -37,64 +37,30 @@ export function ProgressRing({
 }: ProgressRingProps) {
   const theme = useTheme();
   const clamped = Math.min(1, Math.max(0, progress));
-  const arcColor = theme.colors[color];
-  const trackColor = theme.colors.fill;
-
-  // The right half shows 0-50% (0-180deg); the left half shows 50-100%.
-  const rightRotation = `${Math.min(clamped, 0.5) * 360}deg`;
-  const leftRotation = `${Math.max(0, clamped - 0.5) * 360}deg`;
-
-  const halfStyle: ViewStyle = {
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    borderWidth: thickness,
-    borderColor: arcColor,
-  };
-
+  const r = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * r;
   return (
     <View
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
       style={[{ width: size, height: size }, style]}
     >
-      {/* Full track underneath. */}
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            borderRadius: size / 2,
-            borderWidth: thickness,
-            borderColor: trackColor,
-          },
-        ]}
-      />
-      {/* Right-half arc (first 50%). */}
-      <View style={[styles.clip, { width: size / 2, right: 0 }]}>
-        <View style={styles.rotor}>
-          <View
-            style={[
-              halfStyle,
-              styles.rightHalf,
-              { transform: [{ rotate: rightRotation }] },
-            ]}
+      <Svg width={size} height={size}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={theme.colors.fill} strokeWidth={thickness} fill="none" />
+        {clamped > 0 ? (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            stroke={theme.colors[color]}
+            strokeWidth={thickness}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={`${circumference * clamped} ${circumference}`}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
-        </View>
-      </View>
-      {/* Left-half arc (last 50%). */}
-      {clamped > 0.5 ? (
-        <View style={[styles.clip, { width: size / 2, left: 0 }]}>
-          <View style={[styles.rotor, { left: -size / 2 }]}>
-            <View
-              style={[
-                halfStyle,
-                styles.leftHalf,
-                { transform: [{ rotate: leftRotation }] },
-              ]}
-            />
-          </View>
-        </View>
-      ) : null}
+        ) : null}
+      </Svg>
       {children ? <View style={styles.center}>{children}</View> : null}
     </View>
   );
@@ -127,24 +93,6 @@ export function StreakIndicator({ count, goal = 7, size = 72, style }: StreakInd
 }
 
 const styles = StyleSheet.create({
-  clip: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    overflow: 'hidden',
-  },
-  rotor: {
-    position: 'absolute',
-    top: 0,
-  },
-  rightHalf: {
-    borderLeftColor: 'transparent',
-    borderBottomColor: 'transparent',
-  },
-  leftHalf: {
-    borderRightColor: 'transparent',
-    borderTopColor: 'transparent',
-  },
   center: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',

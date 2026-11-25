@@ -45,7 +45,7 @@ export function CalendarCell({
         styles.cell,
         {
           borderRadius: theme.radius.md,
-          backgroundColor: selected ? theme.colors.accent : 'transparent',
+          backgroundColor: selected ? theme.colors.textPrimary : 'transparent',
           borderColor: isToday && !selected ? theme.colors.accent : 'transparent',
           borderWidth: isToday && !selected ? 1.5 : 0,
         },

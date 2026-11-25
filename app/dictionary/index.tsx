@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Chip, Scaffold, Text, colors, radii, spacing } from '@/ui';
+import { Card, Chip, Scaffold, Text, brand, fonts, radii, spacing } from '@/ui';
+import { Icon, Noodle } from '@/brand';
 import {
   DICTIONARY_FILTERS,
   EVIDENCE_LABELS,
@@ -32,23 +33,29 @@ export default function DictionaryScreen() {
   return (
     <Scaffold>
       <View style={styles.header}>
-        <Text variant="largeTitle">Library</Text>
+        <Text variant="caption2" tone="tertiary" style={styles.eyebrow}>
+          {`THE LIBRARY  ·  ${TOTAL} ENTRIES`}
+        </Text>
+        <Text variant="largeTitle">What it claims. What it does.</Text>
         <Text tone="secondary">
-          {`${TOTAL} nootropics: what they claim, and what the research actually shows.`}
+          {'Plain-English profiles of popular nootropics, graded by how strong the research really is.'}
         </Text>
       </View>
 
-      <TextInput
+      <View style={styles.searchBox}>
+        <Icon name="search" size={18} color={brand.faint} />
+        <TextInput
         value={query}
         onChangeText={setQuery}
         placeholder="Search by name, alias or effect"
-        placeholderTextColor={colors.textTertiary}
+        placeholderTextColor={brand.faint}
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="while-editing"
         accessibilityLabel="Search the library"
         style={styles.search}
       />
+      </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         {DICTIONARY_FILTERS.map((f) => (
@@ -57,9 +64,13 @@ export default function DictionaryScreen() {
       </ScrollView>
 
       {empty && (
-        <Text tone="secondary" style={styles.empty}>
-          {'Nothing matches that search.'}
-        </Text>
+        <View style={styles.empty}>
+          <Noodle size={96} mood="wow" />
+          <Text variant="headline">{'Nothing matches that search'}</Text>
+          <Text tone="secondary" style={styles.center}>
+            {'Try a compound name, an alias, or an effect like "sleep".'}
+          </Text>
+        </View>
       )}
 
       {supplements.length > 0 && (
@@ -73,7 +84,12 @@ export default function DictionaryScreen() {
       {unregulated.length > 0 && (
         <Section title="Gray market" count={unregulated.length}>
           <View style={styles.warning}>
-            <Text variant="headline">{'⚠️  Unregulated compounds'}</Text>
+            <View style={styles.warningTitle}>
+              <View style={styles.warningIcon}>
+                <Icon name="shield" size={16} color={brand.white} strokeWidth={2.4} />
+              </View>
+              <Text variant="headline">{'Unregulated compounds'}</Text>
+            </View>
             <Text variant="footnote" tone="secondary">
               {UNREGULATED_WARNING}
             </Text>
@@ -90,8 +106,8 @@ export default function DictionaryScreen() {
 function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <Text variant="footnote" tone="tertiary" style={styles.sectionTitle}>
-        {`${title.toUpperCase()} · ${count}`}
+      <Text variant="caption2" tone="tertiary" style={styles.sectionTitle}>
+        {`${title.toUpperCase()}  ·  ${count}`}
       </Text>
       <Card style={styles.card}>{children}</Card>
     </View>
@@ -108,52 +124,80 @@ function EntryRow({ entry, divider, onPress }: { entry: DictionaryEntry; divider
     >
       <View style={styles.rowText}>
         <View style={styles.rowTitle}>
-          <Text variant="headline">{entry.name}</Text>
-          <Text variant="caption" tone="tertiary">
-            {entry.category}
-          </Text>
+          <Text variant="title3">{entry.name}</Text>
+          <View style={styles.category}>
+            <Text variant="caption" tone="secondary">
+              {entry.category}
+            </Text>
+          </View>
         </View>
         <Text variant="footnote" tone="secondary" numberOfLines={2}>
           {entry.tagline}
         </Text>
         <EvidencePill grade={entry.evidence} compact />
       </View>
-      <Text tone="tertiary">{'›'}</Text>
+      <Icon name="chevronRight" size={18} color={brand.faint} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { gap: spacing.xs },
+  header: { gap: spacing.sm },
+  eyebrow: { letterSpacing: 1.2 },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: brand.white,
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+    paddingHorizontal: spacing.lg,
+  },
   search: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 17,
-    color: colors.text,
+    flex: 1,
+    paddingVertical: spacing.md,
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: brand.ink,
   },
   chips: { gap: spacing.sm, paddingVertical: spacing.xs },
-  empty: { textAlign: 'center', paddingVertical: spacing.xl },
-  section: { gap: spacing.xs },
-  sectionTitle: { paddingHorizontal: spacing.xs },
+  empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
+  center: { textAlign: 'center' },
+  section: { gap: spacing.sm },
+  sectionTitle: { paddingHorizontal: spacing.xs, letterSpacing: 1.2 },
   card: { padding: 0, overflow: 'hidden' },
   warning: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     padding: spacing.lg,
-    backgroundColor: '#FFF4E5',
+    backgroundColor: brand.sunSoft,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.warning,
+    borderBottomColor: brand.line,
+  },
+  warningTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  warningIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: brand.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
   },
-  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
-  pressed: { backgroundColor: colors.surfaceMuted },
-  rowText: { flex: 1, gap: spacing.xxs + 2 },
-  rowTitle: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, flexWrap: 'wrap' },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: brand.line },
+  pressed: { backgroundColor: brand.paper },
+  rowText: { flex: 1, gap: spacing.sm },
+  rowTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
+  category: {
+    backgroundColor: brand.paper,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
 });

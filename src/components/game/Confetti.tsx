@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
-import { gameColors, lightTheme } from '@/ui';
+import { brand } from '@/ui';
 
-const PALETTE = [
-  lightTheme.colors.accent,
-  gameColors.xp,
-  gameColors.flame,
-  gameColors.mint,
-  gameColors.heroEnd,
-  '#FF5FA2',
-];
+const PALETTE = [brand.tang, brand.lilac, brand.sun, brand.mint, brand.ink];
 
 /** Small deterministic PRNG so a burst's layout is a pure function of its key. */
 function mulberry32(seed: number): () => number {

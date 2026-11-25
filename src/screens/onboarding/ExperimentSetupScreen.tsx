@@ -14,18 +14,8 @@ import {
   validateSelections,
   type OnboardingSelections,
 } from '@/engines/onboarding';
-import {
-  Button,
-  Card,
-  Chip,
-  Scaffold,
-  SectionHeader,
-  colors,
-  fontSize,
-  fontWeight,
-  radius,
-  spacing,
-} from '@/ui';
+import { Button, Chip, Scaffold, brand, fonts } from '@/ui';
+import { Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
 
@@ -172,7 +162,7 @@ export function ExperimentSetupScreen() {
       testID="experiment-setup-screen"
       footer={
         <Button
-          label="🚀 Start my experiment"
+          label="Start my experiment"
           testID="setup-confirm"
           onPress={() => void onConfirm()}
           disabled={!canConfirm}
@@ -180,24 +170,30 @@ export function ExperimentSetupScreen() {
         />
       }
     >
+      <View style={styles.stepHeader}>
+        <Text style={styles.step}>Step 2 of 2</Text>
+        <Text style={styles.title}>Design your experiment</Text>
+      </View>
+
       {state.goal && state.supplement ? (
-        <View style={styles.hero}>
-          <View style={styles.stepPill}>
-            <Text style={styles.stepPillText}>STEP 2 OF 2</Text>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryIcon}>
+            <Icon name="flask" size={22} color={brand.ink} />
           </View>
-          <Text style={styles.heroTitle}>🧪 Design your experiment</Text>
-          <Text style={styles.summary}>
-            {goalLabel(state.goal)} · {state.supplement.name} ·{' '}
-            {state.supplement.type === 'acute' ? 'acute' : 'cumulative'} design
-          </Text>
+          <View style={styles.summaryText}>
+            <Text style={styles.summaryTitle}>{state.supplement.name}</Text>
+            <Text style={styles.summaryBody}>
+              {goalLabel(state.goal)} goal · {state.supplement.type === 'acute' ? 'acute' : 'cumulative'} design
+            </Text>
+          </View>
         </View>
       ) : null}
 
-      <View style={styles.block}>
-        <SectionHeader
-          title="⏳ How long?"
-          caption={`A longer run gives a clearer answer. It starts with a ${BASELINE_DAYS}-day baseline: just the daily test, no supplement, so practice effects settle first.`}
-        />
+      <Section
+        icon="clock"
+        title="How long?"
+        caption={`A longer run gives a clearer answer. It starts with a ${BASELINE_DAYS}-day baseline: just the daily test, no supplement, so practice effects settle first.`}
+      >
         <View style={styles.chipRow} testID="length-slider">
           {LENGTH_OPTIONS.map((option) => (
             <Chip
@@ -212,13 +208,9 @@ export function ExperimentSetupScreen() {
             />
           ))}
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.block}>
-        <SectionHeader
-          title="🙈 Blinding"
-          caption="Blinding keeps your expectations out of the result."
-        />
+      <Section icon="eyeOff" title="Blinding" caption="Blinding keeps your expectations out of the result.">
         <View style={styles.chipRow}>
           {BLINDING_OPTIONS.map((option) => (
             <Chip
@@ -233,9 +225,9 @@ export function ExperimentSetupScreen() {
             />
           ))}
         </View>
-        <Card style={styles.instructionsCard} elevation="none" radius="xl">
+        <View style={styles.instructionsCard}>
           <Text style={styles.instructions}>{selectedBlinding.instructions}</Text>
-        </Card>
+        </View>
         {state.blindingMode === 'sealed' ? (
           <View style={styles.passphraseBlock}>
             <Text style={styles.fieldLabel}>Friend’s sealing passphrase</Text>
@@ -244,7 +236,7 @@ export function ExperimentSetupScreen() {
               value={state.friendPassphrase}
               onChangeText={(text) => update({ friendPassphrase: text })}
               placeholder="Ask your friend to type a secret phrase"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={brand.faint}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
@@ -255,13 +247,9 @@ export function ExperimentSetupScreen() {
             ) : null}
           </View>
         ) : null}
-      </View>
+      </Section>
 
-      <View style={styles.block}>
-        <SectionHeader
-          title="⏰ Daily test time"
-          caption="Test at the same time each day for a fair comparison."
-        />
+      <Section icon="calendar" title="Daily test time" caption="Test at the same time each day for a fair comparison.">
         <View style={styles.chipRow} testID="test-window-slider">
           {TEST_WINDOWS.map((w) => (
             <Chip
@@ -276,81 +264,83 @@ export function ExperimentSetupScreen() {
             />
           ))}
         </View>
-      </View>
+      </Section>
     </Scaffold>
   );
 }
 
+function Section({
+  icon,
+  title,
+  caption,
+  children,
+}: {
+  icon: IconName;
+  title: string;
+  caption: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.block}>
+      <View style={styles.sectionHeader}>
+        <Icon name={icon} size={20} color={brand.ink} />
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      <Text style={styles.sectionCaption}>{caption}</Text>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: colors.accent,
-    borderRadius: 24,
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  stepPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xxs,
-  },
-  stepPillText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: '#FFFFFF',
-  },
-  heroTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  summary: {
-    fontSize: fontSize.callout,
-    fontWeight: fontWeight.semibold,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  block: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: spacing.lg,
-  },
-  chipRow: {
+  stepHeader: { gap: 6 },
+  step: { fontSize: 13, fontFamily: fonts.semibold, color: brand.tang },
+  title: { fontSize: 30, lineHeight: 36, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.ink },
+  summaryCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: brand.ink,
+    borderRadius: 20,
+    padding: 16,
   },
-  instructionsCard: {
-    backgroundColor: colors.cautionSurface,
+  summaryIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: brand.lilac,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  instructions: {
-    fontSize: fontSize.footnote,
-    color: colors.text,
-    lineHeight: 21,
+  summaryText: { flex: 1, gap: 2 },
+  summaryTitle: { fontSize: 18, fontFamily: fonts.displayBold, color: brand.white },
+  summaryBody: { fontSize: 13, fontFamily: fonts.medium, color: 'rgba(255,255,255,0.7)' },
+  block: {
+    backgroundColor: brand.white,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+    padding: 16,
+    gap: 12,
   },
-  passphraseBlock: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontSize: fontSize.footnote,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionTitle: { fontSize: 18, fontFamily: fonts.displayBold, color: brand.ink },
+  sectionCaption: { fontSize: 13, lineHeight: 19, fontFamily: fonts.regular, color: brand.muted, marginTop: -4 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  instructionsCard: { backgroundColor: brand.paper, borderRadius: 14, padding: 14 },
+  instructions: { fontSize: 13, lineHeight: 20, fontFamily: fonts.regular, color: brand.ink },
+  passphraseBlock: { gap: 8 },
+  fieldLabel: { fontSize: 13, fontFamily: fonts.semibold, color: brand.ink },
   input: {
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    fontSize: fontSize.body,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: brand.line,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: brand.ink,
+    backgroundColor: brand.white,
   },
-  errorText: {
-    fontSize: fontSize.caption,
-    color: colors.caution,
-  },
+  errorText: { fontSize: 12, fontFamily: fonts.medium, color: brand.rose },
 });

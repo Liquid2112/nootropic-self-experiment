@@ -56,6 +56,7 @@ module.exports = {
       moduleNameMapper: {
         ...base.moduleNameMapper,
         '^react-native$': '<rootDir>/__mocks__/react-native.tsx',
+        '^react-native-svg$': '<rootDir>/__mocks__/react-native-svg.tsx',
         '^react-native-safe-area-context$':
           '<rootDir>/__mocks__/react-native-safe-area-context.tsx',
       },

@@ -1,7 +1,7 @@
 import { Text, type TextProps, type TextStyle } from 'react-native';
 
 import { useTheme } from './theme';
-import type { ThemeColors, TypographyToken } from './tokens';
+import type { ThemeColors, TypographyStyle, TypographyToken } from './tokens';
 
 /** Which semantic color role the text uses. */
 export type TextColorToken = Extract<
@@ -34,7 +34,9 @@ export function AppText({
   const resolved: TextStyle = {
     fontSize: typeStyle.fontSize,
     lineHeight: typeStyle.lineHeight,
-    fontWeight: typeStyle.fontWeight,
+    ...(typeStyle.fontFamily
+      ? { fontFamily: typeStyle.fontFamily }
+      : { fontWeight: (typeStyle as TypographyStyle).fontWeight }),
     letterSpacing: typeStyle.letterSpacing,
     color: theme.colors[color],
     ...(center ? { textAlign: 'center' } : null),
