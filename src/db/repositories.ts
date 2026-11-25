@@ -1,6 +1,7 @@
 import type { SqlDriver, SqlRow, SqlValue } from './driver';
 import type {
   Experiment,
+  HealthNight,
   QuickTest,
   Result,
   ScheduleDay,
@@ -156,6 +157,9 @@ export const experiments = {
   },
   setStatus(db: SqlDriver, id: string, status: Experiment['status']): void {
     db.run('UPDATE experiment SET status = ? WHERE id = ?', [status, id]);
+  },
+  setPrimaryMetric(db: SqlDriver, id: string, primaryMetric: string): void {
+    db.run('UPDATE experiment SET primary_metric = ? WHERE id = ?', [primaryMetric, id]);
   },
 };
 
@@ -370,5 +374,44 @@ export const appState = {
        ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
       [key, value],
     );
+  },
+};
+
+// --- health_night ----------------------------------------------------------
+
+function rowToHealthNight(row: SqlRow): HealthNight {
+  const metric = requireText(row.metric, 'metric');
+  if (metric !== 'sleep_hours' && metric !== 'resting_hr' && metric !== 'hrv_ms') {
+    throw new Error(`Invalid health metric: ${metric}`);
+  }
+  return {
+    date: requireText(row.date, 'date'),
+    metric,
+    value: requireNumber(row.value, 'value'),
+    source: requireText(row.source, 'source'),
+    syncedAt: requireText(row.synced_at, 'synced_at'),
+  };
+}
+
+export const healthNights = {
+  upsert(db: SqlDriver, n: HealthNight): void {
+    db.run(
+      `INSERT INTO health_night (date, metric, value, source, synced_at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT (date, metric) DO UPDATE SET
+         value = excluded.value, source = excluded.source, synced_at = excluded.synced_at`,
+      [n.date, n.metric, n.value, n.source, n.syncedAt],
+    );
+  },
+  listBetween(db: SqlDriver, fromDate: string, toDate: string): HealthNight[] {
+    return db
+      .all('SELECT * FROM health_night WHERE date >= ? AND date <= ? ORDER BY date, metric', [fromDate, toDate])
+      .map(rowToHealthNight);
+  },
+  countNights(db: SqlDriver, fromDate: string, toDate: string): number {
+    const row = db.get('SELECT COUNT(DISTINCT date) AS n FROM health_night WHERE date >= ? AND date <= ?', [
+      fromDate,
+      toDate,
+    ]);
+    return row ? requireNumber(row.n, 'n') : 0;
   },
 };

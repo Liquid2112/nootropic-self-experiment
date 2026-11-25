@@ -23,10 +23,16 @@ export type ShareCardProps = {
   monthlyCost: string | null;
   /** Show the "Blinded" badge (the run hid which days were real). */
   blinded?: boolean;
+  /**
+   * The sharer's referral code. Printed as a call to action so every posted
+   * verdict is an invite: the viewer gets a free month with it, and so does
+   * the sharer.
+   */
+  referralCode?: string | null;
 };
 
 export const ShareCard = forwardRef<ViewRef, ShareCardProps>(function ShareCard(
-  { supplementName, primary, monthlyCost, blinded = false },
+  { supplementName, primary, monthlyCost, blinded = false, referralCode = null },
   ref,
 ) {
   return (
@@ -48,6 +54,17 @@ export const ShareCard = forwardRef<ViewRef, ShareCardProps>(function ShareCard(
         {primary.effectSentence && <Text style={styles.effect}>{primary.effectSentence}</Text>}
         {monthlyCost && <Text style={styles.cost}>{monthlyCost}</Text>}
       </View>
+
+      {referralCode ? (
+        <View style={styles.cta}>
+          <Text style={styles.ctaTitle}>Is yours working, or is it you?</Text>
+          <Text style={styles.ctaBody}>
+            {`Test it blind on Placebo. Code `}
+            <Text style={styles.ctaCode}>{referralCode}</Text>
+            {` = a free month`}
+          </Text>
+        </View>
+      ) : null}
 
       <View style={styles.bottom}>
         <Text style={styles.disclaimer}>{COMPLIANCE_DISCLAIMER}</Text>
@@ -83,6 +100,10 @@ const styles = StyleSheet.create({
   hero: { fontSize: 32, lineHeight: 37, fontFamily: fonts.display, letterSpacing: -0.8, color: brand.white },
   effect: { fontSize: 16, lineHeight: 22, fontFamily: fonts.medium, color: 'rgba(255,255,255,0.75)' },
   cost: { fontSize: 14, lineHeight: 20, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.55)' },
+  cta: { backgroundColor: brand.tang, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, gap: 2, marginBottom: 14 },
+  ctaTitle: { fontSize: 14, fontFamily: fonts.displayBold, color: brand.white },
+  ctaBody: { fontSize: 12, lineHeight: 16, fontFamily: fonts.medium, color: brand.white },
+  ctaCode: { fontFamily: fonts.bold, letterSpacing: 1 },
   bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
   disclaimer: { flex: 1, fontSize: 10, lineHeight: 14, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.45)' },
 });

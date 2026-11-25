@@ -15,10 +15,13 @@
 
 import type { SqlDriver } from '@/db/driver';
 import { results } from '@/db/repositories';
-import type { Experiment, Result, ScheduleDay, TestSession } from '@/db/types';
-import { type ArmMapping, unsealArmMapping } from '@/engines/experiment';
+import type { Experiment, HealthMetric, HealthNight, Result, ScheduleDay, TestSession } from '@/db/types';
+import { type ArmMapping, addDays, unsealArmMapping } from '@/engines/experiment';
 import {
   analyzeMetric,
+  CORE_METRICS,
+  HEALTH_METRICS,
+  HEALTH_PRIMARY_DB,
   type DayObservation,
   type MetricAnalysis,
   type MetricKey,
@@ -35,7 +38,7 @@ import { COMPLIANCE_DISCLAIMER, UNBLINDED_CAVEAT } from './compliance';
 import { monthlyCostLine, type MonthlyCostInput } from './cost';
 
 /** Column on test_session holding each metric's value. */
-const METRIC_COLUMN: Record<MetricKey, keyof TestSession> = {
+const METRIC_COLUMN: Partial<Record<MetricKey, keyof TestSession>> = {
   pvtMedianMs: 'pvtMedianMs',
   pvtLapses: 'pvtLapses',
   nbackAccuracy: 'nbackAccuracy',
@@ -44,6 +47,16 @@ const METRIC_COLUMN: Record<MetricKey, keyof TestSession> = {
   energy: 'energy',
   mood: 'mood',
 };
+
+/** health_night metric behind each Health metric key. */
+const HEALTH_COLUMN: Partial<Record<MetricKey, HealthMetric>> = {
+  healthSleepHours: 'sleep_hours',
+  healthRestingHr: 'resting_hr',
+  healthHrv: 'hrv_ms',
+};
+
+/** Share of run days that need a synced night to judge a Health primary. */
+const MIN_HEALTH_COVERAGE = 0.6;
 
 /** Not-enough-data sentence, reused when a metric can't be fit. */
 const NOT_ENOUGH_DATA_SENTENCE = 'Not enough data: extend 2 weeks or improve adherence.';
@@ -83,6 +96,11 @@ export type VerdictViewModel = {
   /** "$X/month" or null when no price is known. */
   monthlyCost: string | null;
   disclaimer: string;
+  /**
+   * Set when the run pre-registered a Health outcome but too few nights synced
+   * to judge it, so the verdict fell back to the check-in metric. Shown as is.
+   */
+  primaryNote: string | null;
 };
 
 /** Human-readable unblinding of a blinded run's neutral labels. */
@@ -99,6 +117,12 @@ export type ComputeVerdictInput = {
   todayIndex?: number;
   /** Passphrase to unseal a blinded run's arm mapping. Required to unblind. */
   unsealPassphrase?: string;
+  /**
+   * Nightly Apple Health / Health Connect values. Each schedule day is matched
+   * to the night that ENDS the morning after it (last night's sleep reflects
+   * yesterday's dose). Omit when Health isn't connected.
+   */
+  healthNights?: HealthNight[];
   /** Per-dose cost for the monthly-cost line; omit when unknown. */
   cost?: Pick<MonthlyCostInput, 'centsPerDose'>;
 };
@@ -153,6 +177,7 @@ function observationsFor(
 ): DayObservation[] {
   const column = METRIC_COLUMN[metric];
   const rows: DayObservation[] = [];
+  if (!column) return rows;
   for (const s of sessions) {
     if (!s.valid) continue;
     const on = onByDay.get(s.dayIndex);
@@ -166,6 +191,35 @@ function observationsFor(
       sleep: typeof s.sleepHours === 'number' ? s.sleepHours : 0,
       caffeine: s.caffeine ? 1 : 0,
     });
+  }
+  return rows.sort((a, b) => a.t - b.t);
+}
+
+/**
+ * Day observations for a Health metric: schedule day D is paired with the night
+ * ending on D + 1. The sleep covariate is held at 0 (and so dropped by the
+ * model): self-reported sleep is the night BEFORE the dose day, which would be
+ * the wrong night to adjust for here. Caffeine is that day's check-in flag.
+ */
+function healthObservationsFor(
+  metric: MetricKey,
+  schedule: ScheduleDay[],
+  sessions: TestSession[],
+  nights: HealthNight[],
+  onByDay: Map<number, 0 | 1>,
+): DayObservation[] {
+  const column = HEALTH_COLUMN[metric];
+  if (!column) return [];
+  const byDate = new Map(nights.filter((n) => n.metric === column).map((n) => [n.date, n.value]));
+  const caffeineByDay = new Map<number, 0 | 1>(
+    sessions.filter((s) => s.valid).map((s) => [s.dayIndex, s.caffeine ? 1 : 0]),
+  );
+  const rows: DayObservation[] = [];
+  for (const day of schedule) {
+    const on = onByDay.get(day.dayIndex);
+    const y = byDate.get(addDays(day.date, 1));
+    if (on === undefined || y === undefined) continue;
+    rows.push({ y, on, t: day.dayIndex, sleep: 0, caffeine: caffeineByDay.get(day.dayIndex) ?? 0 });
   }
   return rows.sort((a, b) => a.t - b.t);
 }
@@ -236,8 +290,21 @@ export function computeExperimentVerdict(
   };
 
   const goal = experiment.goal as Goal;
-  const { primary, secondary } = selectPrimaryMetric(goal);
-  const metricOrder: MetricKey[] = [primary, ...secondary];
+  const nights = input.healthNights ?? [];
+  const hasHealth = nights.length > 0;
+  const available: MetricKey[] = hasHealth ? [...CORE_METRICS, ...HEALTH_METRICS] : CORE_METRICS;
+  const goalSelection = selectPrimaryMetric(goal, available);
+  // A run that connected Health before day 1 pre-registered a Health outcome.
+  const preRegistered = HEALTH_PRIMARY_DB[experiment.primaryMetric];
+  // It's judged on Health only if enough nights synced: at least 60% of days.
+  const healthPrimary =
+    preRegistered &&
+    healthObservationsFor(preRegistered, schedule, sessions, nights, onByDay).length >=
+      Math.ceil(MIN_HEALTH_COVERAGE * schedule.length)
+      ? preRegistered
+      : undefined;
+  const primary: MetricKey = healthPrimary ?? goalSelection.primary;
+  const metricOrder: MetricKey[] = [primary, ...available.filter((m) => m !== primary)];
   const design: 'acute' | 'cumulative' =
     experiment.design === 'cumulative' ? 'cumulative' : 'acute';
 
@@ -245,7 +312,9 @@ export function computeExperimentVerdict(
   const verdicts = new Map<MetricKey, MetricVerdict>();
 
   for (const metric of metricOrder) {
-    const days = observationsFor(metric, sessions, onByDay);
+    const days = HEALTH_COLUMN[metric]
+      ? healthObservationsFor(metric, schedule, sessions, nights, onByDay)
+      : observationsFor(metric, sessions, onByDay);
     let verdict: MetricVerdict;
     try {
       const analysis = analyzeMetric(metric, days, { adherence: adherenceInput, design });
@@ -276,6 +345,14 @@ export function computeExperimentVerdict(
     }
   }
 
+  // Fall back to the check-in metric when the pre-registered Health outcome
+  // has too few nights to judge, and say so on the verdict.
+  let primaryNote: string | null = null;
+  if (preRegistered && !healthPrimary) {
+    primaryNote = `Not enough nights of ${METRICS[preRegistered].label} data synced from Health, so this verdict uses your ${METRICS[primary].label} instead.`;
+  }
+  const secondary = metricOrder.filter((m) => m !== primary);
+
   const onDays = countOnDays(onByDay);
   const monthlyCost = input.cost
     ? monthlyCostLine({ centsPerDose: input.cost.centsPerDose, onDays, lengthDays: experiment.lengthDays })
@@ -292,5 +369,6 @@ export function computeExperimentVerdict(
     revealedMapping: revealed,
     monthlyCost,
     disclaimer: COMPLIANCE_DISCLAIMER,
+    primaryNote,
   };
 }

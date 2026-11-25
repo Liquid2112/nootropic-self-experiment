@@ -22,6 +22,8 @@ export type OnboardingState = {
   testWindow: TestWindowId;
   startDate: string;
   friendPassphrase: string;
+  /** Friend-blinded runs: the user's first name, shown to their keyholder. */
+  keyholderFromName: string;
 };
 
 export type OnboardingContextValue = {
@@ -48,6 +50,7 @@ function initialState(): OnboardingState {
     testWindow: 'morning',
     startDate: todayIso(),
     friendPassphrase: '',
+    keyholderFromName: '',
   };
 }
 

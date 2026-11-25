@@ -4,7 +4,10 @@
     "slug": "nootropic-self-experiment",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "nootropic",
+    "scheme": [
+      "placebo",
+      "nootropic"
+    ],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -31,7 +34,10 @@
             ]
           }
         ]
-      }
+      },
+      "associatedDomains": [
+        "applinks:placebo.app"
+      ]
     },
     "android": {
       "edgeToEdgeEnabled": true,
@@ -40,7 +46,39 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#15131C"
-      }
+      },
+      "permissions": [
+        "android.permission.health.READ_SLEEP",
+        "android.permission.health.READ_RESTING_HEART_RATE",
+        "android.permission.health.READ_HEART_RATE_VARIABILITY"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "placebo.app",
+              "pathPrefix": "/k/"
+            },
+            {
+              "scheme": "https",
+              "host": "placebo.app",
+              "pathPrefix": "/u/"
+            },
+            {
+              "scheme": "https",
+              "host": "placebo.app",
+              "pathPrefix": "/r/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -50,7 +88,54 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.liquid2112.nootropicexperiment",
+          "enableAndroid": true,
+          "widgets": [
+            {
+              "name": "PlaceboToday",
+              "displayName": "Placebo",
+              "description": "Today's cup, your check-in countdown, streak and days until the verdict.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "accessoryCircular",
+                  "accessoryRectangular",
+                  "accessoryInline"
+                ]
+              },
+              "android": {
+                "targetCellWidth": 3,
+                "targetCellHeight": 2,
+                "minWidth": 180,
+                "minHeight": 110,
+                "resizeMode": "both"
+              }
+            }
+          ]
+        }
+      ],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Placebo reads your sleep, resting heart rate and heart rate variability so your experiment can be judged on real data. Nothing is written to Health.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

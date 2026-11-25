@@ -34,3 +34,13 @@ export const AFFILIATE_DISCLOSURE =
  * from search, filters and direct links.
  */
 export const SHOW_UNREGULATED_ENTRIES = true;
+
+/**
+ * Base for shareable links: keyholder invites (/k/...), keys sent back (/u/...)
+ * and referral codes (/r/CODE). PLACEHOLDER domain: register it, host the
+ * apple-app-site-association and assetlinks.json files there plus a fallback
+ * page that sends people without the app to the App Store / Play Store, then
+ * update ios.associatedDomains and the Android intent filter in app.json if
+ * the domain differs. Until then placebo:// links (the app scheme) still open the app.
+ */
+export const SHARE_LINK_BASE = 'https://placebo.app';

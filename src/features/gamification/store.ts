@@ -78,5 +78,26 @@ export function claimProgress(db: SqlDriver, now: Date = new Date()): { game: Ga
   const next = snapshotOf(game);
   const previous = readSnapshot(db) ?? { xp: 0, level: 1, streak: 0, badges: [] };
   writeSnapshot(db, next);
+  for (const listener of claimListeners) {
+    try {
+      listener();
+    } catch {
+      // A listener (the widget refresh) must never break the action itself.
+    }
+  }
   return { game, delta: diffSnapshots(previous, next) };
+}
+
+const claimListeners = new Set<() => void>();
+
+/**
+ * Run `listener` after every recorded action (dose, check-in, reaction test).
+ * The home-screen widget uses it to refresh without each screen knowing about
+ * widgets. Returns an unsubscribe function.
+ */
+export function onProgressClaimed(listener: () => void): () => void {
+  claimListeners.add(listener);
+  return () => {
+    claimListeners.delete(listener);
+  };
 }

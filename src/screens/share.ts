@@ -32,7 +32,8 @@ export async function captureCard(ref: RefObject<ViewRef | null>): Promise<strin
   const viewShot = loadViewShot();
   if (!viewShot || !ref.current) return null;
   try {
-    return await viewShot.captureRef(ref.current, { format: 'png', quality: 1 });
+    // Export at 1080x1920, the native size for TikTok, Reels and Stories.
+    return await viewShot.captureRef(ref.current, { format: 'png', quality: 1, width: 1080, height: 1920 });
   } catch {
     return null;
   }
@@ -44,13 +45,16 @@ export async function captureCard(ref: RefObject<ViewRef | null>): Promise<strin
  * (including the user dismissing the sheet) are swallowed so the screen stays
  * responsive.
  */
-export async function shareCard(ref: RefObject<ViewRef | null>): Promise<boolean> {
+export async function shareCard(
+  ref: RefObject<ViewRef | null>,
+  message = 'My Placebo experiment result',
+): Promise<boolean> {
   const uri = await captureCard(ref);
   if (!uri) return false;
   try {
     // Lazy import so the native module isn't required at module load.
     const { Share } = await import('react-native');
-    await Share.share({ url: uri, message: 'My nootropic self-experiment result' });
+    await Share.share({ url: uri, message });
     return true;
   } catch {
     return false;

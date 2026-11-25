@@ -15,6 +15,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OnboardingProvider } from '@/screens/onboarding/OnboardingContext';
 
 import { ThemeProvider, useTheme } from '@/ui';
+import { useWidgetSync } from '@/features/widget/useWidgetSync';
+import { useHealthSync } from '@/features/health/useHealthSync';
 
 /**
  * Root navigator. One stack with a route per MVP screen, wrapped in the
@@ -23,6 +25,8 @@ import { ThemeProvider, useTheme } from '@/ui';
  * Welcome -> Goal picker -> Experiment setup steps.
  */
 export default function RootLayout() {
+  useWidgetSync();
+  useHealthSync();
   // Brand fonts. Render nothing until they load (the native splash stays up),
   // so text never flashes in the system font first.
   const [fontsLoaded, fontError] = useFonts({
@@ -78,6 +82,12 @@ function ThemedStack() {
         <Stack.Screen name="reaction-test" options={{ title: 'Reaction test' }} />
         <Stack.Screen name="dictionary/index" options={{ title: 'Library' }} />
         <Stack.Screen name="dictionary/[id]" options={{ title: '' }} />
+        <Stack.Screen name="health" options={{ title: 'Health sync' }} />
+        <Stack.Screen name="invite" options={{ title: 'Invite friends' }} />
+        <Stack.Screen name="keyholder-invite" options={{ title: 'Your keyholder', headerBackVisible: false }} />
+        <Stack.Screen name="k/[token]" options={{ title: 'Keyholder' }} />
+        <Stack.Screen name="u/[token]" options={{ title: 'Unlock' }} />
+        <Stack.Screen name="r/[code]" options={{ headerShown: false }} />
       </Stack>
     </>
   );
