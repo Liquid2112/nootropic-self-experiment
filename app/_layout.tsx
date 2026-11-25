@@ -66,6 +66,7 @@ function ThemedStack() {
       >
         <Stack.Screen name="index" options={{ title: 'Today', headerShown: false }} />
         <Stack.Screen name="welcome" options={{ title: '', headerShown: false }} />
+        <Stack.Screen name="quiz" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="goal-picker" options={{ title: '' }} />
         <Stack.Screen name="experiment-setup" options={{ title: '' }} />
         <Stack.Screen name="daily-test" options={{ headerShown: false, presentation: 'fullScreenModal' }} />

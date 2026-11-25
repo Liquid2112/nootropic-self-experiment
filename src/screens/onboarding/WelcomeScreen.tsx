@@ -25,7 +25,7 @@ export function WelcomeScreen() {
 
   function onContinue() {
     update({ acknowledgedDisclaimer: true });
-    router.push('/goal-picker');
+    router.push('/quiz');
   }
 
   return (
