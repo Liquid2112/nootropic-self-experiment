@@ -16,6 +16,7 @@ import {
   type QuizAnswers,
   type QuizQuestion,
 } from '@/features/quiz';
+import { WhoSentYou } from '@/features/referral/WhoSentYou';
 import { PvtTask } from '@/screens/PvtTask';
 import { useOnboarding } from '@/screens/onboarding/OnboardingContext';
 import { Icon, Brian, type IconName } from '@/brand';
@@ -28,6 +29,7 @@ const PLAN_LENGTH_DAYS = 28;
 type Step =
   | { kind: 'question'; index: number }
   | { kind: 'fact'; afterIndex: number }
+  | { kind: 'whoSentYou' }
   | { kind: 'baselineIntro' }
   | { kind: 'baselineTest' }
   | { kind: 'baselineResult' }
@@ -76,12 +78,12 @@ export default function QuizScreen() {
         return;
       }
       const i = from.index + 1;
-      setStep(i < QUIZ_QUESTIONS.length ? { kind: 'question', index: i } : { kind: 'baselineIntro' });
+      setStep(i < QUIZ_QUESTIONS.length ? { kind: 'question', index: i } : { kind: 'whoSentYou' });
       return;
     }
     if (from.kind === 'fact') {
       const i = from.afterIndex + 1;
-      setStep(i < QUIZ_QUESTIONS.length ? { kind: 'question', index: i } : { kind: 'baselineIntro' });
+      setStep(i < QUIZ_QUESTIONS.length ? { kind: 'question', index: i } : { kind: 'whoSentYou' });
     }
   }, []);
 
@@ -169,6 +171,21 @@ export default function QuizScreen() {
           fact={QUIZ_INTERSTITIALS[QUIZ_QUESTIONS[step.afterIndex]!.id]!}
           onNext={() => next(step)}
         />
+      )}
+
+      {step.kind === 'whoSentYou' && (
+        <View style={styles.referral} testID="quiz-who-sent-you">
+          <View style={styles.referralMascot}>
+            <Brian size={96} mood="wow" />
+          </View>
+          <WhoSentYou
+            skippable
+            onDone={({ saved }) => {
+              // Leave a saved code's thank-you on screen for a beat.
+              setTimeout(() => setStep({ kind: 'baselineIntro' }), saved ? 1600 : 0);
+            }}
+          />
+        </View>
       )}
 
       {step.kind === 'baselineIntro' && (
@@ -463,6 +480,8 @@ const styles = StyleSheet.create({
   track: { flex: 1, height: 8, borderRadius: 4, backgroundColor: brand.paperDeep, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 4, backgroundColor: brand.tang },
   body: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32, gap: 10 },
+  referral: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 16 },
+  referralMascot: { alignItems: 'center' },
   centerBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
   centerText: { textAlign: 'center' },
   eyebrow: { fontSize: 12, fontFamily: fonts.bold, letterSpacing: 1.2, color: brand.tang },
