@@ -38,12 +38,20 @@ export function WelcomeScreen() {
     <Scaffold
       testID="welcome-screen"
       footer={
-        <Button
-          label="Continue"
-          testID="welcome-continue"
-          onPress={onContinue}
-          disabled={!canContinue}
-        />
+        <View style={styles.footer}>
+          <Button
+            label="Continue"
+            testID="welcome-continue"
+            onPress={onContinue}
+            disabled={!canContinue}
+          />
+          <Button
+            label="Just try the free reaction test"
+            variant="subtle"
+            testID="welcome-reaction-test"
+            onPress={() => router.push('/reaction-test')}
+          />
+        </View>
       }
     >
       <View style={styles.header}>
@@ -110,6 +118,9 @@ function AcknowledgeRow({ label, checked, onToggle, testID }: AcknowledgeRowProp
 }
 
 const styles = StyleSheet.create({
+  footer: {
+    gap: 8,
+  },
   header: {
     gap: spacing.sm,
   },

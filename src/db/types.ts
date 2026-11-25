@@ -85,3 +85,12 @@ export type Result = {
   verdict: Verdict;
   computedAt: string;
 };
+
+/** One run of the free standalone reaction test (not tied to an experiment). */
+export type QuickTest = {
+  id: string;
+  takenAt: string;
+  medianMs: number;
+  lapses: number;
+  trials: number;
+};

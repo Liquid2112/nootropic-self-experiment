@@ -9,7 +9,7 @@ import {
   type MetricVerdict,
   type VerdictViewModel,
 } from '@/results';
-import { getDatabase } from '@/db';
+import { experiments, getDatabase } from '@/db';
 import { selfBlindPassphrase } from '@/engines/experiment';
 import { useExperimentData } from '@/screens/useExperimentData';
 import { ShareCard, type ViewRef } from '@/screens/ShareCard';
@@ -163,6 +163,17 @@ export default function VerdictScreen() {
         )}
 
         <Button label="See the evidence" variant="secondary" onPress={() => router.push('/evidence-card')} />
+        <Button
+          label="Start another experiment"
+          variant="secondary"
+          onPress={() => {
+            // Close out this run so Today and onboarding treat the next one as new.
+            if (experiment && experiment.status === 'active') {
+              experiments.setStatus(getDatabase(), experiment.id, 'completed');
+            }
+            router.replace('/goal-picker');
+          }}
+        />
 
         <Text variant="caption" tone="tertiary" style={styles.disclaimer}>
           {COMPLIANCE_DISCLAIMER}

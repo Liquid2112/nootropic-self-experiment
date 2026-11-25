@@ -35,6 +35,8 @@ export type TodayView = {
    * baseline (1..3 of 3) instead of the run.
    */
   isBaseline: boolean;
+  /** True once every scheduled day is in the past: time for the verdict. */
+  isFinished: boolean;
 };
 
 /** What the user reads on a baseline day. */
@@ -154,6 +156,7 @@ export function buildTodayView({
         streak: 0,
         hasDayForToday: false,
         isBaseline: true,
+        isFinished: false,
       };
     }
     return {
@@ -165,6 +168,7 @@ export function buildTodayView({
       streak: computeLatestStreak(schedule, isoDate),
       hasDayForToday: false,
       isBaseline: false,
+      isFinished: schedule.length > 0 && schedule.every((d) => d.date < isoDate),
     };
   }
 
@@ -177,6 +181,7 @@ export function buildTodayView({
     streak: computeStreak(schedule, today.dayIndex),
     hasDayForToday: true,
     isBaseline: false,
+    isFinished: false,
   };
 }
 

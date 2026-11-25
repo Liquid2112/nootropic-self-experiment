@@ -176,6 +176,14 @@ export default function TodayScreen() {
           ))}
       </Card>
 
+      {view.isFinished && (
+        <Card>
+          <Text style={styles.cardTitle}>Your experiment is done</Text>
+          <Text style={styles.muted}>The results are unsealed. See what the data says.</Text>
+          <Button label="See your verdict" onPress={() => router.push('/verdict')} />
+        </Card>
+      )}
+
       <Card>
         <Text style={styles.cardTitle}>Daily check-in</Text>
         <Text style={styles.muted}>About 90 seconds: a quick reaction test, a memory task, and three sliders.</Text>

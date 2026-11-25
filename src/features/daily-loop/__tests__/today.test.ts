@@ -134,6 +134,7 @@ describe('buildTodayView', () => {
     expect(view.hasDayForToday).toBe(false);
     expect(view.dayNumber).toBe(0);
     expect(view.instruction).toMatch(/No scheduled dose/);
+    expect(view.isFinished).toBe(true);
     // Streak reflects the most recent taken run at/ before the date.
     expect(view.streak).toBe(0);
   });
@@ -159,6 +160,7 @@ describe('buildTodayView', () => {
     const early = buildTodayView({ experiment: makeExperiment(), schedule, isoDate: '2025-12-28' });
     expect(early.isBaseline).toBe(false);
     expect(early.hasDayForToday).toBe(false);
+    expect(early.isFinished).toBe(false);
   });
 });
 

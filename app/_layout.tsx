@@ -46,6 +46,8 @@ function ThemedStack() {
         <Stack.Screen name="progress" options={{ title: 'Progress' }} />
         <Stack.Screen name="verdict" options={{ title: 'Verdict' }} />
         <Stack.Screen name="evidence-card" options={{ title: 'Evidence Card' }} />
+        <Stack.Screen name="paywall" options={{ title: 'Pro', presentation: 'modal' }} />
+        <Stack.Screen name="reaction-test" options={{ title: 'Reaction test' }} />
       </Stack>
     </>
   );

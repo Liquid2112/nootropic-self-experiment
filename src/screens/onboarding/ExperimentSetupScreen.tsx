@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { loadPurchasesAdapter, setupGate } from '@/features/paywall';
 import type { BlindingMode } from '@/db';
 import { getDatabase } from '@/db';
 import { BASELINE_DAYS, addDays, type RunLength } from '@/engines/experiment';
@@ -81,30 +82,36 @@ export function ExperimentSetupScreen() {
 
   // Build the selections object the engine validates/consumes. Guarded below;
   // goal and supplement are set on the previous screen before reaching here.
-  const selections: OnboardingSelections | null =
-    state.goal && state.supplement
-      ? {
-          goal: state.goal,
-          supplement: state.supplement,
-          lengthDays: state.lengthDays,
-          blindingMode: state.blindingMode,
-          testWindow: state.testWindow,
-          // The run starts after the 3-day baseline: today through the next
-          // two days are baseline (test only, no supplement), day 0 is day 4.
-          startDate: addDays(state.startDate, BASELINE_DAYS),
-          friendPassphrase: state.friendPassphrase,
-        }
-      : null;
+  const selections = useMemo<OnboardingSelections | null>(
+    () =>
+      state.goal && state.supplement
+        ? {
+            goal: state.goal,
+            supplement: state.supplement,
+            lengthDays: state.lengthDays,
+            blindingMode: state.blindingMode,
+            testWindow: state.testWindow,
+            // The run starts after the 3-day baseline: today through the next
+            // two days are baseline (test only, no supplement), day 0 is day 4.
+            startDate: addDays(state.startDate, BASELINE_DAYS),
+            friendPassphrase: state.friendPassphrase,
+          }
+        : null,
+    [state],
+  );
 
   const errors = selections ? validateSelections(selections) : [];
   const passphraseError = errors.find((e) => e.field === 'friendPassphrase');
   const canConfirm = selections !== null && errors.length === 0 && !submitting;
 
-  function onConfirm() {
+  // Set when the paywall was shown for this confirm, so returning from a
+  // successful purchase finishes starting the experiment.
+  const awaitingPurchase = useRef(false);
+
+  const createAndStart = useCallback(() => {
     if (!selections) {
       return;
     }
-    setSubmitting(true);
     try {
       const db = getDatabase();
       createExperiment(db, selections, {
@@ -118,7 +125,46 @@ export function ExperimentSetupScreen() {
       const message = err instanceof Error ? err.message : 'Could not create the experiment.';
       Alert.alert('Setup failed', message);
     }
+  }, [selections, reset, router]);
+
+  async function onConfirm() {
+    if (!selections) {
+      return;
+    }
+    setSubmitting(true);
+    // Running an experiment needs Pro; the store product carries the free trial.
+    const purchases = await loadPurchasesAdapter(Platform.OS);
+    const isPro = await purchases.isPro();
+    const gate = setupGate({ isPro, available: purchases.available, isDev: __DEV__ });
+    if (gate === 'paywall') {
+      awaitingPurchase.current = true;
+      setSubmitting(false);
+      router.push('/paywall');
+      return;
+    }
+    createAndStart();
   }
+
+  // Back from the paywall: start the experiment only if Pro is now active.
+  useFocusEffect(
+    useCallback(() => {
+      if (!awaitingPurchase.current) {
+        return;
+      }
+      awaitingPurchase.current = false;
+      let cancelled = false;
+      void (async () => {
+        const purchases = await loadPurchasesAdapter(Platform.OS);
+        if (!cancelled && (await purchases.isPro())) {
+          setSubmitting(true);
+          createAndStart();
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [createAndStart]),
+  );
 
   return (
     <Scaffold
@@ -127,7 +173,7 @@ export function ExperimentSetupScreen() {
         <Button
           label="Confirm & start"
           testID="setup-confirm"
-          onPress={onConfirm}
+          onPress={() => void onConfirm()}
           disabled={!canConfirm}
           loading={submitting}
         />
