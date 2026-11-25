@@ -5,7 +5,16 @@ import { experiments } from '@/db/repositories';
 import { computeExperimentVerdict } from '@/results/verdict';
 import {
   canSendKey,
+  cheerMessage,
   clearPendingInvite,
+  decodeProgressPayload,
+  dueProgressMilestone,
+  keyholderRun,
+  markInviteSent,
+  markProgressShared,
+  progressLink,
+  progressMessage,
+  updateHeldProgress,
   decodeKeyholderPayload,
   decodeUnlockPayload,
   encodePayload,
@@ -163,5 +172,58 @@ describe('startKeyholderRun', () => {
       unsealPassphrase: p.key,
     });
     expect(vm.revealedMapping?.supplementLabel).toBe(p.cup);
+  });
+});
+
+describe('keyholder progress updates', () => {
+  const progress = { v: 1 as const, t: 'p' as const, run: 'exp_1', day: 14, of: 28, from: 'Shubh', reveal: '2026-12-22' };
+
+  it('round-trips a progress payload and keeps it apart from keys', () => {
+    const token = encodePayload(progress);
+    expect(decodeProgressPayload(token)).toEqual(progress);
+    expect(decodeUnlockPayload(token)).toBeNull();
+    expect(decodeKeyholderPayload(token)).toBeNull();
+    expect(decodeProgressPayload(encodePayload(payload))).toBeNull();
+    expect(decodeProgressPayload(encodePayload({ ...progress, day: 30 }))).toBeNull();
+    expect(parseLink(progressLink(progress))).toEqual({ kind: 'p', token });
+  });
+
+  it('asks for one update per week, rolling a skipped week forward', () => {
+    expect(dueProgressMilestone(6, 28, 0)).toBeNull();
+    expect(dueProgressMilestone(7, 28, 0)).toBe(7);
+    expect(dueProgressMilestone(9, 28, 7)).toBeNull();
+    expect(dueProgressMilestone(15, 28, 0)).toBe(14);
+    expect(dueProgressMilestone(21, 21, 14)).toBeNull();
+    expect(dueProgressMilestone(22, 28, 14)).toBe(21);
+  });
+
+  it('writes messages with the day count and never a cup or key', () => {
+    const msg = progressMessage(progress);
+    expect(msg).toContain('Day 14 of 28');
+    expect(msg).toContain('Halfway');
+    expect(msg).not.toMatch(/cup [AB]|K7QX/);
+    expect(cheerMessage(progress)).toContain('14 to go');
+    expect(progressMessage({ ...progress, day: 21 })).toContain('One week left');
+  });
+
+  it('records progress on a held key, ignoring older updates and unknown runs', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    holdKey(db, payload);
+    expect(updateHeldProgress(db, 'nope', 7, 28)).toBeNull();
+    expect(updateHeldProgress(db, 'exp_1', 14, 28)?.progress).toMatchObject({ day: 14, of: 28 });
+    expect(updateHeldProgress(db, 'exp_1', 7, 28)?.progress?.day).toBe(14);
+    expect(heldKeys(db)[0]!.progress?.day).toBe(14);
+  });
+
+  it('remembers a sent invite once and tracks the last shared milestone', () => {
+    const db = createMemoryDriver();
+    migrate(db);
+    expect(keyholderRun(db, 'exp_1')).toBeNull();
+    expect(markInviteSent(db, 'exp_1', 'keyholder_link', 'Shubh')).toBe(true);
+    expect(markInviteSent(db, 'exp_1', 'in_person', 'Shubh')).toBe(false);
+    markProgressShared(db, 'exp_1', 8);
+    markProgressShared(db, 'exp_1', 3);
+    expect(keyholderRun(db, 'exp_1')).toMatchObject({ sentVia: 'keyholder_link', from: 'Shubh', lastSharedDay: 8 });
   });
 });

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { experiments, getDatabase } from '@/db';
@@ -6,6 +6,7 @@ import { Brian } from '@/brand';
 import { addDays } from '@/engines/experiment';
 import { canSendKey, decodeUnlockPayload } from '@/features/referral';
 import { localDay } from '@/features/gamification';
+import { trackOnce } from '@/features/analytics';
 import { shortDateLabel } from '@/features/widget/model';
 import { Button, Scaffold, brand, fonts, spacing } from '@/ui';
 
@@ -25,6 +26,15 @@ export default function UnlockScreen() {
     if (!canSendKey(reveal, localDay(new Date()))) return { kind: 'early' as const, reveal };
     return { kind: 'ok' as const, key: payload.key };
   }, [params.token]);
+
+  const outcome = result.kind === 'ok' || result.kind === 'early' ? result.kind : null;
+  const run = useMemo(
+    () => (typeof params.token === 'string' ? decodeUnlockPayload(params.token)?.run : undefined),
+    [params.token],
+  );
+  useEffect(() => {
+    if (outcome && run) trackOnce(`key_received:${run}:${outcome}`, 'key_received', { outcome });
+  }, [outcome, run]);
 
   if (result.kind === 'ok') {
     return <Redirect href={{ pathname: '/verdict', params: { key: result.key } }} />;

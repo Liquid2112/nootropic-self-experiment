@@ -15,6 +15,7 @@ import {
   type ReferralState,
 } from '@/features/referral';
 import { WhoSentYou } from '@/features/referral/WhoSentYou';
+import { track } from '@/features/analytics';
 import { localDay } from '@/features/gamification';
 import { shortDateLabel } from '@/features/widget/model';
 import { Button, Card, Scaffold, brand, fonts, radius, spacing } from '@/ui';
@@ -42,7 +43,8 @@ export default function InviteScreen() {
 
   async function shareCode() {
     try {
-      await Share.share({ message: referralMessage(state.me.myCode) });
+      const res = await Share.share({ message: referralMessage(state.me.myCode) });
+      if (res.action !== Share.dismissedAction) track('invite_sent', { via: 'code' });
     } catch {
       // ignore
     }
@@ -52,6 +54,7 @@ export default function InviteScreen() {
     try {
       const res = await Share.share({ message: unlockMessage({ v: 1, run: k.run, key: k.key }, k.supplement) });
       if (res.action !== Share.dismissedAction) {
+        if (!k.sentAt) track('key_sent_back');
         markKeySent(getDatabase(), k.run);
         setState(load());
       }
@@ -67,7 +70,8 @@ export default function InviteScreen() {
       return;
     }
     setPasteError(null);
-    router.push(link.kind === 'k' ? { pathname: '/k/[token]', params: { token: link.token } } : { pathname: '/u/[token]', params: { token: link.token } });
+    const pathname = link.kind === 'k' ? '/k/[token]' : link.kind === 'p' ? '/p/[token]' : '/u/[token]';
+    router.push({ pathname, params: { token: link.token } });
   }
 
   return (
@@ -98,6 +102,7 @@ export default function InviteScreen() {
             return (
               <View key={k.run} style={styles.keyRow}>
                 <Text style={styles.keyTitle}>{`${k.from || 'A friend'}’s ${k.supplement} test`}</Text>
+                {k.progress && !ready ? <HeldProgress day={k.progress.day} of={k.progress.of} /> : null}
                 <Text style={styles.muted}>
                   {`Cup ${k.cup} is the real one. Key ${k.key}. `}
                   {k.sentAt ? 'Sent.' : ready ? 'Reveal day is here.' : `Unlocks ${shortDateLabel(k.reveal)}.`}
@@ -138,7 +143,23 @@ export default function InviteScreen() {
   );
 }
 
+/** How far the friend is, from their latest progress update. */
+function HeldProgress({ day, of }: { day: number; of: number }) {
+  return (
+    <View style={styles.progressWrap}>
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${Math.max(4, Math.round((day / of) * 100))}%` }]} />
+      </View>
+      <Text style={styles.progressText}>{`Day ${day} of ${of}`}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  progressWrap: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: brand.line, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 3, backgroundColor: brand.tang },
+  progressText: { fontFamily: fonts.semibold, fontSize: 12, color: brand.ink2 },
   hero: { gap: spacing.sm, backgroundColor: brand.tangSoft, borderColor: brand.tangSoft },
   kicker: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 1.2, color: brand.tangDeep },
   heroTitle: { fontFamily: fonts.medium, fontSize: 14, color: brand.muted },

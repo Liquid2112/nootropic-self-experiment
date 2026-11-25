@@ -7,12 +7,15 @@ import {
   REFERRAL_REWARD,
   decodeKeyholderPayload,
   holdKey,
+  heldKeys,
   isOwnRun,
+  markInviteSent,
   referralState,
   setReferredBy,
   type KeyholderPayload,
 } from '@/features/referral';
 import { scheduleRevealReminder } from '@/features/referral/reminders';
+import { track } from '@/features/analytics';
 import { stubRewardsBackend, syncAttribution } from '@/features/referral/rewards';
 import { shortDateLabel } from '@/features/widget/model';
 import { Button, Card, Scaffold, brand, fonts, radius, spacing } from '@/ui';
@@ -72,7 +75,9 @@ export default function KeyholderScreen() {
 
   async function onAccept(p: KeyholderPayload) {
     const db = getDatabase();
+    const firstTime = !heldKeys(db).some((k) => k.run === p.run);
     holdKey(db, p);
+    if (firstTime) track('invite_accepted', { via: 'keyholder' });
     setReferredBy(db, p.ref);
     const me = referralState(db);
     void syncAttribution({ referralCode: me.myCode, referredBy: me.referredBy, creatorCode: me.creatorCode });
@@ -118,7 +123,15 @@ export default function KeyholderScreen() {
             <Text style={styles.key}>{payload.key}</Text>
             <Text style={styles.muted}>{`On ${reveal} they’ll need it to unlock the verdict. Keep it off their phone.`}</Text>
           </Card>
-          <Button label="Done. Hand the phone back" onPress={() => router.replace('/keyholder-invite?done=1')} />
+          <Button
+            label="Done. Hand the phone back"
+            onPress={() => {
+              if (markInviteSent(getDatabase(), payload.run, 'in_person', payload.from)) {
+                track('invite_sent', { via: 'in_person' });
+              }
+              router.replace('/keyholder-invite?done=1');
+            }}
+          />
         </>
       ) : accepted ? (
         <Card style={styles.card}>

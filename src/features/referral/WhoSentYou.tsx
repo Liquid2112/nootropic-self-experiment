@@ -5,6 +5,7 @@ import { getDatabase } from '@/db';
 import { Button, brand, fonts, radius, spacing } from '@/ui';
 import { lookupCode } from './model';
 import { syncAttribution } from './rewards';
+import { track } from '@/features/analytics';
 import { referralState, setCreatorCode, setReferredBy } from './store';
 
 export type WhoSentYouProps = {
@@ -37,6 +38,7 @@ export function WhoSentYou({ onDone, skippable = false }: WhoSentYouProps) {
       setMessage('You’ve already used a code on this phone.');
       return;
     }
+    track('invite_accepted', { via: match.kind === 'creator' ? 'creator' : 'code' });
     const after = referralState(db);
     void syncAttribution({ referralCode: after.myCode, referredBy: after.referredBy, creatorCode: after.creatorCode });
     setSaved(true);

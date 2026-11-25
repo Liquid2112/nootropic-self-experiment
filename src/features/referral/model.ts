@@ -104,6 +104,24 @@ export type KeyholderPayload = {
 /** What the keyholder sends back on reveal day. */
 export type UnlockPayload = { v: 1; run: string; key: string };
 
+/**
+ * A progress update the runner sends their keyholder ("day 14 of 28"). Carries
+ * only how far along the run is, never a score, so it can't hint at the result.
+ */
+export type ProgressPayload = {
+  v: 1;
+  t: 'p';
+  run: string;
+  /** Run day reached (1-based). */
+  day: number;
+  /** Run length in days. */
+  of: number;
+  /** Sender's first name, or ''. */
+  from: string;
+  /** YYYY-MM-DD the verdict unlocks. */
+  reveal: string;
+};
+
 // A fixed mask so a link isn't readable at a glance. Not a secret (see the
 // threat model above).
 const MASK = 'placebo-keyholder';
@@ -128,7 +146,7 @@ function fromBase64Url(text: string): Uint8Array {
   return out;
 }
 
-export function encodePayload(payload: KeyholderPayload | UnlockPayload): string {
+export function encodePayload(payload: KeyholderPayload | UnlockPayload | ProgressPayload): string {
   return toBase64Url(xor(new TextEncoder().encode(JSON.stringify(payload))));
 }
 
@@ -164,20 +182,42 @@ export function decodeKeyholderPayload(token: string): KeyholderPayload | null {
 
 export function decodeUnlockPayload(token: string): UnlockPayload | null {
   const p = decodeJson(token);
-  if (!p || p.v !== 1 || typeof p.run !== 'string' || typeof p.key !== 'string' || 'cup' in p) return null;
+  if (!p || p.v !== 1 || typeof p.run !== 'string' || typeof p.key !== 'string' || 'cup' in p || 't' in p) return null;
   return { v: 1, run: p.run, key: p.key };
+}
+
+const isDay = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 400;
+
+export function decodeProgressPayload(token: string): ProgressPayload | null {
+  const p = decodeJson(token);
+  if (
+    !p ||
+    p.v !== 1 ||
+    p.t !== 'p' ||
+    typeof p.run !== 'string' ||
+    !isDay(p.day) ||
+    !isDay(p.of) ||
+    p.day > p.of ||
+    typeof p.from !== 'string' ||
+    typeof p.reveal !== 'string' ||
+    !ISO.test(p.reveal)
+  ) {
+    return null;
+  }
+  return { v: 1, t: 'p', run: p.run, day: p.day, of: p.of, from: p.from, reveal: p.reveal };
 }
 
 export const keyholderLink = (p: KeyholderPayload) => `${LINK_BASE}/k/${encodePayload(p)}`;
 export const unlockLink = (p: UnlockPayload) => `${LINK_BASE}/u/${encodePayload(p)}`;
 export const referralLink = (code: string) => `${LINK_BASE}/r/${code}`;
+export const progressLink = (p: ProgressPayload) => `${LINK_BASE}/p/${encodePayload(p)}`;
 
-export type ParsedLink = { kind: 'k' | 'u' | 'r'; token: string };
+export type ParsedLink = { kind: 'k' | 'u' | 'r' | 'p'; token: string };
 
 /** Pull the kind and token out of a pasted link (https or placebo://). */
 export function parseLink(text: string): ParsedLink | null {
-  const m = /(?:^|\/)(k|u|r)\/([A-Za-z0-9_-]+)\/?(?:[?#].*)?$/.exec(text.trim());
-  return m ? { kind: m[1] as 'k' | 'u' | 'r', token: m[2]! } : null;
+  const m = /(?:^|\/)(k|u|r|p)\/([A-Za-z0-9_-]+)\/?(?:[?#].*)?$/.exec(text.trim());
+  return m ? { kind: m[1] as ParsedLink['kind'], token: m[2]! } : null;
 }
 
 // --- messages ----------------------------------------------------------------
@@ -200,6 +240,56 @@ export function referralMessage(code: string): string {
     `I'm testing whether my supplements actually work, blind, with Placebo. Use my code ${code} and we both get a free month.`,
     referralLink(code),
   ].join('\n\n');
+}
+
+// --- keyholder progress updates --------------------------------------------
+
+/**
+ * The run days that prompt "tell your keyholder how it's going": once a week.
+ * The keyholder is the one person who knows the run exists and is waiting on
+ * the result, so a weekly ping turns them into a reason to keep going.
+ */
+export const PROGRESS_MILESTONES = [7, 14, 21] as const;
+
+/**
+ * The milestone the runner should share now, or null. That is the latest
+ * milestone reached that hasn't been shared yet and isn't the last day (the
+ * reveal covers that). A skipped week rolls forward instead of stacking up.
+ */
+export function dueProgressMilestone(runDay: number, lengthDays: number, lastSharedDay: number): number | null {
+  let due: number | null = null;
+  for (const m of PROGRESS_MILESTONES) {
+    if (m < lengthDays && m <= runDay && m > lastSharedDay) due = m;
+  }
+  return due;
+}
+
+/** "Day 14 of 28" update the runner sends their keyholder. Never a score. */
+export function progressMessage(p: ProgressPayload): string {
+  const left = p.of - p.day;
+  const half = p.day * 2 >= p.of && (p.day - 1) * 2 < p.of;
+  const line =
+    left <= 7
+      ? `Day ${p.day} of ${p.of}. One week left on my blind test and I still can't tell which cup is real.`
+      : half
+        ? `Day ${p.day} of ${p.of}. Halfway through my blind test, still no idea which cup is real.`
+        : `Day ${p.day} of ${p.of} on my blind test. Still no idea which cup is real.`;
+  return [line, `You're holding my key until ${shortDateLabel(p.reveal)}. Don't tell me anything.`, progressLink(p)].join(
+    '\n\n',
+  );
+}
+
+/** The keyholder's reply: a short cheer, no link needed. */
+export function cheerMessage(p: ProgressPayload): string {
+  const left = p.of - p.day;
+  return left <= 0
+    ? `That's all ${p.of} days. I've got your key ready for ${shortDateLabel(p.reveal)}.`
+    : `Day ${p.day} of ${p.of}, nice. ${left} to go. Your key's safe with me until ${shortDateLabel(p.reveal)}, so don't you dare skip a day.`;
+}
+
+/** The runner's reveal-day nudge to their keyholder. */
+export function keyRequestMessage(supplement: string): string {
+  return `Reveal day! My ${supplement} test is done. Open Placebo and send me the key so I can see if it actually worked.`;
 }
 
 /** True once the key may be sent back (on or after reveal day). */

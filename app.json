@@ -71,6 +71,11 @@
               "scheme": "https",
               "host": "placebo.app",
               "pathPrefix": "/r/"
+            },
+            {
+              "scheme": "https",
+              "host": "placebo.app",
+              "pathPrefix": "/p/"
             }
           ],
           "category": [

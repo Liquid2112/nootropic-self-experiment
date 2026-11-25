@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import {
   experiments,
@@ -10,7 +10,7 @@ import {
   type Experiment,
   type ScheduleDay,
 } from '@/db';
-import { BASELINE_DAYS } from '@/engines/experiment';
+import { BASELINE_DAYS, addDays } from '@/engines/experiment';
 import {
   buildTodayView,
   DEFAULT_CHECK_IN_WINDOW,
@@ -32,6 +32,15 @@ import { RESUME_WARNING, activePause, endExperimentForSafety, resumeExperiment }
 import { track, trackOnce } from '@/features/analytics';
 import { refreshWidgets } from '@/features/widget/useWidgetSync';
 import {
+  dueProgressMilestone,
+  keyRequestMessage,
+  keyholderRun,
+  markProgressShared,
+  pendingInvite,
+  progressMessage,
+  type KeyholderRun,
+} from '@/features/referral';
+import {
   ActionTile,
   Confetti,
   QuestList,
@@ -51,7 +60,25 @@ type Loaded = {
   game: GameState;
   /** Set while the run is paused after a logged bad reaction. */
   pause: AdverseEvent | null;
+  /** Friend-blinded (keyholder) state, or null for other blinding modes. */
+  keyholder: KeyholderToday | null;
 };
+
+type KeyholderToday = {
+  /** The key link was made but never reached a keyholder. */
+  unsent: boolean;
+  run: KeyholderRun | null;
+  reveal: string;
+};
+
+function loadKeyholder(db: ReturnType<typeof getDatabase>, experiment: Experiment): KeyholderToday | null {
+  if (experiment.blindingMode !== 'sealed') return null;
+  const run = keyholderRun(db, experiment.id);
+  const pending = pendingInvite(db);
+  const unsent = run === null && pending !== null && pending.run === experiment.id;
+  if (!run && !unsent) return null;
+  return { unsent, run, reveal: addDays(experiment.startDate, experiment.lengthDays) };
+}
 
 function greeting(now: Date): string {
   const h = now.getHours();
@@ -120,6 +147,7 @@ export default function TodayScreen() {
       view,
       supplementName: supplements.getById(db, experiment.supplementId)?.name ?? 'your supplement',
       game: loadGameState(db),
+      keyholder: loadKeyholder(db, experiment),
     });
     setReady(true);
   }, []);
@@ -168,6 +196,46 @@ export default function TodayScreen() {
     },
     [markTaken, router],
   );
+
+  const shareProgress = useCallback(async () => {
+    const kh = loaded?.keyholder;
+    if (!loaded || !kh?.run) return;
+    const day = loaded.view.dayNumber;
+    try {
+      const res = await Share.share({
+        message: progressMessage({
+          v: 1,
+          t: 'p',
+          run: loaded.experiment.id,
+          day,
+          of: loaded.experiment.lengthDays,
+          from: kh.run.from,
+          reveal: kh.reveal,
+        }),
+      });
+      if (res.action === Share.dismissedAction) return;
+      markProgressShared(getDatabase(), loaded.experiment.id, day);
+      track('progress_shared', { run_day: day });
+      load();
+    } catch {
+      // Share sheet unavailable.
+    }
+  }, [loaded, load]);
+
+  const skipProgress = useCallback(() => {
+    if (!loaded) return;
+    markProgressShared(getDatabase(), loaded.experiment.id, loaded.view.dayNumber);
+    load();
+  }, [loaded, load]);
+
+  const askForKey = useCallback(async () => {
+    if (!loaded) return;
+    try {
+      await Share.share({ message: keyRequestMessage(loaded.supplementName) });
+    } catch {
+      // Share sheet unavailable.
+    }
+  }, [loaded]);
 
   // Schedule the morning dose + check-in reminders for the active experiment.
   // Degrades to a no-op when notification permission is denied or the module is
@@ -269,6 +337,11 @@ export default function TodayScreen() {
         ? (view.dayNumber - 1) / Math.max(1, view.totalDays)
         : 0;
   const checkInDue = (view.hasDayForToday || view.isBaseline) && !game.today.checkIn;
+  const kh = loaded.keyholder;
+  const progressDue =
+    kh?.run && view.hasDayForToday && !view.isBaseline
+      ? dueProgressMilestone(view.dayNumber, experiment.lengthDays, kh.run.lastSharedDay)
+      : null;
 
   return (
     <View style={styles.root}>
@@ -299,6 +372,20 @@ export default function TodayScreen() {
               {`Your ${game.streak.current}-day streak ends at midnight. One quest keeps it alive.`}
             </Text>
           </View>
+        ) : null}
+
+        {kh?.unsent ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/keyholder-invite')}
+            style={styles.riskBanner}
+          >
+            <Icon name="lock" size={18} color={brand.tang} strokeWidth={2.4} />
+            <Text style={styles.riskText}>
+              Your key isn’t with a keyholder yet. Without it your verdict can’t unlock. Send it now.
+            </Text>
+            <Icon name="chevronRight" size={16} color={brand.tangDeep} />
+          </Pressable>
         ) : null}
 
         {/* Hero: verdict countdown + run progress */}
@@ -345,6 +432,12 @@ export default function TodayScreen() {
               <Icon name="arrowRight" size={18} color={brand.ink} />
             </Pressable>
           ) : null}
+          {view.isFinished && kh?.run ? (
+            <Pressable accessibilityRole="button" onPress={() => void askForKey()} style={styles.heroLink}>
+              <Icon name="lock" size={15} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.heroLinkText}>Ask your keyholder for the key</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Daily quests */}
@@ -366,6 +459,28 @@ export default function TodayScreen() {
           </View>
           <QuestList quests={quests} onPressQuest={onQuest} />
         </View>
+
+        {/* Weekly check-in with the keyholder */}
+        {progressDue !== null ? (
+          <View style={[styles.card, styles.keyholderCard]}>
+            <View style={styles.doseHeader}>
+              <View style={[styles.iconBubble, { backgroundColor: brand.white }]}>
+                <Icon name="share" size={20} color={brand.tang} />
+              </View>
+              <View style={styles.flex}>
+                <Text style={styles.cardTitle}>{`Week ${Math.round(progressDue / 7)} done`}</Text>
+                <Text style={styles.muted}>Let your keyholder know you’re still going</Text>
+              </View>
+            </View>
+            <Text style={styles.body}>
+              {`They’re holding your key until the reveal. Send them a day count. It never includes a score.`}
+            </Text>
+            <Button label="Send an update" onPress={() => void shareProgress()} />
+            <Pressable accessibilityRole="button" onPress={skipProgress} style={styles.skipRow}>
+              <Text style={styles.skipText}>Not this week</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* Dose instruction (blinded wording) */}
         {(view.hasDayForToday || view.isBaseline) && (
@@ -606,6 +721,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroButtonText: { color: brand.ink, fontSize: 16, fontFamily: fonts.semibold },
+  heroLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
+  heroLinkText: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontFamily: fonts.semibold },
+  keyholderCard: { backgroundColor: brand.tangSoft, borderColor: brand.tangSoft },
+  skipRow: { alignItems: 'center', paddingVertical: 2 },
+  skipText: { color: brand.muted, fontSize: 14, fontFamily: fonts.medium },
   card: {
     backgroundColor: brand.white,
     borderRadius: 24,

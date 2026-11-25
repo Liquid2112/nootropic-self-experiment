@@ -29,7 +29,29 @@ export type AnalyticsEvent =
   /** Once per local day the app is opened during a run: the retention curve. */
   | 'run_day_active'
   | 'check_in_completed'
-  | 'dose_logged';
+  | 'dose_logged'
+  /** The referral loop (friend-blinding and codes). See REFERRAL_VIA. */
+  | 'invite_sent'
+  | 'invite_accepted'
+  /** Sender shared a progress update with their keyholder. */
+  | 'progress_shared'
+  /** Keyholder opened a progress update from their friend. */
+  | 'progress_opened'
+  /** Keyholder sent the key back on reveal day. */
+  | 'key_sent_back'
+  /** A key came back to the sender's phone (outcome: ok or early). */
+  | 'key_received';
+
+/**
+ * How an invite went out or came in, so the referral funnel splits by channel.
+ *  - keyholder_link: the friend-blinding link sent through the share sheet
+ *  - in_person: the keyholder read the cup on the runner's phone
+ *  - code: a personal referral code shared or typed
+ *  - creator: a creator code typed or tapped
+ *  - keyholder: a friend accepted a keyholder link
+ */
+export const REFERRAL_VIA = ['keyholder_link', 'in_person', 'code', 'creator', 'keyholder'] as const;
+export type ReferralVia = (typeof REFERRAL_VIA)[number];
 
 export type PropValue = string | number | boolean;
 export type EventProps = Record<string, PropValue>;
@@ -47,6 +69,12 @@ export const ALLOWED_PROPS: Record<AnalyticsEvent, readonly string[]> = {
   run_day_active: ['run_day', 'phase'],
   check_in_completed: ['run_day', 'phase'],
   dose_logged: ['run_day'],
+  invite_sent: ['via'],
+  invite_accepted: ['via'],
+  progress_shared: ['run_day'],
+  progress_opened: ['run_day'],
+  key_sent_back: [],
+  key_received: ['outcome'],
 };
 
 const TOKEN = /^[a-z0-9_]{1,24}$/;

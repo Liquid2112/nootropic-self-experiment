@@ -90,6 +90,7 @@ function ThemedStack() {
         <Stack.Screen name="keyholder-invite" options={{ title: 'Your keyholder', headerBackVisible: false }} />
         <Stack.Screen name="k/[token]" options={{ title: 'Keyholder' }} />
         <Stack.Screen name="u/[token]" options={{ title: 'Unlock' }} />
+        <Stack.Screen name="p/[token]" options={{ title: 'Keyholder' }} />
         <Stack.Screen name="r/[code]" options={{ headerShown: false }} />
       </Stack>
     </>

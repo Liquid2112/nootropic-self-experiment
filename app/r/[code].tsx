@@ -4,6 +4,7 @@ import { CREATORS } from '@/config/creators';
 import { getDatabase } from '@/db';
 import { lookupCode, referralState, setCreatorCode, setReferredBy } from '@/features/referral';
 import { syncAttribution } from '@/features/referral/rewards';
+import { track } from '@/features/analytics';
 
 /**
  * A referral or creator link (placebo.app/r/CODE), e.g. from a TikTok bio or a
@@ -20,6 +21,7 @@ export default function ReferralLink() {
     if (!match) return;
     const saved = match.kind === 'creator' ? setCreatorCode(db, match.code) : setReferredBy(db, match.code);
     if (saved) {
+      track('invite_accepted', { via: match.kind === 'creator' ? 'creator' : 'code' });
       const after = referralState(db);
       void syncAttribution({ referralCode: after.myCode, referredBy: after.referredBy, creatorCode: after.creatorCode });
     }

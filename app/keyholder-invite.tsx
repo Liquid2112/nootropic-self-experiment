@@ -7,8 +7,11 @@ import {
   clearPendingInvite,
   encodePayload,
   keyholderInviteMessage,
+  keyholderRun,
+  markInviteSent,
   pendingInvite,
 } from '@/features/referral';
+import { track } from '@/features/analytics';
 import { shortDateLabel } from '@/features/widget/model';
 import { Button, Card, Scaffold, brand, fonts, spacing } from '@/ui';
 
@@ -21,7 +24,9 @@ import { Button, Card, Scaffold, brand, fonts, spacing } from '@/ui';
 export default function KeyholderInviteScreen() {
   const params = useLocalSearchParams<{ done?: string }>();
   const [payload] = useState(() => pendingInvite(getDatabase()));
-  const [sent, setSent] = useState(params.done === '1');
+  const [sent, setSent] = useState(
+    () => params.done === '1' || (payload !== null && keyholderRun(getDatabase(), payload.run) !== null),
+  );
 
   function finish() {
     clearPendingInvite(getDatabase());
@@ -45,7 +50,12 @@ export default function KeyholderInviteScreen() {
     if (!payload) return;
     try {
       const res = await Share.share({ message: keyholderInviteMessage(payload) });
-      if (res.action !== Share.dismissedAction) setSent(true);
+      if (res.action !== Share.dismissedAction) {
+        if (markInviteSent(getDatabase(), payload.run, 'keyholder_link', payload.from)) {
+          track('invite_sent', { via: 'keyholder_link' });
+        }
+        setSent(true);
+      }
     } catch {
       // Share sheet unavailable; the user can still hand the phone over.
     }
