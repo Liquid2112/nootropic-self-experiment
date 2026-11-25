@@ -61,3 +61,19 @@ export function drawBanner(g,W,H,big,small,bg='#FF5A36',fg='#15131C'){
   g.fillStyle=fg;g.textAlign='center';g.font='900 '+Math.round(H*.36)+'px Inter';g.fillText(big,W/2,H*.56);
   if(small){g.font='800 '+Math.round(H*.15)+'px Inter';g.fillText(small,W/2,H*.83);}g.textAlign='left';
 }
+export function wrapText(g,txt,x,y,maxW,lh){const words=txt.split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){g.fillText(line,x,y);y+=lh;line=w;}else line=t;}if(line)g.fillText(line,x,y);return y+lh;}
+export function drawEntry(g,W,H,e,btn){
+  g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-8,40);g.fill();
+  g.fillStyle='#6d6788';g.font='800 30px Inter';g.fillText('PLACEBO LIBRARY',40,66);
+  g.fillStyle='#15131C';g.font='900 '+(e.name.length>14?58:76)+'px Inter';g.fillText(e.name,40,145);
+  g.fillStyle='#4a4560';g.font='700 34px Inter';let y=wrapText(g,e.tag,40,200,W-80,42);
+  g.fillStyle=e.evColor;g.beginPath();g.roundRect(40,y,400,60,16);g.fill();g.fillStyle='#15131C';g.font='900 32px Inter';g.fillText('EVIDENCE: '+e.evidence,62,y+42);
+  y+=110;g.fillStyle='#6d6788';g.font='800 28px Inter';g.fillText('WHAT THE RESEARCH SAYS',40,y);y+=54;
+  g.fillStyle='#15131C';g.font='900 42px Inter';y=wrapText(g,e.research,40,y,W-80,52);
+  y+=8;let x=40;g.font='800 28px Inter';for(const c of e.chips){const w=g.measureText(c).width+40;g.fillStyle='#B7A6FF';g.beginPath();g.roundRect(x,y,w,50,14);g.fill();g.fillStyle='#15131C';g.fillText(c,x+20,y+35);x+=w+14;}
+  if(btn){g.fillStyle=btn>1?'#15131C':'#FF5A36';g.beginPath();g.roundRect(40,H-130,W-80,90,24);g.fill();g.fillStyle=btn>1?'#F7F4EE':'#15131C';g.font='900 40px Inter';g.textAlign='center';g.fillText(btn>1?'BLIND TEST STARTED':'TEST THIS ON ME',W/2,H-72);g.textAlign='left';}
+}
+export function drawMini(g,W,H,name,col){g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-8,26);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(4,4,W-8,60,[26,26,0,0]);g.fill();
+  g.fillStyle='#15131C';g.font='900 34px Inter';g.textAlign='center';wrapText(g,name,W/2,140,W-30,40);g.textAlign='left';}
+export function drawClaim(g,W,H,txt){g.fillStyle='#15131C';g.beginPath();g.roundRect(4,4,W-8,H-8,30);g.fill();g.strokeStyle='#ff2d6f';g.lineWidth=8;g.stroke();
+  g.fillStyle='#ff2d6f';g.font='900 32px Inter';g.fillText('TIKTOK SAID',36,60);g.fillStyle='#fff';g.font='900 56px Inter';wrapText(g,txt,36,130,W-72,64);}
