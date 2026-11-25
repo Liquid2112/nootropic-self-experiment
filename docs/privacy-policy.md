@@ -35,6 +35,8 @@ If you tap a share button, the app creates an image or text with your result and
 
 If you join the waitlist on our website, we collect the email address you enter. It is stored by **Formspree**, the form service we use, and used only to email you when Placebo is available. We don't sell it or share it for advertising. To have it removed, contact us (see Contact below) and we'll delete it. See [Formspree's privacy policy](https://formspree.io/legal/privacy-policy/).
 
+The website also uses PostHog to count page views and waitlist signups. It doesn't set cookies, doesn't record your session, and never sends your email address to PostHog.
+
 ## Analytics and advertising
 
 The app does not include advertising and does not track you across other apps or websites.

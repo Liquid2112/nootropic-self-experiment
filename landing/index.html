@@ -84,6 +84,20 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
 @media(max-width:600px){.faq{grid-template-columns:minmax(0,1fr)}.grid{gap:4px}.day{border-radius:7px;font-size:11px}.navcta{padding:8px 13px;font-size:14px}}
 @media(prefers-reduced-motion:no-preference){.bob{animation:bob 3.2s ease-in-out infinite;transform-origin:60px 100px}@keyframes bob{50%{transform:translateY(-4px) rotate(2deg)}}}
 </style>
+<script>
+  // PostHog: page views and waitlist signups only. No autocapture, no session
+  // recording, no cookies (memory persistence), and never the email address.
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_sxBKZUfyEspSVe5wo2tmEmAobAoq8ZgtyTyyhHZdSi3X', {
+    api_host: 'https://us.i.posthog.com',
+    person_profiles: 'identified_only',
+    persistence: 'memory',
+    autocapture: false,
+    capture_pageview: true,
+    capture_pageleave: false,
+    disable_session_recording: true,
+  });
+</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -258,6 +272,7 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
         const res = await fetch(FORM_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ email, source: formId }) });
         if (!res.ok) throw new Error(String(res.status));
         form.hidden = true;
+        try { window.posthog?.capture('waitlist_signup', { form: formId }); } catch {}
         say('You’re on the list. We’ll email you once, when Placebo is ready.', true);
       } catch {
         say('Couldn’t save that just now. Try again in a minute.', false);
