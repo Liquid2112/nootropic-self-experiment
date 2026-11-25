@@ -21,11 +21,16 @@ export function PvtTask({
   const onsetRef = useRef<number>(0);
   const rtsRef = useRef<number[]>([]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Parents often pass an inline onDone; keep the latest without restarting.
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  });
 
   const scheduleNext = useCallback(
     (i: number) => {
       if (i >= schedule.length) {
-        onDone(rtsRef.current);
+        onDoneRef.current(rtsRef.current);
         return;
       }
       const isi = schedule[i] ?? 1000;
@@ -34,23 +39,17 @@ export function PvtTask({
         setVisible(true);
       }, isi);
     },
-    [schedule, onDone],
+    [schedule],
   );
 
-  // Kick off the first trial once.
-  const started = useRef(false);
-  if (!started.current) {
-    started.current = true;
+  // Start the first trial on mount; don't fire a pending stimulus after the
+  // screen is left.
+  useEffect(() => {
     scheduleNext(0);
-  }
-
-  // Don't fire a pending stimulus after the screen is left.
-  useEffect(
-    () => () => {
+    return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    },
-    [],
-  );
+    };
+  }, [scheduleNext]);
 
   const onTap = useCallback(() => {
     if (!visible) {

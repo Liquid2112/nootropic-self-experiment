@@ -80,16 +80,14 @@ export default function DailyTestScreen() {
   const [context, setContext] = useState<DailyContext>(emptyContext());
 
   // PVT schedule + collected RTs.
-  const pvtSchedule = useMemo(
-    () => generatePvtSchedule({ trials: PVT_DEFAULT_TRIALS, seed: Date.now() & 0xffff }),
-    [],
+  const [pvtSchedule] = useState(() =>
+    generatePvtSchedule({ trials: PVT_DEFAULT_TRIALS, seed: Date.now() & 0xffff }),
   );
   const rtRef = useRef<number[]>([]);
 
   // N-back sequence + collected responses.
-  const nbackSequence = useMemo<NbackSequence>(
-    () => generateNbackSequence({ trials: NBACK_DEFAULT_TRIALS, seed: (Date.now() >> 4) & 0xffff }),
-    [],
+  const [nbackSequence] = useState<NbackSequence>(() =>
+    generateNbackSequence({ trials: NBACK_DEFAULT_TRIALS, seed: (Date.now() >> 4) & 0xffff }),
   );
   const nbackResponsesRef = useRef<NbackResponse[]>([]);
 

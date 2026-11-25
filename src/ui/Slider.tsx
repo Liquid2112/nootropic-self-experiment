@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   PanResponder,
   StyleSheet,
@@ -75,42 +75,39 @@ export function Slider({
   const range = max - min;
   const fraction = range === 0 ? 0 : (snap(value, min, max, step) - min) / range;
 
-  const emitFromX = (x: number) => {
-    const w = widthRef.current;
-    if (w <= 0) return;
-    const ratio = Math.min(1, Math.max(0, x / w));
-    const next = snap(min + ratio * range, min, max, step);
-    if (next !== value) onChange(next);
-  };
+  // Latest props for the gesture handlers. The PanResponder is created once;
+  // its handlers read this ref at event time, never during render.
+  const latest = useRef({ value, onChange, min, max, step, range, disabled });
+  useEffect(() => {
+    latest.current = { value, onChange, min, max, step, range, disabled };
+  });
 
-  const responder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => !disabled,
-        onMoveShouldSetPanResponder: () => !disabled,
-        onPanResponderGrant: (evt: GestureResponderEvent) => {
-          emitFromX(evt.nativeEvent.locationX);
-        },
-        onPanResponderMove: (
-          evt: GestureResponderEvent,
-          gesture: PanResponderGestureState,
-        ) => {
-          // locationX can report relative to the thumb once it captures the
-          // gesture, so derive from the track-relative moveX fallback: use
-          // the gesture's absolute dx added to the grant point when available.
-          const localX = evt.nativeEvent.locationX;
-          if (Number.isFinite(localX)) {
-            emitFromX(localX);
-          } else {
-            emitFromX(gesture.moveX);
-          }
-        },
-      }),
-    // emitFromX closes over the latest props via refs/values; recreating it
-    // when `disabled` or the bounds change keeps behavior correct.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [disabled, min, max, step, value],
-  );
+  // The refs are only read inside the gesture handlers (event time). The
+  // compiler can't see that through PanResponder.create, hence the disable.
+  // eslint-disable-next-line react-hooks/refs
+  const [responder] = useState(() => {
+    const emitFromX = (x: number) => {
+      const w = widthRef.current;
+      if (w <= 0) return;
+      const p = latest.current;
+      const ratio = Math.min(1, Math.max(0, x / w));
+      const next = snap(p.min + ratio * p.range, p.min, p.max, p.step);
+      if (next !== p.value) p.onChange(next);
+    };
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => !latest.current.disabled,
+      onMoveShouldSetPanResponder: () => !latest.current.disabled,
+      onPanResponderGrant: (evt: GestureResponderEvent) => {
+        emitFromX(evt.nativeEvent.locationX);
+      },
+      onPanResponderMove: (evt: GestureResponderEvent, gesture: PanResponderGestureState) => {
+        // locationX can report relative to the thumb once it captures the
+        // gesture; fall back to the gesture's moveX when it isn't finite.
+        const localX = evt.nativeEvent.locationX;
+        emitFromX(Number.isFinite(localX) ? localX : gesture.moveX);
+      },
+    });
+  });
 
   const onLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;

@@ -7,7 +7,7 @@
  * @/results directly.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   experiments,
   getDatabase,
@@ -61,30 +61,28 @@ function currentExperiment(): Experiment | null {
 }
 
 /**
- * Load the current experiment data once on mount. Returns EMPTY until loaded,
- * so screens can render a "no experiment yet" state without special-casing the
- * initial render.
+ * Read the current experiment data. Returns EMPTY when there is no experiment,
+ * so screens can render a "no experiment yet" state.
  */
+function loadExperimentData(): ExperimentData {
+  const db = getDatabase();
+  const experiment = currentExperiment();
+  if (!experiment) {
+    return EMPTY;
+  }
+  const elapsed = daysSince(experiment.startDate);
+  return {
+    experiment,
+    schedule: scheduleDays.listForExperiment(db, experiment.id),
+    sessions: testSessions.listForExperiment(db, experiment.id),
+    supplement: supplements.getById(db, experiment.supplementId),
+    todayIndex: Math.max(-1, Math.min(elapsed, experiment.lengthDays - 1)),
+    baselineDaysLeft: Math.max(0, -elapsed),
+  };
+}
+
 export function useExperimentData(): ExperimentData {
-  const [data, setData] = useState<ExperimentData>(EMPTY);
-
-  useEffect(() => {
-    const db = getDatabase();
-    const experiment = currentExperiment();
-    if (!experiment) {
-      setData(EMPTY);
-      return;
-    }
-    const elapsed = daysSince(experiment.startDate);
-    setData({
-      experiment,
-      schedule: scheduleDays.listForExperiment(db, experiment.id),
-      sessions: testSessions.listForExperiment(db, experiment.id),
-      supplement: supplements.getById(db, experiment.supplementId),
-      todayIndex: Math.max(-1, Math.min(elapsed, experiment.lengthDays - 1)),
-      baselineDaysLeft: Math.max(0, -elapsed),
-    });
-  }, []);
-
+  // expo-sqlite reads are synchronous, so load once on mount in the initializer.
+  const [data] = useState<ExperimentData>(loadExperimentData);
   return data;
 }

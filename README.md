@@ -8,10 +8,11 @@ instead of a vibe. Everything stays on your device.
 This app is for personal self-experiments. It is not medical advice and does not
 recommend taking any supplement.
 
-> **Status:** foundation plus the daily loop. The data layer, curated supplement
-> list, cognitive-test engine, Today/home screen, daily check-in flow, local
-> notifications, and a small UI kit are in place. Statistics, scheduling setup,
-> and the verdict/evidence screens land in later PRs.
+> **Status:** feature-complete MVP, getting ready for the App Store. All eight
+> MVP screens, the experiment-design / cognitive-test / stats engines, the 3-day
+> baseline, the Pro paywall (RevenueCat, free trial at experiment setup), and the
+> free standalone reaction test are in place. See [Shipping](#shipping) for what
+> is left.
 
 ## Running it
 
@@ -23,7 +24,11 @@ npx expo start
 ```
 
 Then open the project in Expo Go (iOS/Android) or a simulator from the Expo CLI
-menu. Useful scripts:
+menu. Expo Go can't make real purchases; without RevenueCat keys the paywall is
+skipped in development builds so the full flow stays testable. To test real
+purchases, copy `.env.example` to `.env.local`, add the RevenueCat public keys,
+and use a development build (`eas build --profile development` or
+`npx expo run:ios`). Useful scripts:
 
 | Script              | What it does                          |
 | ------------------- | ------------------------------------- |
@@ -94,3 +99,22 @@ src/
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for where later features belong and the
 conventions that keep the data layer testable.
+
+## Monetization
+
+- **Free:** the standalone reaction test (`app/reaction-test.tsx`), with a
+  personal best and a share button.
+- **Pro:** needed to start an experiment. "Confirm & start" on Experiment setup
+  opens the paywall (`app/paywall.tsx`) for users without the `pro`
+  entitlement. Plans come from RevenueCat's current offering; the free trial is
+  set on the store products.
+
+## Shipping
+
+- Builds: `eas.json` has `development`, `preview` and `production` profiles.
+- Store assets: `assets/` (icon, Android adaptive icon, splash, favicon).
+- Privacy policy: [`docs/privacy-policy.md`](./docs/privacy-policy.md), linked
+  from Welcome and the paywall. Use its URL in App Store Connect.
+- Still needed before submitting: RevenueCat project + keys, the final bundle
+  ID, a contact email in the privacy policy, App Store screenshots, and a pass
+  on real devices.
