@@ -30,6 +30,10 @@ Daily reminders are scheduled locally on your device. No reminder content is sen
 
 If you tap a share button, the app creates an image or text with your result and hands it to your phone's share sheet. Nothing is shared unless you choose to share it, and what happens after that is governed by the app you share to.
 
+## Waitlist (website)
+
+If you join the waitlist on our website, we collect the email address you enter. It is stored by **Formspree**, the form service we use, and used only to email you when Placebo is available. We don't sell it or share it for advertising. To have it removed, contact us (see Contact below) and we'll delete it. See [Formspree's privacy policy](https://formspree.io/legal/privacy-policy/).
+
 ## Analytics and advertising
 
 The app does not include advertising and does not track you across other apps or websites. If we add product analytics in a future version (for example, counting how many people finish onboarding), we will update this policy first, and it will never include your experiment data or health-related answers.
