@@ -32,16 +32,8 @@ import {
 import { PvtTask } from '@/screens/PvtTask';
 import { claimProgress, type GameState, type ProgressDelta } from '@/features/gamification';
 import { Celebration } from '@/components/game';
-import {
-  Button,
-  Card,
-  Scaffold,
-  Slider,
-  colors,
-  radius,
-  spacing,
-  typography,
-} from '@/ui';
+import { Icon, Brian } from '@/brand';
+import { Card, Scaffold, Slider, brand, fonts, radius, spacing } from '@/ui';
 
 type Phase = 'context' | 'pvt' | 'nback' | 'ratings' | 'saved' | 'no-experiment';
 
@@ -145,9 +137,11 @@ export default function DailyTestScreen() {
 
   if (phase === 'no-experiment') {
     return (
-      <Scaffold inverse scroll={false}>
+      <Scaffold inverse scroll={false} contentStyle={styles.centerFill}>
+        <Brian size={110} mood="sleepy" />
         <Text style={styles.invTitle}>No active experiment</Text>
-        <Button label="Back" variant="secondary" onPress={() => router.replace('/')} />
+        <Text style={styles.invMuted}>Start an experiment to log a daily check-in.</Text>
+        <LightButton label="Back to today" onPress={() => router.replace('/')} />
       </Scaffold>
     );
   }
@@ -193,21 +187,21 @@ export default function DailyTestScreen() {
   if (phase === 'ratings') {
     return (
       <Scaffold inverse>
-        <Text style={styles.invTitle}>How do you feel right now?</Text>
-        <Card style={styles.darkCard}>
+        <StepHeader step={3} title="How do you feel right now?" subtitle="Go with your gut. There are no right answers." />
+        <Card style={styles.lightCard}>
           <Slider label="Focus" value={focus} onChange={setFocus} lowLabel="Foggy" highLabel="Sharp" />
           <Slider label="Energy" value={energy} onChange={setEnergy} lowLabel="Drained" highLabel="Wired" />
           <Slider label="Mood" value={mood} onChange={setMood} lowLabel="Low" highLabel="Great" />
           <TextInput
             style={styles.noteInput}
             placeholder="Optional note"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={brand.faint}
             value={note}
             onChangeText={setNote}
             multiline
           />
         </Card>
-        <Button label="Finish check-in" onPress={save} />
+        <LightButton label="Finish check-in" onPress={save} />
       </Scaffold>
     );
   }
@@ -227,14 +221,15 @@ export default function DailyTestScreen() {
     );
   }
   return (
-    <Scaffold inverse scroll={false}>
+    <Scaffold inverse scroll={false} contentStyle={styles.centerFill}>
+      <Brian size={110} mood={recorded ? 'happy' : 'wink'} />
       <Text style={styles.invTitle}>{recorded ? 'Check-in saved' : 'Practice run done'}</Text>
       <Text style={styles.invMuted}>
         {recorded
           ? 'See you tomorrow.'
           : 'Today isn\u2019t part of your experiment, so this run wasn\u2019t recorded.'}
       </Text>
-      <Button label="Done" onPress={() => router.replace('/')} />
+      <LightButton label="Done" onPress={() => router.replace('/')} />
     </Scaffold>
   );
 }
@@ -265,6 +260,67 @@ function normalizeResponses(
   return out;
 }
 
+// --- shared pieces ---------------------------------------------------------
+
+/** White pill button for the ink screens (the ink primary would vanish here). */
+function LightButton({
+  label,
+  onPress,
+  disabled = false,
+  accessibilityHint,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  accessibilityHint?: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      accessibilityHint={accessibilityHint}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.lightButton,
+        pressed && !disabled ? styles.lightButtonPressed : null,
+        disabled ? styles.disabled : null,
+      ]}
+    >
+      <Text style={styles.lightButtonText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Outlined pill for a secondary action on the ink screens. */
+function GhostButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.ghostButton, pressed ? styles.ghostPressed : null]}
+    >
+      <Text style={styles.ghostText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** "Step N of 3" eyebrow, title and optional subtitle for the check-in. */
+function StepHeader({ step, title, subtitle }: { step: number; title: string; subtitle?: string }) {
+  return (
+    <View style={styles.stepHeader}>
+      <View style={styles.stepDots}>
+        {[1, 2, 3].map((n) => (
+          <View key={n} style={[styles.stepDot, n <= step ? styles.stepDotOn : null]} />
+        ))}
+      </View>
+      <Text style={styles.eyebrow}>{`STEP ${step} OF 3`}</Text>
+      <Text style={styles.invTitle}>{title}</Text>
+      {subtitle ? <Text style={styles.invMuted}>{subtitle}</Text> : null}
+    </View>
+  );
+}
+
 // --- Context step ----------------------------------------------------------
 
 function ContextStep({
@@ -278,10 +334,13 @@ function ContextStep({
 }) {
   return (
     <Scaffold inverse>
-      <Text style={styles.invTitle}>Before you start</Text>
+      <StepHeader step={1} title="Before you start" subtitle="Three quick taps so the analysis can account for your day." />
 
-      <Card style={styles.darkCard}>
-        <Text style={styles.invLabel}>Hours slept last night</Text>
+      <View style={styles.darkCard}>
+        <View style={styles.labelRow}>
+          <Icon name="moon" size={18} color={brand.lilac} />
+          <Text style={styles.invLabel}>Hours slept last night</Text>
+        </View>
         <View style={styles.chipRow}>
           {SLEEP_HOUR_OPTIONS.map((h) => (
             <Chip
@@ -292,18 +351,24 @@ function ContextStep({
             />
           ))}
         </View>
-      </Card>
+      </View>
 
-      <Card style={styles.darkCard}>
-        <Text style={styles.invLabel}>Had caffeine today?</Text>
+      <View style={styles.darkCard}>
+        <View style={styles.labelRow}>
+          <Icon name="bolt" size={18} color={brand.lilac} />
+          <Text style={styles.invLabel}>Had caffeine today?</Text>
+        </View>
         <View style={styles.chipRow}>
           <Chip label="No" selected={!context.caffeine} onPress={() => onChange({ ...context, caffeine: false })} />
           <Chip label="Yes" selected={context.caffeine} onPress={() => onChange({ ...context, caffeine: true })} />
         </View>
-      </Card>
+      </View>
 
-      <Card style={styles.darkCard}>
-        <Text style={styles.invLabel}>Device</Text>
+      <View style={styles.darkCard}>
+        <View style={styles.labelRow}>
+          <Icon name="target" size={18} color={brand.lilac} />
+          <Text style={styles.invLabel}>Device</Text>
+        </View>
         <View style={styles.chipRow}>
           {(['phone', 'tablet'] as FormFactor[]).map((f) => (
             <Chip
@@ -314,9 +379,9 @@ function ContextStep({
             />
           ))}
         </View>
-      </Card>
+      </View>
 
-      <Button label="Start test" onPress={onStart} />
+      <LightButton label="Start test" onPress={onStart} />
     </Scaffold>
   );
 }
@@ -351,20 +416,28 @@ function NbackStep({
 
   const letter = sequence.letters[index] ?? '';
   const eligible = index >= NBACK_N;
+  const total = sequence.letters.length;
 
   return (
-    <Scaffold inverse scroll={false}>
-      <Text style={styles.invMuted}>Tap &quot;Match&quot; when the letter matches the one 2 back</Text>
-      <Text style={styles.pvtProgress}>{`${index + 1} / ${sequence.letters.length}`}</Text>
-      <Text style={styles.nbackLetter}>{letter}</Text>
+    <Scaffold inverse scroll={false} contentStyle={styles.nbackLayout}>
+      <View style={styles.nbackTop}>
+        <Text style={styles.pvtProgress}>{`${index + 1} / ${total}`}</Text>
+        <View style={styles.track}>
+          <View style={[styles.trackFill, { width: `${(index / Math.max(1, total)) * 100}%` }]} />
+        </View>
+        <Text style={styles.invMuted}>Tap Match when the letter matches the one 2 back</Text>
+      </View>
+      <View style={styles.letterTile}>
+        <Text style={styles.nbackLetter}>{letter}</Text>
+      </View>
       <View style={styles.nbackButtons}>
-        <Button
+        <LightButton
           label="Match"
           onPress={markMatch}
           disabled={!eligible}
           accessibilityHint="The current letter matches the one two positions back"
         />
-        <Button label="No match" variant="secondary" onPress={advance} />
+        <GhostButton label="No match" onPress={advance} />
       </View>
     </Scaffold>
   );
@@ -393,73 +466,136 @@ function Chip({
   );
 }
 
+const DIM = 'rgba(255,255,255,0.6)';
+const HAIRLINE = 'rgba(255,255,255,0.12)';
+
 const styles = StyleSheet.create({
+  centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
+  stepHeader: { gap: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.xs },
+  stepDots: { flexDirection: 'row', gap: 6, marginBottom: spacing.xs },
+  stepDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: HAIRLINE },
+  stepDotOn: { backgroundColor: brand.lilac },
+  eyebrow: { fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 1.2, color: brand.lilac },
   invTitle: {
-    fontSize: typography.title.fontSize,
-    fontWeight: typography.title.fontWeight,
-    color: colors.textInverse,
-    textAlign: 'center',
+    fontSize: 28,
+    lineHeight: 34,
+    fontFamily: fonts.display,
+    letterSpacing: -0.6,
+    color: brand.white,
   },
   invMuted: {
-    fontSize: typography.body.fontSize,
-    color: colors.textInverse,
-    opacity: 0.7,
-    textAlign: 'center',
+    fontSize: 15,
+    lineHeight: 21,
+    fontFamily: fonts.regular,
+    color: DIM,
   },
   invLabel: {
-    fontSize: typography.headline.fontSize,
-    fontWeight: typography.headline.fontWeight,
-    color: colors.textInverse,
+    fontSize: 16,
+    fontFamily: fonts.semibold,
+    color: brand.white,
   },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   darkCard: {
-    backgroundColor: colors.surfaceInverse,
-    borderColor: colors.textMuted,
+    backgroundColor: brand.ink2,
+    borderRadius: 20,
+    padding: spacing.lg,
+    gap: spacing.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: HAIRLINE,
   },
+  lightCard: { gap: spacing.lg, borderRadius: 24 },
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
   chip: {
+    minWidth: 52,
+    alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   chipIdle: {
-    borderColor: colors.textMuted,
-    backgroundColor: 'transparent',
+    borderColor: HAIRLINE,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   chipSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accent,
+    borderColor: brand.white,
+    backgroundColor: brand.white,
   },
   chipText: {
-    fontSize: typography.body.fontSize,
-    color: colors.textInverse,
+    fontSize: 15,
+    fontFamily: fonts.medium,
+    color: brand.white,
   },
   chipTextSelected: {
-    color: colors.onAccent,
-    fontWeight: '600',
+    color: brand.ink,
+    fontFamily: fonts.semibold,
   },
   noteInput: {
-    minHeight: 60,
+    minHeight: 64,
     borderWidth: 1,
-    borderColor: colors.textMuted,
-    borderRadius: radius.md,
+    borderColor: brand.line,
+    borderRadius: 14,
     padding: spacing.md,
-    color: colors.textInverse,
+    fontSize: 15,
+    fontFamily: fonts.regular,
+    color: brand.ink,
+    backgroundColor: brand.paper,
     textAlignVertical: 'top',
   },
+  lightButton: {
+    minHeight: 54,
+    borderRadius: radius.pill,
+    backgroundColor: brand.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    alignSelf: 'stretch',
+  },
+  lightButtonPressed: { backgroundColor: brand.paperDeep, transform: [{ translateY: 1 }] },
+  lightButtonText: { fontSize: 17, fontFamily: fonts.semibold, color: brand.ink },
+  disabled: { opacity: 0.35 },
+  ghostButton: {
+    minHeight: 54,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+  },
+  ghostPressed: { backgroundColor: 'rgba(255,255,255,0.06)' },
+  ghostText: { fontSize: 17, fontFamily: fonts.semibold, color: brand.white },
   pvtProgress: {
-    fontSize: typography.body.fontSize,
-    color: colors.textInverse,
-    opacity: 0.6,
+    fontSize: 13,
+    fontFamily: fonts.semibold,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
+  },
+  track: { alignSelf: 'stretch', height: 4, borderRadius: 2, backgroundColor: HAIRLINE, overflow: 'hidden' },
+  trackFill: { height: '100%', borderRadius: 2, backgroundColor: brand.lilac },
+  nbackLayout: { flex: 1, justifyContent: 'space-between', paddingTop: 56, paddingBottom: spacing.xl },
+  nbackTop: { gap: spacing.md, alignItems: 'center' },
+  letterTile: {
+    alignSelf: 'center',
+    width: 180,
+    height: 180,
+    borderRadius: 40,
+    backgroundColor: brand.ink2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: HAIRLINE,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nbackLetter: {
-    fontSize: 96,
-    fontWeight: '700',
-    color: colors.textInverse,
+    fontSize: 104,
+    lineHeight: 120,
+    fontFamily: fonts.display,
+    color: brand.white,
   },
   nbackButtons: {
     width: '100%',

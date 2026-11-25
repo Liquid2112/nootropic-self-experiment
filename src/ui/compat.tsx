@@ -15,7 +15,7 @@
  */
 import { Text as RNText, type TextProps as RNTextProps, type TextStyle } from 'react-native';
 
-import { lightTheme, radius, type TypographyToken } from './tokens';
+import { lightTheme, radius, type TypographyStyle, type TypographyToken } from './tokens';
 
 const t = lightTheme.colors;
 
@@ -109,7 +109,9 @@ export function Text({ variant = 'body', tone = 'primary', style, ...rest }: Tex
   const resolved: TextStyle = {
     fontSize: typeStyle.fontSize,
     lineHeight: typeStyle.lineHeight,
-    fontWeight: typeStyle.fontWeight,
+    ...(typeStyle.fontFamily
+      ? { fontFamily: typeStyle.fontFamily }
+      : { fontWeight: (typeStyle as TypographyStyle).fontWeight }),
     letterSpacing: typeStyle.letterSpacing,
     color: lightTheme.colors[TONE_COLOR[tone]],
   };

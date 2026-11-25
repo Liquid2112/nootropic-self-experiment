@@ -1,9 +1,11 @@
 /**
- * Design tokens for the Nootropic Self-Experiment app.
+ * Design tokens for Placebo.
  *
- * Direction: bright and playful. Lavender-tinted background, white cards, a
- * single electric-violet accent, mint for success and a warm flame/gold pair
- * for the game layer (streaks, XP), with rounded cards and chunky buttons.
+ * Direction: warm paper and ink with one signature color. A cream "paper"
+ * background, white cards with hairline borders instead of heavy shadows, ink
+ * (near-black) primary buttons, and Tang orange as the single signature accent.
+ * Lilac is Tang's partner: the two halves of the brand capsule, and the two
+ * blinded cups A and B. Display type is Bricolage Grotesque, body is Inter.
  *
  * Tokens are grouped into two layers:
  *  - raw palettes / scales (private building blocks), and
@@ -14,6 +16,40 @@
  * built so a dark theme can be added by supplying another `ThemeColors`
  * object with the same keys — no component changes required.
  */
+
+/** Raw brand palette. Prefer the semantic roles; these are for brand art. */
+export const brand = {
+  ink: '#15131C',
+  ink2: '#2B2836',
+  paper: '#F7F4EE',
+  paperDeep: '#EFEAE1',
+  white: '#FFFFFF',
+  line: '#E7E1D6',
+  tang: '#FF5A36',
+  tangDeep: '#E5431F',
+  tangSoft: '#FFE7DF',
+  lilac: '#B7A6FF',
+  lilacDeep: '#7B63F0',
+  lilacSoft: '#EEEAFF',
+  mint: '#1FAE6B',
+  mintSoft: '#DDF4E8',
+  sun: '#FFC23D',
+  sunDeep: '#B07800',
+  sunSoft: '#FFF2CF',
+  rose: '#E8384F',
+  muted: '#6D6878',
+  faint: '#A9A3B3',
+} as const;
+
+/** Font family names, as registered by `useFonts` in the root layout. */
+export const fonts = {
+  display: 'BricolageGrotesque_800ExtraBold',
+  displayBold: 'BricolageGrotesque_700Bold',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+} as const;
 
 /** Spacing scale (points). A 4pt base with an extra-small 2pt step. */
 export const spacing = {
@@ -32,10 +68,10 @@ export type SpacingToken = keyof typeof spacing;
 /** Corner radius scale (points). `pill`/`round` are effectively fully rounded. */
 export const radius = {
   none: 0,
-  sm: 6,
-  md: 10,
-  lg: 16,
-  xl: 22,
+  sm: 8,
+  md: 12,
+  lg: 20,
+  xl: 28,
   pill: 999,
   round: 9999,
 } as const;
@@ -56,20 +92,22 @@ export type TypographyStyle = {
     | '600'
     | '700';
   letterSpacing: number;
+  /** Brand font family; when set it replaces fontWeight (custom fonts carry their weight). */
+  fontFamily?: string;
 };
 
 export const typography = {
-  largeTitle: { fontSize: 34, lineHeight: 41, fontWeight: '700', letterSpacing: 0.37 },
-  title: { fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: 0.36 },
-  title2: { fontSize: 22, lineHeight: 28, fontWeight: '600', letterSpacing: 0.35 },
-  title3: { fontSize: 20, lineHeight: 25, fontWeight: '600', letterSpacing: 0.38 },
-  headline: { fontSize: 17, lineHeight: 22, fontWeight: '600', letterSpacing: -0.41 },
-  body: { fontSize: 17, lineHeight: 24, fontWeight: '400', letterSpacing: -0.41 },
-  callout: { fontSize: 16, lineHeight: 21, fontWeight: '400', letterSpacing: -0.32 },
-  subhead: { fontSize: 15, lineHeight: 20, fontWeight: '400', letterSpacing: -0.24 },
-  footnote: { fontSize: 13, lineHeight: 18, fontWeight: '400', letterSpacing: -0.08 },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: '400', letterSpacing: 0 },
-  caption2: { fontSize: 11, lineHeight: 13, fontWeight: '400', letterSpacing: 0.06 },
+  largeTitle: { fontSize: 34, lineHeight: 40, fontWeight: '700', letterSpacing: -0.8, fontFamily: fonts.display },
+  title: { fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.6, fontFamily: fonts.display },
+  title2: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.4, fontFamily: fonts.displayBold },
+  title3: { fontSize: 20, lineHeight: 25, fontWeight: '700', letterSpacing: -0.3, fontFamily: fonts.displayBold },
+  headline: { fontSize: 17, lineHeight: 22, fontWeight: '600', letterSpacing: -0.2, fontFamily: fonts.semibold },
+  body: { fontSize: 17, lineHeight: 24, fontWeight: '400', letterSpacing: -0.2, fontFamily: fonts.regular },
+  callout: { fontSize: 16, lineHeight: 22, fontWeight: '400', letterSpacing: -0.2, fontFamily: fonts.regular },
+  subhead: { fontSize: 15, lineHeight: 20, fontWeight: '400', letterSpacing: -0.1, fontFamily: fonts.regular },
+  footnote: { fontSize: 13, lineHeight: 18, fontWeight: '400', letterSpacing: 0, fontFamily: fonts.regular },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0, fontFamily: fonts.medium },
+  caption2: { fontSize: 11, lineHeight: 13, fontWeight: '600', letterSpacing: 0.4, fontFamily: fonts.semibold },
 } as const satisfies Record<string, TypographyStyle>;
 
 export type TypographyToken = keyof typeof typography;
@@ -93,7 +131,7 @@ export type ThemeColors = {
   textTertiary: string;
   /** Hairline borders and dividers. */
   border: string;
-  /** The single brand accent (interactive violet). */
+  /** The single signature accent (Tang). */
   accent: string;
   /** Pressed / darker variant of the accent. */
   accentPressed: string;
@@ -143,39 +181,40 @@ export type Theme = {
 };
 
 const lightColors: ThemeColors = {
-  background: '#F5F3FF',
-  surface: '#FFFFFF',
-  surfaceRaised: '#FFFFFF',
-  textPrimary: '#1A1530',
-  textSecondary: '#625C7A',
-  textTertiary: '#A7A2BC',
-  border: '#E6E1F5',
-  accent: '#6B4EFF',
-  accentPressed: '#5236E0',
-  onAccent: '#FFFFFF',
-  accentMuted: '#ECE7FF',
-  success: '#12B886',
-  warning: '#FF9F1C',
-  danger: '#F0435A',
-  fill: '#ECE9F6',
-  scrim: 'rgba(20, 12, 48, 0.45)',
+  background: brand.paper,
+  surface: brand.white,
+  surfaceRaised: brand.white,
+  textPrimary: brand.ink,
+  textSecondary: brand.muted,
+  textTertiary: brand.faint,
+  border: brand.line,
+  accent: brand.tang,
+  accentPressed: brand.tangDeep,
+  onAccent: brand.white,
+  accentMuted: brand.tangSoft,
+  success: brand.mint,
+  warning: brand.sun,
+  danger: brand.rose,
+  fill: brand.paperDeep,
+  scrim: 'rgba(21, 19, 28, 0.5)',
 };
 
 /**
- * Extra colors for the game layer (streak flame, XP, badges). Kept outside the
+ * Extra colors for the game layer (streaks, XP, badges). Kept outside the
  * semantic `ThemeColors` roles because only the gamified widgets use them.
+ * Names are kept stable; values come from the brand palette.
  */
 export const gameColors = {
-  flame: '#FF6B2C',
-  flameMuted: '#FFE9DD',
-  xp: '#FFB800',
-  xpMuted: '#FFF4D1',
-  mint: '#12B886',
-  mintMuted: '#DDF7EE',
-  violetDeep: '#2A1A6E',
-  heroStart: '#6B4EFF',
-  heroEnd: '#9B5CFF',
-  locked: '#D9D5E6',
+  flame: brand.tang,
+  flameMuted: brand.tangSoft,
+  xp: brand.sun,
+  xpMuted: brand.sunSoft,
+  mint: brand.mint,
+  mintMuted: brand.mintSoft,
+  violetDeep: brand.ink,
+  heroStart: brand.ink,
+  heroEnd: brand.lilac,
+  locked: '#DAD4C8',
 } as const;
 
 const lightShadows: ThemeShadows = {
@@ -189,8 +228,8 @@ const lightShadows: ThemeShadows = {
   sm: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
     elevation: 1,
   },
   md: {

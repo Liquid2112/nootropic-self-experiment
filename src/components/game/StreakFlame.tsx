@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { gameColors, lightTheme } from '@/ui';
+import { Icon } from '@/brand';
+import { brand, fonts } from '@/ui';
 
 export type StreakFlameProps = {
   count: number;
@@ -10,7 +11,7 @@ export type StreakFlameProps = {
   style?: ViewStyle;
 };
 
-/** Flame + day count pill. Grey when there is no streak, pulsing when at risk. */
+/** Flame + day count pill. Quiet grey with no streak, pulsing when at risk. */
 export function StreakFlame({ count, atRisk = false, size = 'sm', style }: StreakFlameProps) {
   const [pulse] = useState(() => new Animated.Value(1));
   useEffect(() => {
@@ -20,8 +21,8 @@ export function StreakFlame({ count, atRisk = false, size = 'sm', style }: Strea
     }
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.18, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1.15, duration: 650, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 650, useNativeDriver: true }),
       ]),
     );
     loop.start();
@@ -30,30 +31,16 @@ export function StreakFlame({ count, atRisk = false, size = 'sm', style }: Strea
 
   const lit = count > 0;
   const big = size === 'lg';
+  const color = lit ? brand.tang : brand.faint;
   return (
     <View
       accessibilityLabel={`${count} day streak${atRisk ? ', check in today to keep it' : ''}`}
-      style={[
-        styles.pill,
-        { backgroundColor: lit ? gameColors.flameMuted : lightTheme.colors.fill },
-        big && styles.pillLg,
-        style,
-      ]}
+      style={[styles.pill, { backgroundColor: lit ? brand.tangSoft : brand.paperDeep }, big && styles.pillLg, style]}
     >
-      <Animated.Text
-        style={[{ fontSize: big ? 30 : 18, opacity: lit ? 1 : 0.35 }, { transform: [{ scale: pulse }] }]}
-      >
-        🔥
-      </Animated.Text>
-      <Text
-        style={[
-          styles.count,
-          { color: lit ? gameColors.flame : lightTheme.colors.textTertiary },
-          big && styles.countLg,
-        ]}
-      >
-        {count}
-      </Text>
+      <Animated.View style={{ transform: [{ scale: pulse }] }}>
+        <Icon name="flame" size={big ? 28 : 18} color={color} strokeWidth={2.4} />
+      </Animated.View>
+      <Text style={[styles.count, { color }, big && styles.countLg]}>{count}</Text>
     </View>
   );
 }
@@ -63,11 +50,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 12,
+    paddingLeft: 10,
+    paddingRight: 12,
     paddingVertical: 6,
     borderRadius: 999,
   },
-  pillLg: { paddingHorizontal: 18, paddingVertical: 10, gap: 6 },
-  count: { fontSize: 17, fontWeight: '700' },
-  countLg: { fontSize: 28 },
+  pillLg: { paddingHorizontal: 16, paddingVertical: 8, gap: 6 },
+  count: { fontSize: 16, lineHeight: 20, fontFamily: fonts.display },
+  countLg: { fontSize: 28, lineHeight: 32 },
 });

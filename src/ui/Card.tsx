@@ -1,4 +1,4 @@
-import { View, type ViewProps, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type ViewProps, type ViewStyle } from 'react-native';
 
 import { useTheme } from './theme';
 import type { RadiusToken, SpacingToken } from './tokens';
@@ -18,7 +18,7 @@ export type CardProps = ViewProps & {
 };
 
 /**
- * Rounded content surface with gentle depth. The default card sits on the app
+ * Rounded white content surface with a hairline edge and near-zero depth. The default card sits on the app
  * background; `raised` is for a card layered above another surface.
  */
 export function Card({
@@ -38,6 +38,9 @@ export function Card({
           backgroundColor: raised ? theme.colors.surfaceRaised : theme.colors.surface,
           borderRadius: theme.radius[radius],
           padding: padding === 'none' ? 0 : theme.spacing[padding],
+          // Hairline edge instead of a heavy shadow: cards sit on warm paper.
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: theme.colors.border,
         },
         theme.shadows[elevation],
         style,

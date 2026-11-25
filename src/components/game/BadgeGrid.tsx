@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { Icon } from '@/brand';
 import { BADGES } from '@/features/gamification';
-import { gameColors, lightTheme } from '@/ui';
+import { brand, fonts } from '@/ui';
+import { BADGE_ICON } from './questIcons';
 
 export type BadgeGridProps = {
   unlocked: string[];
@@ -8,7 +10,7 @@ export type BadgeGridProps = {
   limit?: number;
 };
 
-/** Every badge, unlocked ones in color and locked ones greyed with their goal. */
+/** Every badge: unlocked ones as ink medals, locked ones as faint outlines. */
 export function BadgeGrid({ unlocked, limit }: BadgeGridProps) {
   const have = new Set(unlocked);
   const ordered = [...BADGES].sort((a, b) => Number(have.has(b.id)) - Number(have.has(a.id)));
@@ -18,13 +20,9 @@ export function BadgeGrid({ unlocked, limit }: BadgeGridProps) {
       {shown.map((b) => {
         const on = have.has(b.id);
         return (
-          <View
-            key={b.id}
-            style={styles.item}
-            accessibilityLabel={`${b.title}: ${b.description}${on ? ' Unlocked.' : ' Locked.'}`}
-          >
+          <View key={b.id} style={styles.item} accessibilityLabel={`${b.title}: ${b.description}${on ? ' Unlocked.' : ' Locked.'}`}>
             <View style={[styles.medal, on ? styles.medalOn : styles.medalOff]}>
-              <Text style={[styles.emoji, !on && styles.emojiOff]}>{on ? b.emoji : '🔒'}</Text>
+              <Icon name={on ? (BADGE_ICON[b.id] ?? 'medal') : 'lock'} size={on ? 26 : 20} color={on ? brand.sun : brand.faint} strokeWidth={on ? 2.2 : 2} />
             </View>
             <Text style={[styles.title, !on && styles.off]} numberOfLines={2}>
               {b.title}
@@ -40,21 +38,12 @@ export function BadgeGrid({ unlocked, limit }: BadgeGridProps) {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 18 },
   item: { width: '33.33%', alignItems: 'center', paddingHorizontal: 4, gap: 4 },
-  medal: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-  },
-  medalOn: { backgroundColor: gameColors.xpMuted, borderColor: gameColors.xp },
-  medalOff: { backgroundColor: lightTheme.colors.fill, borderColor: gameColors.locked },
-  emoji: { fontSize: 28 },
-  emojiOff: { fontSize: 20, opacity: 0.6 },
-  title: { fontSize: 13, fontWeight: '700', textAlign: 'center', color: lightTheme.colors.textPrimary },
-  off: { color: lightTheme.colors.textSecondary },
-  desc: { fontSize: 11, textAlign: 'center', color: lightTheme.colors.textTertiary },
+  medal: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  medalOn: { backgroundColor: brand.ink },
+  medalOff: { backgroundColor: brand.paper, borderWidth: 1.5, borderColor: brand.line, borderStyle: 'dashed' },
+  title: { fontSize: 13, fontFamily: fonts.semibold, textAlign: 'center', color: brand.ink },
+  off: { color: brand.muted },
+  desc: { fontSize: 11, lineHeight: 14, fontFamily: fonts.regular, textAlign: 'center', color: brand.faint },
 });

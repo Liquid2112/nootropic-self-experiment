@@ -10,7 +10,8 @@ import {
   type Plan,
   type PurchasesAdapter,
 } from '@/features/paywall';
-import { Button, Card, Scaffold, Text, colors, gameColors, radius, spacing } from '@/ui';
+import { Button, Scaffold, Text, brand, fonts } from '@/ui';
+import { Icon, LogoMark, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 
 const PERIOD_TITLE: Record<Plan['period'], string> = {
@@ -20,11 +21,11 @@ const PERIOD_TITLE: Record<Plan['period'], string> = {
   other: 'Plan',
 };
 
-const BENEFITS: { emoji: string; text: string }[] = [
-  { emoji: '🙈', text: 'Blinded on/off experiments on any supplement you own' },
-  { emoji: '🧠', text: 'A daily 90-second brain test that tracks real performance' },
-  { emoji: '📊', text: 'A verdict with an effect size, not a vibe' },
-  { emoji: '🏆', text: 'Unlimited experiments and a shareable result card' },
+const BENEFITS: { icon: IconName; text: string }[] = [
+  { icon: 'eyeOff', text: 'Blinded on/off experiments on any supplement you own' },
+  { icon: 'brain', text: 'A daily 90-second brain test that tracks real performance' },
+  { icon: 'chart', text: 'A verdict with an effect size, not a vibe' },
+  { icon: 'trophy', text: 'Unlimited experiments and a shareable result card' },
 ];
 
 /**
@@ -124,23 +125,25 @@ export default function PaywallScreen() {
       }
     >
       <View style={styles.hero}>
-        <View style={styles.proPill}>
-          <Text style={styles.proPillText}>⚡ PRO</Text>
+        <View style={styles.heroTop}>
+          <LogoMark size={44} />
+          <View style={styles.proPill}>
+            <Text style={styles.proPillText}>PRO</Text>
+          </View>
         </View>
         <Text style={styles.heroTitle}>Find out if it actually works</Text>
         <Text style={styles.heroSubtitle}>Start your experiment with Pro.</Text>
-      </View>
-
-      <Card radius="xl" style={styles.benefits}>
-        {BENEFITS.map((b) => (
-          <View key={b.text} style={styles.benefitRow}>
-            <View style={styles.benefitIcon}>
-              <Text style={styles.benefitEmoji}>{b.emoji}</Text>
+        <View style={styles.benefits}>
+          {BENEFITS.map((b) => (
+            <View key={b.text} style={styles.benefitRow}>
+              <View style={styles.benefitIcon}>
+                <Icon name={b.icon} size={18} color={brand.white} />
+              </View>
+              <Text style={styles.benefit}>{b.text}</Text>
             </View>
-            <Text style={styles.benefit}>{b.text}</Text>
-          </View>
-        ))}
-      </Card>
+          ))}
+        </View>
+      </View>
 
       {adapter === null ? (
         <ActivityIndicator />
@@ -161,16 +164,16 @@ export default function PaywallScreen() {
               >
                 <View style={styles.planRow}>
                   <View style={[styles.radio, isSelected ? styles.radioOn : null]}>
-                    {isSelected ? <Text style={styles.radioCheck}>✓</Text> : null}
+                    {isSelected ? <Icon name="check" size={14} color={brand.white} strokeWidth={3} /> : null}
                   </View>
-                  <Text variant="headline" style={styles.planTitle}>{PERIOD_TITLE[plan.period]}</Text>
+                  <Text style={styles.planTitle}>{PERIOD_TITLE[plan.period]}</Text>
                   {plan.period === 'annual' && savings !== null && (
                     <View style={styles.saveTag}>
-                      <Text style={styles.saveText}>{`SAVE ${savings}%`}</Text>
+                      <Text style={styles.saveText}>{`Best value · save ${savings}%`}</Text>
                     </View>
                   )}
                 </View>
-                <Text tone="secondary">
+                <Text style={styles.planPrice}>
                   {plan.trialDays
                     ? `${plan.trialDays} days free, then ${plan.priceString}`
                     : plan.priceString}
@@ -191,119 +194,49 @@ export default function PaywallScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: colors.accent,
-    borderRadius: 24,
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  proPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: gameColors.xp,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xxs,
-  },
-  proPillText: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: gameColors.violetDeep,
-  },
-  heroTitle: {
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  heroSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  benefits: {
-    gap: spacing.md,
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
+  hero: { backgroundColor: brand.ink, borderRadius: 24, padding: 20, gap: 8 },
+  heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  proPill: { backgroundColor: brand.sun, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  proPillText: { fontSize: 11, letterSpacing: 1, fontFamily: fonts.bold, color: brand.ink },
+  heroTitle: { fontSize: 28, lineHeight: 33, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.white },
+  heroSubtitle: { fontSize: 15, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.7)' },
+  benefits: { gap: 12, marginTop: 12 },
+  benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   benefitIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.cautionSurface,
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  benefitEmoji: {
-    fontSize: 20,
-  },
-  benefit: {
-    flex: 1,
-    fontWeight: '600',
-  },
-  saveTag: {
-    backgroundColor: gameColors.mint,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xxs,
-  },
-  saveText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
+  benefit: { flex: 1, fontSize: 14, lineHeight: 19, fontFamily: fonts.medium, color: brand.white },
+  saveTag: { backgroundColor: brand.tang, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  saveText: { fontSize: 11, fontFamily: fonts.bold, color: brand.white },
   radio: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: brand.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioOn: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  radioCheck: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  planTitle: {
-    flex: 1,
-  },
-  plans: {
-    gap: spacing.md,
-  },
+  radioOn: { backgroundColor: brand.ink, borderColor: brand.ink },
+  planTitle: { flex: 1, fontSize: 17, fontFamily: fonts.displayBold, color: brand.ink },
+  planPrice: { fontSize: 14, fontFamily: fonts.regular, color: brand.muted, marginLeft: 32 },
+  plans: { gap: 12 },
   plan: {
-    borderWidth: 2,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: brand.line,
     borderRadius: 20,
-    padding: spacing.lg,
-    gap: spacing.xs,
-    backgroundColor: colors.surface,
+    padding: 16,
+    gap: 4,
+    backgroundColor: brand.white,
   },
-  planSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.cautionSurface,
-  },
-  planRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  footer: {
-    gap: spacing.sm,
-  },
-  links: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.lg,
-  },
-  center: {
-    textAlign: 'center',
-  },
+  planSelected: { borderColor: brand.ink, borderWidth: 2 },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  footer: { gap: 8 },
+  links: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
+  center: { textAlign: 'center' },
 });

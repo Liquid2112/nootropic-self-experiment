@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { now } from '@/features/daily-loop';
-import { colors, spacing, typography } from '@/ui';
+import { brand, fonts, spacing } from '@/ui';
 
 /**
  * Psychomotor vigilance task (PVT): a dot appears after each inter-stimulus
@@ -63,6 +63,8 @@ export function PvtTask({
     scheduleNext(next);
   }, [visible, index, scheduleNext]);
 
+  const total = schedule.length;
+  const done = Math.min(index, total);
   return (
     <Pressable
       style={styles.pvtArea}
@@ -70,9 +72,16 @@ export function PvtTask({
       accessibilityRole="button"
       accessibilityLabel="Tap when the dot appears"
     >
-      <Text style={styles.muted}>Tap the moment the dot appears</Text>
-      <Text style={styles.progress}>{`${Math.min(index + 1, schedule.length)} / ${schedule.length}`}</Text>
-      {visible ? <View style={styles.dot} /> : <View style={styles.dotPlaceholder} />}
+      <View style={styles.top}>
+        <Text style={styles.progress}>{`${Math.min(index + 1, total)} / ${total}`}</Text>
+        <View style={styles.track}>
+          <View style={[styles.trackFill, { width: `${total > 0 ? (done / total) * 100 : 0}%` }]} />
+        </View>
+      </View>
+      <View style={styles.stage}>
+        {visible ? <View style={styles.dot} /> : <View style={styles.dotPlaceholder} />}
+      </View>
+      <Text style={styles.muted}>Tap anywhere the moment the dot appears</Text>
     </Pressable>
   );
 }
@@ -80,30 +89,45 @@ export function PvtTask({
 const styles = StyleSheet.create({
   pvtArea: {
     flex: 1,
-    backgroundColor: colors.surfaceInverse,
+    backgroundColor: brand.ink,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xl,
+    justifyContent: 'space-between',
+    paddingTop: 72,
+    paddingBottom: 56,
+    paddingHorizontal: spacing.xl,
   },
+  top: { alignSelf: 'stretch', alignItems: 'center', gap: spacing.md },
+  track: {
+    alignSelf: 'stretch',
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
+  },
+  trackFill: { height: '100%', backgroundColor: brand.lilac, borderRadius: 2 },
+  stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   muted: {
-    fontSize: typography.body.fontSize,
-    color: colors.textInverse,
-    opacity: 0.7,
+    fontSize: 15,
+    lineHeight: 20,
+    fontFamily: fonts.medium,
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
   },
   progress: {
-    fontSize: typography.body.fontSize,
-    color: colors.textInverse,
-    opacity: 0.6,
+    fontSize: 13,
+    fontFamily: fonts.semibold,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.55)',
   },
+  // The stimulus: large, high-contrast Tang on ink so it is unmissable.
   dot: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.stimulus,
+    width: 132,
+    height: 132,
+    borderRadius: 66,
+    backgroundColor: brand.tang,
   },
   dotPlaceholder: {
-    width: 120,
-    height: 120,
+    width: 132,
+    height: 132,
   },
 });

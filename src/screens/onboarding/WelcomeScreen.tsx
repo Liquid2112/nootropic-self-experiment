@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  Button,
-  Card,
-  Scaffold,
-  colors,
-  fontSize,
-  gameColors,
-  radius,
-  spacing,
-} from '@/ui';
+import { Button, Scaffold, brand, fonts } from '@/ui';
+import { Icon, Logo, Brian, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
@@ -42,7 +34,7 @@ export function WelcomeScreen() {
       footer={
         <View style={styles.footer}>
           <Button
-            label="Let's go"
+            label="Start my experiment"
             testID="welcome-continue"
             onPress={() => {
               tapLight();
@@ -50,60 +42,66 @@ export function WelcomeScreen() {
             }}
             disabled={!canContinue}
           />
-          <Button
-            label="⚡ Just try the free reaction test"
-            variant="subtle"
+          <Pressable
+            accessibilityRole="button"
             testID="welcome-reaction-test"
             onPress={() => router.push('/reaction-test')}
-          />
+            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+          >
+            <Icon name="bolt" size={18} color={brand.ink} />
+            <Text style={styles.secondaryText}>Just try the free reaction test</Text>
+          </Pressable>
         </View>
       }
     >
       <View style={styles.hero}>
-        <View style={styles.heroBubble}>
-          <Text style={styles.heroEmoji}>🧠</Text>
+        <Logo size={24} />
+        <View style={styles.mascot}>
+          <Brian size={148} mood="happy" />
         </View>
-        <Text style={styles.heroEyebrow}>YOUR BRAIN, YOUR DATA</Text>
-        <Text style={styles.promise}>Find out if your nootropic actually works for you.</Text>
+        <Text style={styles.promise}>Does your nootropic actually work?</Text>
         <Text style={styles.subtitle}>
-          A blinded 3–4 week self-experiment on one supplement, measured on your own device.
+          Run a blinded 3 to 4 week experiment on one supplement and get a real answer, measured
+          on your own phone.
         </Text>
       </View>
 
       <View style={styles.benefits}>
         <BenefitRow
-          emoji="🙈"
-          tint={colors.cautionSurface}
+          icon="eyeOff"
+          tint={brand.lilacSoft}
           title="Blinded, like a real trial"
           body="You won't know which days are the real thing, so hype can't fake the result."
         />
         <BenefitRow
-          emoji="🔥"
-          tint={gameColors.flameMuted}
+          icon="flame"
+          tint={brand.tangSoft}
           title="90 seconds a day"
-          body="A quick reaction and memory check-in. Build streaks, earn XP, unlock badges."
+          body="A quick reaction and memory check-in. Keep your streak, earn XP, unlock badges."
         />
         <BenefitRow
-          emoji="🏆"
-          tint={gameColors.xpMuted}
-          title="A real verdict in ~4 weeks"
+          icon="trophy"
+          tint={brand.sunSoft}
+          title="A real verdict in about 4 weeks"
           body="Stats on your own data tell you if it works, does nothing, or backfires."
+          last
         />
       </View>
 
-      <Card radius="xl" style={styles.card}>
-        <Text style={styles.cardTitle}>⚠️ Before you start</Text>
-        <Text style={styles.body}>
+      <View style={styles.notice}>
+        <View style={styles.noticeHeader}>
+          <Icon name="shield" size={18} color={brand.muted} />
+          <Text style={styles.noticeTitle}>Before you start</Text>
+        </View>
+        <Text style={styles.noticeBody}>
           This app helps you run a personal experiment. It is not medical advice and does not
           diagnose, treat, or prevent any condition.
         </Text>
-        <View style={styles.safety}>
-          <Text style={styles.safetyText}>
-            If you take prescription medication, are pregnant, or have a medical condition, check
-            with a doctor or pharmacist first.
-          </Text>
-        </View>
-      </Card>
+        <Text style={styles.noticeBody}>
+          If you take prescription medication, are pregnant, or have a medical condition, check
+          with a doctor or pharmacist first.
+        </Text>
+      </View>
 
       <View style={styles.acks}>
         <AcknowledgeRow
@@ -123,6 +121,7 @@ export function WelcomeScreen() {
             setAdult((v) => !v);
           }}
           label="I am 18 years of age or older."
+          last
         />
       </View>
 
@@ -130,9 +129,11 @@ export function WelcomeScreen() {
         accessibilityRole="link"
         testID="welcome-privacy"
         onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+        style={styles.privacy}
       >
+        <Icon name="lock" size={14} color={brand.muted} />
         <Text style={styles.privacyLink}>
-          🔒 Your data stays on this phone. Read the privacy policy.
+          Your data stays on this phone. <Text style={styles.privacyUnderline}>Privacy policy</Text>
         </Text>
       </Pressable>
     </Scaffold>
@@ -144,32 +145,33 @@ type AcknowledgeRowProps = {
   checked: boolean;
   onToggle: () => void;
   testID?: string;
+  last?: boolean;
 };
 
-function AcknowledgeRow({ label, checked, onToggle, testID }: AcknowledgeRowProps) {
+function AcknowledgeRow({ label, checked, onToggle, testID, last }: AcknowledgeRowProps) {
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       testID={testID}
       onPress={onToggle}
-      style={({ pressed }) => [styles.ackRow, pressed ? styles.ackPressed : null]}
+      style={({ pressed }) => [styles.ackRow, !last && styles.divider, pressed ? styles.pressed : null]}
     >
       <View style={[styles.box, checked ? styles.boxChecked : null]}>
-        {checked ? <Text style={styles.check}>✓</Text> : null}
+        {checked ? <Icon name="check" size={16} color={brand.white} strokeWidth={3} /> : null}
       </View>
       <Text style={styles.ackLabel}>{label}</Text>
     </Pressable>
   );
 }
 
-type BenefitRowProps = { emoji: string; tint: string; title: string; body: string };
+type BenefitRowProps = { icon: IconName; tint: string; title: string; body: string; last?: boolean };
 
-function BenefitRow({ emoji, tint, title, body }: BenefitRowProps) {
+function BenefitRow({ icon, tint, title, body, last }: BenefitRowProps) {
   return (
-    <View style={styles.benefit}>
+    <View style={[styles.benefit, !last && styles.divider]}>
       <View style={[styles.benefitIcon, { backgroundColor: tint }]}>
-        <Text style={styles.benefitEmoji}>{emoji}</Text>
+        <Icon name={icon} size={22} color={brand.ink} />
       </View>
       <View style={styles.benefitText}>
         <Text style={styles.benefitTitle}>{title}</Text>
@@ -180,147 +182,77 @@ function BenefitRow({ emoji, tint, title, body }: BenefitRowProps) {
 }
 
 const styles = StyleSheet.create({
-  footer: {
+  footer: { gap: 4 },
+  secondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    minHeight: 48,
   },
-  hero: {
-    backgroundColor: colors.accent,
-    borderRadius: 24,
-    padding: spacing.xl,
-    gap: spacing.sm,
-    alignItems: 'flex-start',
-  },
-  heroBubble: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  heroEmoji: {
-    fontSize: 34,
-  },
-  heroEyebrow: {
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-  },
+  secondaryText: { fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
+  pressed: { opacity: 0.6 },
+  hero: { alignItems: 'center', gap: 12, paddingTop: 8 },
+  mascot: { marginVertical: 8 },
   promise: {
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    fontSize: fontSize.callout,
-    lineHeight: 22,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  benefits: {
-    gap: spacing.md,
-  },
-  benefit: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: spacing.md,
-  },
-  benefitIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  benefitEmoji: {
-    fontSize: 24,
-  },
-  benefitText: {
-    flex: 1,
-    gap: 2,
-  },
-  benefitTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  benefitBody: {
-    fontSize: fontSize.footnote,
-    lineHeight: 18,
-    color: colors.textSecondary,
-  },
-  card: {
-    gap: spacing.sm,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  body: {
-    fontSize: fontSize.footnote,
-    color: colors.textSecondary,
-    lineHeight: 21,
-  },
-  safety: {
-    marginTop: spacing.xs,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    backgroundColor: gameColors.flameMuted,
-  },
-  safetyText: {
-    fontSize: fontSize.footnote,
-    color: '#B5410F',
-    lineHeight: 21,
-  },
-  acks: {
-    gap: spacing.sm,
-  },
-  ackRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-  },
-  ackPressed: {
-    opacity: 0.6,
-  },
-  box: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  boxChecked: {
-    backgroundColor: gameColors.mint,
-    borderColor: gameColors.mint,
-  },
-  check: {
-    color: colors.onAccent,
-    fontSize: fontSize.callout,
-    fontWeight: '800',
-  },
-  privacyLink: {
-    fontSize: fontSize.footnote,
-    color: colors.accent,
-    fontWeight: '600',
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.8,
+    fontFamily: fonts.display,
+    color: brand.ink,
     textAlign: 'center',
   },
-  ackLabel: {
-    flex: 1,
-    fontSize: fontSize.callout,
-    fontWeight: '600',
-    color: colors.text,
+  subtitle: {
+    fontSize: 16,
+    lineHeight: 23,
+    fontFamily: fonts.regular,
+    color: brand.muted,
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
+  benefits: {
+    backgroundColor: brand.white,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+    paddingHorizontal: 16,
+  },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: brand.line },
+  benefit: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
+  benefitIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  benefitText: { flex: 1, gap: 2 },
+  benefitTitle: { fontSize: 16, fontFamily: fonts.displayBold, color: brand.ink },
+  benefitBody: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
+  notice: {
+    backgroundColor: brand.paperDeep,
+    borderRadius: 20,
+    padding: 16,
+    gap: 8,
+  },
+  noticeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  noticeTitle: { fontSize: 15, fontFamily: fonts.semibold, color: brand.ink },
+  noticeBody: { fontSize: 13, lineHeight: 19, fontFamily: fonts.regular, color: brand.muted },
+  acks: {
+    backgroundColor: brand.white,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+    paddingHorizontal: 16,
+  },
+  ackRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
+  box: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: brand.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: brand.white,
+  },
+  boxChecked: { backgroundColor: brand.ink, borderColor: brand.ink },
+  ackLabel: { flex: 1, fontSize: 15, lineHeight: 20, fontFamily: fonts.medium, color: brand.ink },
+  privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
+  privacyLink: { fontSize: 13, fontFamily: fonts.regular, color: brand.muted },
+  privacyUnderline: { fontFamily: fonts.semibold, color: brand.ink, textDecorationLine: 'underline' },
 });

@@ -1,29 +1,32 @@
 import { StyleSheet, View } from 'react-native';
-import { Text, colors, radii, spacing } from '@/ui';
+import { Text, brand, fonts, radii, spacing } from '@/ui';
 import type { EvidenceGrade } from './types';
 import { EVIDENCE_LABELS } from './index';
 
-/** Filled dots out of four, so the grade reads at a glance. */
-const DOTS: Record<EvidenceGrade, number> = { strong: 4, moderate: 3, limited: 2, preclinical: 1 };
+/** Filled bars out of four, so the grade reads at a glance. */
+const BARS: Record<EvidenceGrade, number> = { strong: 4, moderate: 3, limited: 2, preclinical: 1 };
 
 const TINT: Record<EvidenceGrade, string> = {
-  strong: colors.success,
-  moderate: colors.accent,
-  limited: colors.warning,
-  preclinical: colors.textTertiary,
+  strong: brand.mint,
+  moderate: brand.lilacDeep,
+  limited: brand.sunDeep,
+  preclinical: brand.muted,
 };
 
-/** Compact evidence-strength badge: four dots plus a label. */
+/** Compact evidence-strength badge: four rising bars plus a label. */
 export function EvidencePill({ grade, compact = false }: { grade: EvidenceGrade; compact?: boolean }) {
   const tint = TINT[grade];
   return (
     <View style={[styles.pill, compact && styles.compact]} accessibilityLabel={EVIDENCE_LABELS[grade]}>
-      <View style={styles.dots}>
+      <View style={styles.bars}>
         {[0, 1, 2, 3].map((i) => (
-          <View key={i} style={[styles.dot, { backgroundColor: i < DOTS[grade] ? tint : colors.border }]} />
+          <View
+            key={i}
+            style={[styles.bar, { height: 5 + i * 2.5, backgroundColor: i < BARS[grade] ? tint : brand.line }]}
+          />
         ))}
       </View>
-      <Text variant="caption" style={{ color: tint, fontWeight: '600' }}>
+      <Text variant="caption" style={[styles.label, { color: tint }]}>
         {EVIDENCE_LABELS[grade]}
       </Text>
     </View>
@@ -36,12 +39,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: brand.paper,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.xs + 1,
   },
-  compact: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs },
-  dots: { flexDirection: 'row', gap: 3 },
-  dot: { width: 7, height: 7, borderRadius: 4 },
+  compact: { paddingHorizontal: spacing.sm + 2, paddingVertical: spacing.xxs + 1 },
+  bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
+  bar: { width: 4, borderRadius: 2 },
+  label: { fontFamily: fonts.semibold },
 });

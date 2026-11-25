@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { AppText } from './AppText';
 import { useTheme } from './theme';
+import { lightTheme } from './tokens';
 
 export type ListRowProps = {
   /** Primary row label. */
@@ -69,7 +70,7 @@ export function ListRow({
     >
       {leading ? <View>{leading}</View> : null}
       <View style={styles.textCol}>
-        <AppText variant="body">{title}</AppText>
+        <AppText variant="callout" style={styles.title}>{title}</AppText>
         {subtitle ? (
           <AppText variant="footnote" color="textSecondary">
             {subtitle}
@@ -120,6 +121,9 @@ const styles = StyleSheet.create({
   textCol: {
     flex: 1,
     gap: 2,
+  },
+  title: {
+    fontFamily: lightTheme.typography.headline.fontFamily,
   },
   badge: {
     paddingHorizontal: 8,

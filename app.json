@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Nootropic Self-Experiment",
+    "name": "Placebo",
     "slug": "nootropic-self-experiment",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "nootropic",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0E1226"
+      "backgroundColor": "#F7F4EE"
     },
     "ios": {
       "supportsTablet": true,
@@ -39,7 +39,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0E1226"
+        "backgroundColor": "#15131C"
       }
     },
     "web": {

@@ -13,7 +13,8 @@ import {
 import { PvtTask } from '@/screens/PvtTask';
 import { claimProgress, type ProgressDelta } from '@/features/gamification';
 import { Confetti, celebrate } from '@/components/game';
-import { Button, Card, Scaffold, Text, gameColors, spacing } from '@/ui';
+import { Icon, Brian, type IconName } from '@/brand';
+import { Button, Card, Scaffold, Text, brand, fonts, spacing } from '@/ui';
 
 type Phase = 'intro' | 'test' | 'result';
 
@@ -88,100 +89,122 @@ export default function ReactionTestScreen() {
     const party = score.ok && (newBest || (reward !== null && (reward.newBadges.length > 0 || reward.levelUp !== null)));
     return (
       <View style={styles.flex}>
-      <Scaffold
-        footer={
-          <View style={styles.footer}>
-            <Button label="Try again" onPress={start} />
-            <Button label="Done" variant="subtle" onPress={() => router.back()} />
-          </View>
-        }
-      >
-        {score.ok ? (
-          <View style={styles.hero}>
-            <Text variant="caption" tone="secondary">
-              YOUR REACTION TIME
-            </Text>
-            <Text style={styles.bigNumber}>{`${score.medianMs} ms`}</Text>
-            <Text variant="title3" tone="accent">
-              {speedLabel(score.medianMs)}
-            </Text>
-            {comparison && <Text tone="secondary">{comparison}</Text>}
-            {reward && (
-              <View style={styles.rewardRow}>
-                <View style={[styles.rewardPill, { backgroundColor: gameColors.xpMuted }]}>
-                  <Text style={styles.rewardText}>{reward.xpGained > 0 ? `+${reward.xpGained} XP` : 'Daily XP maxed'}</Text>
-                </View>
-                <View style={[styles.rewardPill, { backgroundColor: gameColors.flameMuted }]}>
-                  <Text style={styles.rewardText}>{`🔥 ${reward.streak}`}</Text>
-                </View>
-                {reward.newBadges.map((b) => (
-                  <View key={b.id} style={[styles.rewardPill, { backgroundColor: gameColors.mintMuted }]}>
-                    <Text style={styles.rewardText}>{`${b.emoji} ${b.title}`}</Text>
-                  </View>
-                ))}
-                {reward.levelUp !== null && (
-                  <View style={[styles.rewardPill, { backgroundColor: gameColors.xpMuted }]}>
-                    <Text style={styles.rewardText}>{`🚀 Level ${reward.levelUp}`}</Text>
-                  </View>
-                )}
+        <Scaffold
+          footer={
+            <View style={styles.footer}>
+              <Button label="Try again" onPress={start} />
+              <Button label="Done" variant="subtle" onPress={() => router.back()} />
+            </View>
+          }
+        >
+          {score.ok ? (
+            <View style={styles.resultCard}>
+              <Text style={styles.eyebrow}>YOUR REACTION TIME</Text>
+              <View style={styles.scoreRow}>
+                <Text style={styles.bigNumber}>{String(score.medianMs)}</Text>
+                <Text style={styles.unit}>ms</Text>
               </View>
-            )}
-            <Button
-              label="Share my score"
-              variant="secondary"
-              onPress={() => {
-                void Share.share({ message: shareText(score.medianMs) });
-              }}
-            />
-          </View>
-        ) : (
-          <View style={styles.hero}>
-            <Text variant="title2">No score this time</Text>
-            <Text tone="secondary">
-              {score.reason === 'abandoned'
-                ? 'The run ended early. Tap every dot to get a score.'
-                : 'Too many taps came before the dot appeared. Wait for it, then tap.'}
-            </Text>
-          </View>
-        )}
+              <View style={styles.speedChip}>
+                <Icon name="bolt" size={16} color={brand.tang} strokeWidth={2.4} />
+                <Text style={styles.speedText}>{speedLabel(score.medianMs)}</Text>
+              </View>
+              {comparison && (
+                <Text tone="secondary" style={styles.centerText}>
+                  {comparison}
+                </Text>
+              )}
+              {reward && (
+                <View style={styles.rewardRow}>
+                  <RewardPill
+                    icon="sparkle"
+                    tint={brand.sunSoft}
+                    color={brand.sunDeep}
+                    label={reward.xpGained > 0 ? `+${reward.xpGained} XP` : 'Daily XP maxed'}
+                  />
+                  <RewardPill icon="flame" tint={brand.tangSoft} color={brand.tang} label={`${reward.streak} day streak`} />
+                  {reward.newBadges.map((b) => (
+                    <RewardPill key={b.id} icon="medal" tint={brand.mintSoft} color={brand.mint} label={b.title} />
+                  ))}
+                  {reward.levelUp !== null && (
+                    <RewardPill icon="crown" tint={brand.lilacSoft} color={brand.lilacDeep} label={`Level ${reward.levelUp}`} />
+                  )}
+                </View>
+              )}
+              <Button
+                label="Share my score"
+                variant="secondary"
+                fullWidth
+                onPress={() => {
+                  void Share.share({ message: shareText(score.medianMs) });
+                }}
+              />
+            </View>
+          ) : (
+            <View style={styles.failCard}>
+              <Brian size={110} mood="wow" />
+              <Text variant="title2" style={styles.centerText}>
+                No score this time
+              </Text>
+              <Text tone="secondary" style={styles.centerText}>
+                {score.reason === 'abandoned'
+                  ? 'The run ended early. Tap every dot to get a score.'
+                  : 'Too many taps came before the dot appeared. Wait for it, then tap.'}
+              </Text>
+            </View>
+          )}
 
-        {!hasActiveExperiment && (
-          <Card>
-            <Text variant="headline">Does your nootropic change this?</Text>
-            <Text tone="secondary">
-              Run a blinded 3 to 4 week experiment with this test every day and get a real verdict
-              on whether it works for you.
-            </Text>
-            <Button label="Start an experiment" variant="secondary" onPress={() => router.push('/welcome')} />
-          </Card>
-        )}
+          {!hasActiveExperiment && (
+            <Card style={styles.upsell}>
+              <View style={styles.upsellIcon}>
+                <Icon name="flask" size={22} color={brand.white} />
+              </View>
+              <Text variant="title3">Does your nootropic change this?</Text>
+              <Text tone="secondary">
+                Run a blinded 3 to 4 week experiment with this test every day and get a real verdict
+                on whether it works for you.
+              </Text>
+              <Button label="Start an experiment" variant="secondary" onPress={() => router.push('/welcome')} />
+            </Card>
+          )}
 
-        <Text variant="caption" tone="tertiary">
-          Scores vary with your phone&apos;s touch latency, so compare yourself with yourself. Not a
-          medical test.
-        </Text>
-      </Scaffold>
-      {party ? <Confetti burstKey={runKey} /> : null}
+          <Text variant="caption" tone="tertiary" style={styles.centerText}>
+            Scores vary with your phone&apos;s touch latency, so compare yourself with yourself. Not a
+            medical test.
+          </Text>
+        </Scaffold>
+        {party ? <Confetti burstKey={runKey} /> : null}
       </View>
     );
   }
 
   return (
     <Scaffold footer={<Button label="Start" onPress={start} />}>
-      <View style={styles.hero}>
-        <Text variant="largeTitle">Reaction test</Text>
-        <Text tone="secondary">
-          About 30 seconds. A dot appears {PVT_DEFAULT_TRIALS} times at random moments; tap it as fast
+      <View style={styles.intro}>
+        <Brian size={140} mood="focused" />
+        <Text variant="largeTitle" style={styles.centerText}>
+          How fast is your brain today?
+        </Text>
+        <Text tone="secondary" style={styles.centerText}>
+          About 30 seconds. A dot appears {PVT_DEFAULT_TRIALS} times at random moments. Tap it as fast
           as you can. Free, no sign-up.
         </Text>
       </View>
 
       {history.best && (
-        <Card>
-          <Text variant="headline">Personal best</Text>
-          <Text variant="title2" tone="accent">{`${Math.round(history.best.medianMs)} ms`}</Text>
+        <Card style={styles.bestCard}>
+          <View style={styles.bestRow}>
+            <View style={styles.bestIcon}>
+              <Icon name="trophy" size={20} color={brand.sun} />
+            </View>
+            <View style={styles.flex}>
+              <Text variant="caption" tone="secondary">
+                PERSONAL BEST
+              </Text>
+              <Text style={styles.bestValue}>{`${Math.round(history.best.medianMs)} ms`}</Text>
+            </View>
+          </View>
           {history.recent.length > 0 && (
-            <Text tone="secondary">
+            <Text variant="footnote" tone="secondary">
               {`Recent: ${history.recent.map((q) => `${Math.round(q.medianMs)}`).join(', ')} ms`}
             </Text>
           )}
@@ -191,24 +214,83 @@ export default function ReactionTestScreen() {
   );
 }
 
+function RewardPill({ icon, tint, color, label }: { icon: IconName; tint: string; color: string; label: string }) {
+  return (
+    <View style={[styles.rewardPill, { backgroundColor: tint }]}>
+      <Icon name={icon} size={14} color={color} strokeWidth={2.4} />
+      <Text style={[styles.rewardText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  hero: {
+  flex: { flex: 1 },
+  centerText: { textAlign: 'center' },
+  intro: { alignItems: 'center', gap: spacing.md, paddingTop: spacing.lg, paddingBottom: spacing.sm },
+  resultCard: {
+    alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.lg,
+    backgroundColor: brand.white,
+    borderRadius: 24,
+    padding: spacing.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
   },
+  failCard: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xl },
+  eyebrow: { fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 1.2, color: brand.muted },
+  scoreRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   bigNumber: {
-    // The base Text style sets a 24pt line height; without its own line height
-    // the 64pt number overflows upward and sits on top of the label above it.
-    fontSize: 64,
-    lineHeight: 76,
-    fontWeight: '800',
-    marginTop: spacing.xs,
+    // Its own line height: the base Text style's 24pt line would clip a 88pt
+    // number and push it up over the label above.
+    fontSize: 88,
+    lineHeight: 96,
+    fontFamily: fonts.display,
+    letterSpacing: -3,
+    color: brand.ink,
   },
+  unit: { fontSize: 22, lineHeight: 40, fontFamily: fonts.displayBold, color: brand.muted },
+  speedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: brand.tangSoft,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  speedText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.tangDeep },
   footer: {
     gap: spacing.sm,
   },
-  flex: { flex: 1 },
-  rewardRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  rewardPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  rewardText: { fontSize: 14, fontWeight: '800' },
+  rewardRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
+  rewardPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  rewardText: { fontSize: 13, fontFamily: fonts.semibold },
+  upsell: { gap: spacing.sm, borderRadius: 24 },
+  upsellIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: brand.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  bestCard: { gap: spacing.sm, borderRadius: 20 },
+  bestRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  bestIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: brand.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bestValue: { fontSize: 24, lineHeight: 30, fontFamily: fonts.display, color: brand.ink },
 });

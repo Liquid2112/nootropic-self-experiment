@@ -38,10 +38,12 @@ type VariantColors = {
 function variantColors(theme: Theme, variant: ButtonVariant): VariantColors {
   switch (variant) {
     case 'primary':
+      // Ink buttons: the brand's primary action is near-black, which keeps Tang
+      // free to mean "signature / reward" instead of "every button".
       return {
-        background: theme.colors.accent,
-        backgroundPressed: theme.colors.accentPressed,
-        border: theme.colors.accent,
+        background: theme.colors.textPrimary,
+        backgroundPressed: '#2B2836',
+        border: theme.colors.textPrimary,
         text: 'onAccent',
         spinner: theme.colors.onAccent,
       };
@@ -55,11 +57,11 @@ function variantColors(theme: Theme, variant: ButtonVariant): VariantColors {
       };
     case 'subtle':
       return {
-        background: theme.colors.accentMuted,
-        backgroundPressed: theme.colors.fill,
-        border: theme.colors.accentMuted,
-        text: 'accent',
-        spinner: theme.colors.accent,
+        background: theme.colors.fill,
+        backgroundPressed: theme.colors.border,
+        border: theme.colors.fill,
+        text: 'textPrimary',
+        spinner: theme.colors.textPrimary,
       };
   }
 }
@@ -96,7 +98,7 @@ export function Button({
             {
               backgroundColor: pressed ? colors.backgroundPressed : colors.background,
               borderColor: colors.border,
-              borderRadius: theme.radius.lg,
+              borderRadius: theme.radius.pill,
               paddingVertical: theme.spacing.md,
               transform: [{ translateY: pressed && !isInactive ? 2 : 0 }],
               paddingHorizontal: theme.spacing.xl,

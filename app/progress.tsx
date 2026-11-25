@@ -14,7 +14,8 @@ import { getDatabase } from '@/db';
 import { loadGameState } from '@/features/gamification';
 import { useExperimentData } from '@/screens/useExperimentData';
 import { JourneyPath, StreakFlame } from '@/components/game';
-import { Button, Card, Scaffold, gameColors, lightTheme } from '@/ui';
+import { Button, Card, Scaffold, brand, fonts } from '@/ui';
+import { Icon, Brian } from '@/brand';
 
 /**
  * Journey (progress) screen: the run as a winding trail of day stops with
@@ -40,7 +41,7 @@ export default function ProgressScreen() {
     return (
       <Scaffold>
         <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>🗺️</Text>
+          <Brian size={110} mood="sleepy" />
           <Text style={styles.title}>Your journey starts here</Text>
           <Text style={styles.muted}>Start an experiment to see your run mapped out day by day.</Text>
         </View>
@@ -61,11 +62,11 @@ export default function ProgressScreen() {
       </Text>
 
       <View style={styles.row}>
-        <View style={[styles.tile, { backgroundColor: lightTheme.colors.accentMuted }]}>
-          <Text style={[styles.big, { color: lightTheme.colors.accent }]}>{pct}%</Text>
+        <View style={styles.tile}>
+          <Text style={styles.big}>{pct}%</Text>
           <Text style={styles.tileLabel}>Adherence</Text>
         </View>
-        <View style={[styles.tile, { backgroundColor: gameColors.flameMuted }]}>
+        <View style={styles.tile}>
           <StreakFlame count={game.streak.current} atRisk={game.streak.atRisk} size="lg" style={styles.clear} />
           <Text style={styles.tileLabel}>Day streak</Text>
         </View>
@@ -76,7 +77,12 @@ export default function ProgressScreen() {
 
       {midpoint && !complete && (
         <Card style={styles.card}>
-          <Text style={styles.cardTitle}>⭐ Halfway there</Text>
+          <View style={styles.titleRow}>
+            <View style={styles.titleIcon}>
+              <Icon name="star" size={16} color={brand.sun} strokeWidth={2.4} />
+            </View>
+            <Text style={styles.cardTitle}>Halfway there</Text>
+          </View>
           <Text style={styles.muted}>
             We show adherence only for now. Your results stay sealed until the experiment ends, so the
             wait can&apos;t sway what you measure.
@@ -84,15 +90,15 @@ export default function ProgressScreen() {
         </Card>
       )}
 
-      {complete && <Button label="Reveal my verdict 🏆" onPress={() => router.push('/verdict')} />}
+      {complete &&  <Button label="Reveal my verdict" onPress={() => router.push('/verdict')} />}
 
       <Card style={styles.card}>
         <Text style={styles.cardTitle}>Your trail</Text>
         <View style={styles.legend}>
-          <Legend color={gameColors.mint} label="Dose + check-in" />
-          <Legend color={lightTheme.colors.accent} label="Half done" />
-          <Legend color="#C9C4D9" label="Missed" />
-          <Legend color={gameColors.locked} label="Ahead" />
+          <Legend color={brand.mint} label="Dose + check-in" />
+          <Legend color={brand.sun} label="Half done" />
+          <Legend color="#D8D2C6" label="Missed" />
+          <Legend color={brand.paperDeep} label="Ahead" />
         </View>
         <JourneyPath
           days={calendar}
@@ -122,23 +128,33 @@ function Legend({ color, label }: { color: string; label: string }) {
   );
 }
 
-const c = lightTheme.colors;
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', gap: 10, paddingTop: 60 },
-  emptyEmoji: { fontSize: 64 },
-  title: { fontSize: 24, fontWeight: '800', color: c.textPrimary, textAlign: 'center' },
-  subtitle: { fontSize: 16, fontWeight: '600', color: c.textSecondary },
-  row: { flexDirection: 'row', gap: 10 },
-  tile: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', gap: 6 },
+  empty: { alignItems: 'center', gap: 12, paddingTop: 56 },
+  title: { fontSize: 26, lineHeight: 32, fontFamily: fonts.display, letterSpacing: -0.6, color: brand.ink, textAlign: 'center' },
+  subtitle: { fontSize: 15, fontFamily: fonts.semibold, color: brand.muted },
+  row: { flexDirection: 'row', gap: 12 },
+  tile: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: brand.white,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+  },
   clear: { backgroundColor: 'transparent' },
-  big: { fontSize: 36, fontWeight: '800' },
-  tileLabel: { fontSize: 13, fontWeight: '700', color: c.textSecondary },
+  big: { fontSize: 34, lineHeight: 40, fontFamily: fonts.display, letterSpacing: -0.8, color: brand.ink },
+  tileLabel: { fontSize: 13, fontFamily: fonts.medium, color: brand.muted },
   card: { gap: 12 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary },
-  muted: { fontSize: 14, lineHeight: 19, color: c.textSecondary, textAlign: 'left' },
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  titleIcon: { width: 28, height: 28, borderRadius: 9, backgroundColor: brand.ink, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { fontSize: 18, lineHeight: 23, fontFamily: fonts.displayBold, color: brand.ink },
+  muted: { fontSize: 14, lineHeight: 20, fontFamily: fonts.regular, color: brand.muted },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  swatch: { width: 14, height: 14, borderRadius: 7 },
-  legendText: { fontSize: 12, color: c.textSecondary },
-  disclaimer: { fontSize: 12, color: c.textTertiary, textAlign: 'center' },
+  swatch: { width: 12, height: 12, borderRadius: 4 },
+  legendText: { fontSize: 12, fontFamily: fonts.medium, color: brand.muted },
+  disclaimer: { fontSize: 12, lineHeight: 16, fontFamily: fonts.regular, color: brand.faint, textAlign: 'center' },
 });

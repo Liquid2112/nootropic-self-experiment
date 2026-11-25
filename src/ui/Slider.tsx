@@ -171,7 +171,7 @@ export function Slider({
             {
               left: thumbLeft,
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
+              borderColor: theme.colors.textPrimary,
             },
           ]}
         />
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 2,
     top: 0,
   },
   disabled: {
