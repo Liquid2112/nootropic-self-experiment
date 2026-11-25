@@ -71,14 +71,19 @@ export type NotificationsAdapter = {
   requestPermissions: () => Promise<boolean>;
   cancelAll: () => Promise<void>;
   schedule: (plan: ReminderPlan) => Promise<void>;
-  /** Cancel one reminder by id. Optional: fakes and older adapters may lack it. */
+  /** Cancel one scheduled notification by id, leaving the others alone. */
   cancel?: (id: string) => Promise<void>;
-  /** Schedule a one-off reminder at a date (e.g. a keyholder's reveal day). */
-  scheduleOnce?: (plan: OneOffReminder) => Promise<void>;
+  /** Schedule a one-off notification at an exact local time. */
+  scheduleAt?: (reminder: OneOffReminder) => Promise<void>;
 };
 
-/** A reminder that fires once, at a specific time. */
-export type OneOffReminder = { id: string; title: string; body: string; at: Date };
+/** A notification that fires once, at `date`. */
+export type OneOffReminder = {
+  id: string;
+  title: string;
+  body: string;
+  date: Date;
+};
 
 /** A no-op adapter used when expo-notifications is not available. */
 export const noopNotificationsAdapter: NotificationsAdapter = {
@@ -89,6 +94,12 @@ export const noopNotificationsAdapter: NotificationsAdapter = {
     /* no-op */
   },
   async schedule() {
+    /* no-op */
+  },
+  async cancel() {
+    /* no-op */
+  },
+  async scheduleAt() {
     /* no-op */
   },
 };
@@ -111,8 +122,8 @@ export async function loadNotificationsAdapter(): Promise<NotificationsAdapter> 
 type ExpoNotificationsLike = {
   requestPermissionsAsync: () => Promise<{ granted?: boolean; status?: string }>;
   cancelAllScheduledNotificationsAsync: () => Promise<void>;
+  cancelScheduledNotificationAsync?: (identifier: string) => Promise<void>;
   scheduleNotificationAsync: (request: unknown) => Promise<string>;
-  cancelScheduledNotificationAsync?: (id: string) => Promise<void>;
   SchedulableTriggerInputTypes?: { DAILY?: string; DATE?: string };
 };
 
@@ -143,14 +154,16 @@ export function createExpoAdapter(mod: unknown): NotificationsAdapter {
       });
     },
     async cancel(id: string) {
-      await api.cancelScheduledNotificationAsync?.(id);
+      if (typeof api.cancelScheduledNotificationAsync === 'function') {
+        await api.cancelScheduledNotificationAsync(id);
+      }
     },
-    async scheduleOnce(plan: OneOffReminder) {
+    async scheduleAt(reminder: OneOffReminder) {
       const dateType = api.SchedulableTriggerInputTypes?.DATE ?? 'date';
       await api.scheduleNotificationAsync({
-        identifier: plan.id,
-        content: { title: plan.title, body: plan.body },
-        trigger: { type: dateType, date: plan.at },
+        identifier: reminder.id,
+        content: { title: reminder.title, body: reminder.body },
+        trigger: { type: dateType, date: reminder.date },
       });
     },
   };
@@ -178,10 +191,12 @@ export async function scheduleDailyReminders(
     return { scheduled: false, count: 0 };
   }
   const plans = buildDailyReminders(input);
-  // Replace only our own daily reminders when the adapter can, so one-off
-  // reminders (a keyholder's reveal day) survive a reschedule.
+  // Replace only the daily reminders, so a one-off (like the trial billing
+  // reminder) survives a reschedule.
   if (adapter.cancel) {
-    for (const plan of plans) await adapter.cancel(plan.id);
+    for (const plan of plans) {
+      await adapter.cancel(plan.id);
+    }
   } else {
     await adapter.cancelAll();
   }
@@ -189,4 +204,20 @@ export async function scheduleDailyReminders(
     await adapter.schedule(plan);
   }
   return { scheduled: true, count: plans.length };
+}
+
+/**
+ * Request permission and schedule one one-off reminder. Returns false (and does
+ * nothing) when permission is denied or the module can't schedule by date.
+ */
+export async function scheduleOneOff(reminder: OneOffReminder, adapter: NotificationsAdapter): Promise<boolean> {
+  if (!adapter.scheduleAt || reminder.date.getTime() <= Date.now()) {
+    return false;
+  }
+  const granted = await adapter.requestPermissions();
+  if (!granted) {
+    return false;
+  }
+  await adapter.scheduleAt(reminder);
+  return true;
 }

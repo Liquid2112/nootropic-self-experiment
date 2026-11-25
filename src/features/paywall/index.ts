@@ -38,6 +38,8 @@ export type PurchasesAdapter = {
   available: boolean;
   isPro(): Promise<boolean>;
   getPlans(): Promise<Plan[]>;
+  /** Plans in a named RevenueCat offering (e.g. the exit offer); [] when absent. */
+  getOffering(offeringId: string): Promise<Plan[]>;
   purchase(planId: string): Promise<PurchaseOutcome>;
   /** Restores prior purchases; resolves true when Pro is active afterwards. */
   restore(): Promise<boolean>;
@@ -49,6 +51,9 @@ export const unavailablePurchasesAdapter: PurchasesAdapter = {
     return false;
   },
   async getPlans() {
+    return [];
+  },
+  async getOffering() {
     return [];
   },
   async purchase() {
@@ -168,6 +173,129 @@ export function renewalTerms(plan: Plan | undefined): string {
   return `${lead} Renews automatically until you cancel. Cancel anytime in your App Store or Google Play settings, at least 24 hours before the ${plan.trialDays ? 'trial' : 'period'} ends, to avoid being charged.`;
 }
 
+// --- honest trial timeline ---------------------------------------------------
+
+/** The exit offer is a separate RevenueCat offering with this identifier. */
+export const EXIT_OFFERING_ID = 'exit_offer';
+
+/** Never discount more than this on the exit offer, whatever the store says. */
+export const MAX_EXIT_DISCOUNT_PERCENT = 30;
+
+/** Billing-reminder notification id, so it can be replaced, never doubled. */
+export const BILLING_REMINDER_ID = 'trial-billing-reminder';
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date: Date, days: number): Date {
+  const d = startOfDay(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+/** Days before the trial ends that the reminder fires: 2 on longer trials, else 1. */
+export function reminderLeadDays(trialDays: number): number {
+  return trialDays >= 5 ? 2 : 1;
+}
+
+export type TrialStep = {
+  id: 'today' | 'reminder' | 'billing';
+  /** "Today", "Day 5", "Day 7". */
+  when: string;
+  title: string;
+  body: string;
+  date: Date;
+};
+
+/**
+ * The three honest steps of a free trial: what you get today, when we remind
+ * you, and exactly when and how much you're charged. Null without a trial.
+ */
+export function trialTimeline(plan: Plan | undefined, today: Date): TrialStep[] | null {
+  if (!plan?.trialDays) return null;
+  const days = plan.trialDays;
+  const lead = reminderLeadDays(days);
+  const per = PERIOD_NOUN[plan.period];
+  return [
+    {
+      id: 'today',
+      when: 'Today',
+      title: 'Your experiment starts',
+      body: 'Full access. Set up your run and take your first check-in.',
+      date: startOfDay(today),
+    },
+    {
+      id: 'reminder',
+      when: `Day ${days - lead}`,
+      title: 'We remind you',
+      body: `A notification ${lead === 1 ? 'the day' : `${lead} days`} before your trial ends.`,
+      date: addDays(today, days - lead),
+    },
+    {
+      id: 'billing',
+      when: `Day ${days}`,
+      title: `You're charged ${plan.priceString}/${per}`,
+      body: 'Unless you cancel before this. Cancel in two taps in your store settings.',
+      date: addDays(today, days),
+    },
+  ];
+}
+
+/**
+ * The local notification sent before the trial converts, at 10 AM on the
+ * reminder day. Null without a trial.
+ */
+export function billingReminder(
+  plan: Plan | undefined,
+  start: Date,
+): { id: string; title: string; body: string; date: Date } | null {
+  if (!plan?.trialDays) return null;
+  const lead = reminderLeadDays(plan.trialDays);
+  const date = addDays(start, plan.trialDays - lead);
+  date.setHours(10, 0, 0, 0);
+  const when = lead === 1 ? 'tomorrow' : `in ${lead} days`;
+  return {
+    id: BILLING_REMINDER_ID,
+    title: `Your free trial ends ${when}`,
+    body: `After that it's ${plan.priceString}/${PERIOD_NOUN[plan.period]}. Want to keep going? Do nothing. Want to stop? Cancel in your store settings.`,
+    date,
+  };
+}
+
+/** "$39.99/year": a plan's price and billing period. */
+export function pricePerPeriod(plan: Plan): string {
+  return `${plan.priceString}/${PERIOD_NOUN[plan.period]}`;
+}
+
+/** The headline price line: price as prominent as "free", never hidden. */
+export function priceLine(plan: Plan): string {
+  const per = PERIOD_NOUN[plan.period];
+  return plan.trialDays
+    ? `${plan.trialDays} days free, then ${plan.priceString}/${per}`
+    : `${plan.priceString}/${per}`;
+}
+
+/**
+ * The exit offer, if it's honest: the same billing period as a regular plan
+ * and a real discount of at most MAX_EXIT_DISCOUNT_PERCENT. Anything else
+ * (no matching plan, no saving, a bigger cut) is not shown.
+ */
+export function pickExitOffer(
+  regular: Plan[],
+  offer: Plan[],
+): { plan: Plan; regular: Plan; percentOff: number } | null {
+  for (const candidate of sortPlans(offer)) {
+    const base = regular.find((p) => p.period === candidate.period);
+    if (!base || base.price <= 0 || candidate.price <= 0) continue;
+    const percentOff = Math.round((1 - candidate.price / base.price) * 100);
+    if (percentOff > 0 && percentOff <= MAX_EXIT_DISCOUNT_PERCENT) {
+      return { plan: candidate, regular: base, percentOff };
+    }
+  }
+  return null;
+}
+
 export type SetupGate = 'proceed' | 'paywall';
 
 /**
@@ -191,7 +319,10 @@ type CustomerInfoLike = {
 type PurchasesModuleLike = {
   configure: (config: { apiKey: string }) => void;
   getCustomerInfo: () => Promise<CustomerInfoLike>;
-  getOfferings: () => Promise<{ current?: { availablePackages?: PackageLike[] } | null }>;
+  getOfferings: () => Promise<{
+    current?: { availablePackages?: PackageLike[] } | null;
+    all?: Record<string, { availablePackages?: PackageLike[] } | undefined>;
+  }>;
   purchasePackage: (pkg: PackageLike) => Promise<{ customerInfo: CustomerInfoLike }>;
   restorePurchases: () => Promise<CustomerInfoLike>;
 };
@@ -217,7 +348,15 @@ export function createRevenueCatAdapter(mod: unknown, apiKey: string | undefined
   const sdk = api as PurchasesModuleLike;
   sdk.configure({ apiKey });
 
-  let packages: PackageLike[] = [];
+  // Every package seen so far, from the current offering and any named one,
+  // so `purchase` can find a plan whichever list it came from.
+  const packages = new Map<string, PackageLike>();
+  const remember = (list: PackageLike[]): Plan[] => {
+    for (const pkg of list) {
+      if (pkg.identifier) packages.set(pkg.identifier, pkg);
+    }
+    return sortPlans(list.map(planFromPackage).filter((p): p is Plan => p !== null));
+  };
 
   return {
     available: true,
@@ -231,14 +370,21 @@ export function createRevenueCatAdapter(mod: unknown, apiKey: string | undefined
     async getPlans() {
       try {
         const offerings = await sdk.getOfferings();
-        packages = offerings.current?.availablePackages ?? [];
-        return sortPlans(packages.map(planFromPackage).filter((p): p is Plan => p !== null));
+        return remember(offerings.current?.availablePackages ?? []);
+      } catch {
+        return [];
+      }
+    },
+    async getOffering(offeringId: string) {
+      try {
+        const offerings = await sdk.getOfferings();
+        return remember(offerings.all?.[offeringId]?.availablePackages ?? []);
       } catch {
         return [];
       }
     },
     async purchase(planId: string) {
-      const pkg = packages.find((p) => p.identifier === planId);
+      const pkg = packages.get(planId);
       if (!pkg) return 'failed';
       try {
         const { customerInfo } = await sdk.purchasePackage(pkg);
