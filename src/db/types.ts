@@ -94,3 +94,16 @@ export type QuickTest = {
   lapses: number;
   trials: number;
 };
+
+/** A Health metric summarized per night (see the health_night table). */
+export type HealthMetric = 'sleep_hours' | 'resting_hr' | 'hrv_ms';
+
+export type HealthNight = {
+  /** Local YYYY-MM-DD the night ended on (the wake-up morning). */
+  date: string;
+  metric: HealthMetric;
+  value: number;
+  /** 'healthkit' or 'health_connect'. */
+  source: string;
+  syncedAt: string;
+};

@@ -19,7 +19,13 @@ export type MetricKey =
   | 'nbackDprime'
   | 'focus'
   | 'energy'
-  | 'mood';
+  | 'mood'
+  // Nightly values from Apple Health / Health Connect (see features/health).
+  // Each is the night AFTER the dose day, so last night's sleep is matched to
+  // yesterday's dose.
+  | 'healthSleepHours'
+  | 'healthRestingHr'
+  | 'healthHrv';
 
 export type MetricSpec = {
   key: MetricKey;
@@ -44,6 +50,30 @@ export const METRICS: Record<MetricKey, MetricSpec> = {
   focus: { key: 'focus', label: 'focus rating', unit: '', betterDirection: 'higher' },
   energy: { key: 'energy', label: 'energy rating', unit: '', betterDirection: 'higher' },
   mood: { key: 'mood', label: 'mood rating', unit: '', betterDirection: 'higher' },
+  healthSleepHours: { key: 'healthSleepHours', label: 'sleep', unit: 'h', betterDirection: 'higher' },
+  healthRestingHr: { key: 'healthRestingHr', label: 'resting heart rate', unit: 'bpm', betterDirection: 'lower' },
+  healthHrv: { key: 'healthHrv', label: 'overnight HRV', unit: 'ms', betterDirection: 'higher' },
+};
+
+/** The metrics every run measures (the daily check-in). */
+export const CORE_METRICS: MetricKey[] = [
+  'pvtMedianMs',
+  'pvtLapses',
+  'nbackAccuracy',
+  'nbackDprime',
+  'focus',
+  'energy',
+  'mood',
+];
+
+/** Metrics that come from Apple Health / Health Connect. */
+export const HEALTH_METRICS: MetricKey[] = ['healthSleepHours', 'healthRestingHr', 'healthHrv'];
+
+/** experiment.primary_metric values that pre-register a Health outcome. */
+export const HEALTH_PRIMARY_DB: Record<string, MetricKey> = {
+  health_sleep_hours: 'healthSleepHours',
+  health_hrv_ms: 'healthHrv',
+  health_resting_hr: 'healthRestingHr',
 };
 
 /** The four goals a user can pick, mirrored from the experiment setup flow. */
@@ -73,7 +103,7 @@ export type PrimarySelection = {
  */
 export function selectPrimaryMetric(
   goal: Goal,
-  available: MetricKey[] = Object.keys(METRICS) as MetricKey[],
+  available: MetricKey[] = CORE_METRICS,
 ): PrimarySelection {
   const primary = PRIMARY_BY_GOAL[goal];
   if (!primary) {

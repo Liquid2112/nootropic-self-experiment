@@ -2,6 +2,7 @@ import {
   isImprovement,
   METRICS,
   selectPrimaryMetric,
+  CORE_METRICS,
 } from '../metrics';
 
 describe('metric direction', () => {
@@ -41,7 +42,7 @@ describe('selectPrimaryMetric', () => {
     const sel = selectPrimaryMetric('focus');
     expect(sel.secondary).not.toContain('pvtMedianMs');
     expect(sel.secondary).toContain('nbackDprime');
-    expect(sel.secondary.length).toBe(Object.keys(METRICS).length - 1);
+    expect(sel.secondary.length).toBe(CORE_METRICS.length - 1);
   });
 
   it('respects a restricted available set', () => {

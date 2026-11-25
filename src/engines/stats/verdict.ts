@@ -127,6 +127,7 @@ function formatSignedRange(spec: MetricSpec, ci: ConfidenceInterval): string {
 function improvementWord(spec: MetricSpec, improved: boolean): string {
   if (spec.key === 'pvtMedianMs') return improved ? 'faster' : 'slower';
   if (spec.key === 'pvtLapses') return improved ? 'fewer' : 'more';
+  if (spec.key === 'healthSleepHours') return improved ? 'longer' : 'shorter';
   return improved ? 'higher' : 'lower';
 }
 

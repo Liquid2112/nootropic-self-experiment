@@ -117,6 +117,23 @@ export const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    // One row per night per Health metric (sleep hours, resting heart rate,
+    // overnight HRV), read from Apple Health or Health Connect. `date` is the
+    // local date the night ENDED on (the morning you woke up), so the verdict
+    // can line a night up with the dose taken the day before it.
+    version: 5,
+    statements: [
+      `CREATE TABLE health_night (
+        date TEXT NOT NULL,
+        metric TEXT NOT NULL CHECK (metric IN ('sleep_hours', 'resting_hr', 'hrv_ms')),
+        value REAL NOT NULL,
+        source TEXT NOT NULL,
+        synced_at TEXT NOT NULL,
+        PRIMARY KEY (date, metric)
+      )`,
+    ],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

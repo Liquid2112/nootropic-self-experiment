@@ -82,6 +82,7 @@ describe('schema migrations', () => {
     expect(tables).toEqual([
       'app_state',
       'experiment',
+      'health_night',
       'quick_test',
       'result',
       'schedule_day',
