@@ -71,6 +71,18 @@ export type NotificationsAdapter = {
   requestPermissions: () => Promise<boolean>;
   cancelAll: () => Promise<void>;
   schedule: (plan: ReminderPlan) => Promise<void>;
+  /** Cancel one scheduled notification by id, leaving the others alone. */
+  cancel?: (id: string) => Promise<void>;
+  /** Schedule a one-off notification at an exact local time. */
+  scheduleAt?: (reminder: OneOffReminder) => Promise<void>;
+};
+
+/** A notification that fires once, at `date`. */
+export type OneOffReminder = {
+  id: string;
+  title: string;
+  body: string;
+  date: Date;
 };
 
 /** A no-op adapter used when expo-notifications is not available. */
@@ -82,6 +94,12 @@ export const noopNotificationsAdapter: NotificationsAdapter = {
     /* no-op */
   },
   async schedule() {
+    /* no-op */
+  },
+  async cancel() {
+    /* no-op */
+  },
+  async scheduleAt() {
     /* no-op */
   },
 };
@@ -104,8 +122,9 @@ export async function loadNotificationsAdapter(): Promise<NotificationsAdapter> 
 type ExpoNotificationsLike = {
   requestPermissionsAsync: () => Promise<{ granted?: boolean; status?: string }>;
   cancelAllScheduledNotificationsAsync: () => Promise<void>;
+  cancelScheduledNotificationAsync?: (identifier: string) => Promise<void>;
   scheduleNotificationAsync: (request: unknown) => Promise<string>;
-  SchedulableTriggerInputTypes?: { DAILY?: string };
+  SchedulableTriggerInputTypes?: { DAILY?: string; DATE?: string };
 };
 
 /** Wrap the expo-notifications module in our adapter. Isolated for testability. */
@@ -134,6 +153,19 @@ export function createExpoAdapter(mod: unknown): NotificationsAdapter {
         trigger: { type: dailyType, hour: plan.hour, minute: plan.minute },
       });
     },
+    async cancel(id: string) {
+      if (typeof api.cancelScheduledNotificationAsync === 'function') {
+        await api.cancelScheduledNotificationAsync(id);
+      }
+    },
+    async scheduleAt(reminder: OneOffReminder) {
+      const dateType = api.SchedulableTriggerInputTypes?.DATE ?? 'date';
+      await api.scheduleNotificationAsync({
+        identifier: reminder.id,
+        content: { title: reminder.title, body: reminder.body },
+        trigger: { type: dateType, date: reminder.date },
+      });
+    },
   };
 }
 
@@ -159,9 +191,33 @@ export async function scheduleDailyReminders(
     return { scheduled: false, count: 0 };
   }
   const plans = buildDailyReminders(input);
-  await adapter.cancelAll();
+  // Replace only the daily reminders, so a one-off (like the trial billing
+  // reminder) survives a reschedule.
+  if (adapter.cancel) {
+    for (const plan of plans) {
+      await adapter.cancel(plan.id);
+    }
+  } else {
+    await adapter.cancelAll();
+  }
   for (const plan of plans) {
     await adapter.schedule(plan);
   }
   return { scheduled: true, count: plans.length };
+}
+
+/**
+ * Request permission and schedule one one-off reminder. Returns false (and does
+ * nothing) when permission is denied or the module can't schedule by date.
+ */
+export async function scheduleOneOff(reminder: OneOffReminder, adapter: NotificationsAdapter): Promise<boolean> {
+  if (!adapter.scheduleAt || reminder.date.getTime() <= Date.now()) {
+    return false;
+  }
+  const granted = await adapter.requestPermissions();
+  if (!granted) {
+    return false;
+  }
+  await adapter.scheduleAt(reminder);
+  return true;
 }
