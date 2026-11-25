@@ -22,7 +22,7 @@ import {
 import type { ScheduleDay, TestSession } from '@/db/types';
 
 /** Status of one day for calendar rendering. Mirrors CalendarCell's DayStatus. */
-export type DayStatus = 'taken' | 'missed' | 'upcoming' | 'baseline';
+export type DayStatus = 'taken' | 'missed' | 'upcoming';
 
 export type CalendarDay = {
   /** 0-based schedule index. */
@@ -47,14 +47,12 @@ export type AdherenceSummary = {
   elapsedDays: number;
 };
 
-/** How many lead-in days are flagged baseline (no supplement taken yet). */
-export const BASELINE_DAYS = 3;
-
 /**
  * Build the per-day calendar model. `todayIndex` is the current 0-based day
  * (e.g. days since start); days at or before it are evaluated as taken/missed,
- * days after it are 'upcoming'. The first BASELINE_DAYS are flagged 'baseline'
- * so the UI can show them as a lead-in rather than a missed dose.
+ * days after it are 'upcoming'. The 3-day baseline happens before day 0 and is
+ * not part of the schedule, so every day here is a real run day. During the
+ * baseline itself `todayIndex` is negative and every day reads 'upcoming'.
  */
 export function buildCalendar(
   schedule: ScheduleDay[],
@@ -70,9 +68,7 @@ export function buildCalendar(
     .sort((a, b) => a.dayIndex - b.dayIndex)
     .map((d) => {
       let status: DayStatus;
-      if (d.dayIndex < BASELINE_DAYS) {
-        status = 'baseline';
-      } else if (d.dayIndex > todayIndex) {
+      if (d.dayIndex > todayIndex) {
         status = 'upcoming';
       } else {
         status = d.taken ? 'taken' : 'missed';
@@ -88,9 +84,9 @@ export function buildCalendar(
 }
 
 /**
- * Summarize adherence over the elapsed portion of the run. Baseline days are
- * excluded from both the scheduled count and the taken/tested counts, since no
- * supplement is taken then and they must not drag the rate down. `todayIndex`
+ * Summarize adherence over the elapsed portion of the run. Baseline check-ins
+ * (negative day indices, before the run) never match a schedule day, so they
+ * neither count toward nor drag down the rate. `todayIndex`
  * bounds the window so a mid-run check is judged only against days that have
  * happened.
  */
@@ -109,7 +105,6 @@ export function summarizeAdherence(
   let testedDays = 0;
   let elapsedDays = 0;
   for (const d of schedule) {
-    if (d.dayIndex < BASELINE_DAYS) continue; // baseline: no dose expected
     if (d.dayIndex > todayIndex) continue; // not reached yet
     scheduledDays += 1;
     elapsedDays += 1;

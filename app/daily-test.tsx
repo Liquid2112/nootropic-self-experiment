@@ -19,6 +19,7 @@ import {
 } from '@/engines/cognitive-test';
 import {
   assembleDailyTest,
+  checkInDayIndex,
   deviceModelLabel,
   DEFAULT_CHECK_IN_WINDOW,
   emptyContext,
@@ -98,6 +99,8 @@ export default function DailyTestScreen() {
   const [mood, setMood] = useState(5);
   const [note, setNote] = useState('');
 
+  const [recorded, setRecorded] = useState(true);
+
   const startedAtRef = useRef<string>(new Date().toISOString());
   const startHourRef = useRef<number>(localHourOf(new Date()));
 
@@ -107,6 +110,14 @@ export default function DailyTestScreen() {
     }
     const db = getDatabase();
     const dayIndex = currentDayIndex(experiment);
+    if (dayIndex === null) {
+      // Outside both the baseline and the run: there is no day to attach this
+      // check-in to, so it is treated as practice and not stored (it used to be
+      // written as day 0, silently overwriting the first run day's data).
+      setRecorded(false);
+      setPhase('saved');
+      return;
+    }
     const result = assembleDailyTest({
       experimentId: experiment.id,
       dayIndex,
@@ -201,23 +212,29 @@ export default function DailyTestScreen() {
   // saved
   return (
     <Scaffold inverse scroll={false}>
-      <Text style={styles.invTitle}>Check-in saved</Text>
-      <Text style={styles.invMuted}>See you tomorrow.</Text>
+      <Text style={styles.invTitle}>{recorded ? 'Check-in saved' : 'Practice run done'}</Text>
+      <Text style={styles.invMuted}>
+        {recorded
+          ? 'See you tomorrow.'
+          : 'Today isn\u2019t part of your experiment, so this run wasn\u2019t recorded.'}
+      </Text>
       <Button label="Done" onPress={() => router.replace('/')} />
     </Scaffold>
   );
 }
 
-/** Current day index of the experiment by matching today's date in the schedule. */
-function currentDayIndex(experiment: Experiment): number {
+/**
+ * Day index for a check-in today: the schedule day during the run, a negative
+ * baseline index (-3..-1) during the 3-day baseline, or null outside both.
+ */
+function currentDayIndex(experiment: Experiment): number | null {
   const db = getDatabase();
   const schedule = scheduleDays.listForExperiment(db, experiment.id);
   const now2 = new Date();
   const iso = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}-${String(
     now2.getDate(),
   ).padStart(2, '0')}`;
-  const match = schedule.find((d) => d.date === iso);
-  return match ? match.dayIndex : 0;
+  return checkInDayIndex(experiment, schedule, iso);
 }
 
 /** Pad or trim the collected responses to exactly the sequence length. */

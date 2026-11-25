@@ -32,6 +32,8 @@ export {
   MIDPOINT_START_DAY,
   MIDPOINT_END_DAY,
   addDays,
+  baselineDayIndex,
+  daysBetween,
   generateSchedule,
   toScheduleDayRows,
   isMidpointDay,

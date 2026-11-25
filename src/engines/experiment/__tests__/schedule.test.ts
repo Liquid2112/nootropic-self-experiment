@@ -2,6 +2,8 @@ import { unsealArmMapping } from '../sealedKey';
 import {
   BASELINE_DAYS,
   addDays,
+  baselineDayIndex,
+  daysBetween,
   generateSchedule,
   isMidpointDay,
   toScheduleDayRows,
@@ -39,10 +41,26 @@ describe('generateSchedule: shape and dates', () => {
     s.days.forEach((d, i) => expect(d.dayIndex).toBe(i));
   });
 
-  it('flags the first three days as baseline, rest not', () => {
+  it('makes every generated day a real arm day (baseline sits before the start)', () => {
     const s = generateSchedule(base());
-    expect(s.days.slice(0, BASELINE_DAYS).every((d) => d.isBaseline)).toBe(true);
-    expect(s.days.slice(BASELINE_DAYS).some((d) => d.isBaseline)).toBe(false);
+    expect(s.days).toHaveLength(28);
+    expect(s.days.every((d) => !('isBaseline' in d))).toBe(true);
+  });
+
+  it('maps the BASELINE_DAYS days before the start to indices -3..-1', () => {
+    expect(BASELINE_DAYS).toBe(3);
+    expect(baselineDayIndex('2026-01-04', '2026-01-01')).toBe(-3);
+    expect(baselineDayIndex('2026-01-04', '2026-01-02')).toBe(-2);
+    expect(baselineDayIndex('2026-01-04', '2026-01-03')).toBe(-1);
+    expect(baselineDayIndex('2026-01-04', '2026-01-04')).toBeNull();
+    expect(baselineDayIndex('2026-01-04', '2025-12-31')).toBeNull();
+    // across a month/year boundary
+    expect(baselineDayIndex('2026-01-01', '2025-12-29')).toBe(-3);
+  });
+
+  it('counts whole days between two dates', () => {
+    expect(daysBetween('2026-01-01', '2026-01-29')).toBe(28);
+    expect(daysBetween('2026-03-10', '2026-03-07')).toBe(-3);
   });
 
   it('rejects an unsupported length', () => {

@@ -51,8 +51,8 @@ export type GenerateScheduleInput = {
 
 /**
  * One generated day. `arm` is the value persisted into `schedule_day.arm`
- * (constrained to ON/OFF/A/B by the schema). `isBaseline` flags the first three
- * lead-in days, during which no supplement is taken regardless of arm.
+ * (constrained to ON/OFF/A/B by the schema). Every generated day is a real
+ * arm day; the baseline lead-in sits before `startDate` (see schedule.ts).
  */
 export type GeneratedDay = {
   dayIndex: number;
@@ -60,8 +60,6 @@ export type GeneratedDay = {
   date: string;
   /** The arm label stored in the DB (neutralized for blinded runs). */
   arm: ScheduleArm;
-  /** True for the 3-day baseline lead-in; such days carry no supplement. */
-  isBaseline: boolean;
 };
 
 /** A full generated schedule plus the blinding artifacts a run needs. */

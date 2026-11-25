@@ -3,7 +3,7 @@ import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { BlindingMode } from '@/db';
 import { getDatabase } from '@/db';
-import type { RunLength } from '@/engines/experiment';
+import { BASELINE_DAYS, addDays, type RunLength } from '@/engines/experiment';
 import {
   TEST_WINDOWS,
   createExperiment,
@@ -89,7 +89,9 @@ export function ExperimentSetupScreen() {
           lengthDays: state.lengthDays,
           blindingMode: state.blindingMode,
           testWindow: state.testWindow,
-          startDate: state.startDate,
+          // The run starts after the 3-day baseline: today through the next
+          // two days are baseline (test only, no supplement), day 0 is day 4.
+          startDate: addDays(state.startDate, BASELINE_DAYS),
           friendPassphrase: state.friendPassphrase,
         }
       : null;
@@ -141,7 +143,10 @@ export function ExperimentSetupScreen() {
       ) : null}
 
       <View>
-        <SectionHeader title="How long?" caption="A longer run gives a clearer answer." />
+        <SectionHeader
+          title="How long?"
+          caption={`A longer run gives a clearer answer. It starts with a ${BASELINE_DAYS}-day baseline: just the daily test, no supplement, so practice effects settle first.`}
+        />
         <View style={styles.chipRow} testID="length-slider">
           {LENGTH_OPTIONS.map((option) => (
             <Chip
