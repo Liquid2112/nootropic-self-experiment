@@ -1,14 +1,18 @@
 /**
- * PostHog product analytics. PLACEHOLDER: create a PostHog project, copy its
- * project API key (starts with "phc_") into EXPO_PUBLIC_POSTHOG_KEY in
- * .env.local and in the EAS environment. Until a key is set, analytics is
- * completely off and nothing leaves the device.
+ * PostHog product analytics (project 766766, US cloud).
  *
- * Use the EU host (https://eu.i.posthog.com) if the project lives in the EU cloud.
+ * The project API key is a public, write-only client key: it can send events
+ * but can't read any data, so it ships in the app like any client SDK key.
+ * EXPO_PUBLIC_POSTHOG_KEY / EXPO_PUBLIC_POSTHOG_HOST override it (for example a
+ * separate dev project); setting the env key to "off" disables analytics.
  */
+export const POSTHOG_PROJECT_KEY = 'phc_sxBKZUfyEspSVe5wo2tmEmAobAoq8ZgtyTyyhHZdSi3X';
+export const POSTHOG_HOST = 'https://us.i.posthog.com';
+
 export function posthogConfig(): { apiKey: string; host: string } {
+  const env = process.env.EXPO_PUBLIC_POSTHOG_KEY;
   return {
-    apiKey: process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '',
-    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+    apiKey: env === 'off' ? '' : env || POSTHOG_PROJECT_KEY,
+    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || POSTHOG_HOST,
   };
 }
