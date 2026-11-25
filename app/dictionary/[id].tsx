@@ -9,8 +9,8 @@ import {
   getDictionaryEntry,
 } from '@/features/dictionary';
 import { EvidencePill } from '@/features/dictionary/EvidencePill';
-import { amazonAffiliateUrl } from '@/features/dictionary/affiliate';
-import { AMAZON_DISCLOSURE } from '@/config/links';
+import { affiliateLinks } from '@/features/dictionary/affiliate';
+import { AFFILIATE_DISCLOSURE } from '@/config/links';
 import { SEED_SUPPLEMENTS } from '@/db/seed';
 import { useOnboarding } from '@/screens/onboarding/OnboardingContext';
 
@@ -42,7 +42,7 @@ export default function DictionaryEntryScreen() {
   }
 
   const unregulated = entry.kind === 'unregulated';
-  const buyUrl = amazonAffiliateUrl(entry);
+  const buyLinks = affiliateLinks(entry);
 
   return (
     <Scaffold>
@@ -134,16 +134,23 @@ export default function DictionaryEntryScreen() {
         </Card>
       )}
 
-      {buyUrl && (
+      {buyLinks.length > 0 && (
         <Card style={styles.card}>
           <Text variant="headline">{'Where to find it'}</Text>
-          <Text variant="footnote" tone="secondary">
-            {'Quality varies between brands. Look for third-party testing (USP, NSF or Informed Choice).'}
-          </Text>
-          <Button label="Buy on Amazon" variant="secondary" onPress={() => void Linking.openURL(buyUrl)} />
           <Text variant="caption" tone="tertiary">
-            {`Affiliate link. ${AMAZON_DISCLOSURE}`}
+            {AFFILIATE_DISCLOSURE}
           </Text>
+          <Text variant="footnote" tone="secondary">
+            {'Quality varies between brands. Look for third-party lab testing.'}
+          </Text>
+          {buyLinks.map((link, i) => (
+            <Button
+              key={link.store}
+              label={`Shop on ${link.label}`}
+              variant={i === 0 ? 'primary' : 'secondary'}
+              onPress={() => void Linking.openURL(link.url)}
+            />
+          ))}
         </Card>
       )}
 
