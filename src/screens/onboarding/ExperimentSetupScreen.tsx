@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { loadPurchasesAdapter, setupGate } from '@/features/paywall';
 import type { BlindingMode } from '@/db';
 import { getDatabase } from '@/db';
+import { rewardCopy } from '@/config/referralRewards';
 import { BASELINE_DAYS, addDays, type RunLength } from '@/engines/experiment';
 import {
   TEST_WINDOWS,
@@ -48,7 +49,7 @@ const BLINDING_OPTIONS: readonly [BlindingOption, ...BlindingOption[]] = [
     mode: 'sealed',
     label: 'Friend-blinded',
     instructions:
-      'The gold standard. A friend becomes your keyholder: Placebo sends them a link that says which cup gets the real supplement. They fill cups A and B, you take the cup the app names each day, and on reveal day they send the key that unlocks your verdict. You both get a free month.',
+      'The gold standard. A friend becomes your keyholder: Placebo sends them a link that says which cup gets the real supplement. They fill cups A and B, you take the cup the app names each day, and on reveal day they send the key that unlocks your verdict.' + rewardCopy('keyholderModeSuffix'),
   },
   {
     mode: 'self_blind',

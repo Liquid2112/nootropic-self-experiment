@@ -115,6 +115,14 @@ export default function ProgressScreen() {
       )}
 
       <Text style={styles.disclaimer}>{COMPLIANCE_DISCLAIMER}</Text>
+      <Text
+        style={styles.privacyLink}
+        accessibilityRole="link"
+        testID="progress-privacy"
+        onPress={() => router.push('/privacy-settings')}
+      >
+        Privacy choices
+      </Text>
     </Scaffold>
   );
 }
@@ -156,5 +164,13 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   swatch: { width: 12, height: 12, borderRadius: 4 },
   legendText: { fontSize: 12, fontFamily: fonts.medium, color: brand.muted },
+  privacyLink: {
+    fontSize: 13,
+    fontFamily: fonts.semibold,
+    color: brand.muted,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    paddingVertical: 8,
+  },
   disclaimer: { fontSize: 12, lineHeight: 16, fontFamily: fonts.regular, color: brand.faint, textAlign: 'center' },
 });

@@ -68,7 +68,7 @@ export const FOCUS_MOOD_ENTRIES: DictionaryEntry[] = [
     tagline: 'The cheapest choline source, with the weakest brain case.',
     mechanism:
       'Supplies choline, an essential nutrient used for acetylcholine and cell membranes, though less of it reaches the brain than with other forms.',
-    claims: ['Better memory', 'Prevents racetam headaches', 'Supports liver health'],
+    claims: ['Better memory', 'Cheap choline top-up', 'Supports liver health'],
     research:
       'A placebo-controlled study in healthy young adults found no acute effect on memory. Choline is a genuine essential nutrient, but there is little evidence that extra choline bitartrate sharpens cognition in people who are not deficient.',
     evidence: 'limited',
@@ -261,7 +261,7 @@ export const FOCUS_MOOD_ENTRIES: DictionaryEntry[] = [
     kind: 'supplement',
     category: 'Herbal extract',
     goals: ['mood', 'sleep'],
-    tagline: 'The pricey spice with real antidepressant trial data.',
+    tagline: 'The pricey spice with real mood trial data.',
     mechanism:
       'Compounds such as crocin and safranal appear to affect serotonin and other monoamines and reduce inflammation and oxidative stress.',
     claims: ['Brighter mood', 'Less anxiety', 'Better sleep', 'Fewer PMS symptoms'],
@@ -351,7 +351,7 @@ export const FOCUS_MOOD_ENTRIES: DictionaryEntry[] = [
     tagline: 'The body’s main methyl donor, sold for mood and joints.',
     mechanism:
       'Donates methyl groups needed to make and recycle serotonin, dopamine and norepinephrine, and supports cell-membrane chemistry.',
-    claims: ['Antidepressant effect', 'Joint pain relief', 'Liver support'],
+    claims: ['Mood support', 'Joint comfort', 'Liver support'],
     research:
       'Dozens of trials, mostly older and small, suggest benefit in depression, and a clinician review found it promising as an add-on. A Cochrane review judged the evidence low quality with no clear advantage over placebo on its own.',
     evidence: 'limited',

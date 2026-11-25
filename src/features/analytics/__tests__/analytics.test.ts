@@ -3,14 +3,21 @@ import { migrate } from '@/db/schema';
 import { createMemoryDriver } from '@/db/__tests__/memoryDriver';
 import {
   ALLOWED_PROPS,
+  CONSENT_FREE_EVENTS,
   FUNNEL,
+  needsProgressConsent,
   buildEvent,
   runPosition,
   sanitizeProps,
   type AnalyticsEvent,
 } from '@/features/analytics/events';
 import { createClient } from '@/features/analytics/client';
-import { anonymousId, createTracker, setAnalyticsOptOut } from '@/features/analytics/tracker';
+import {
+  anonymousId,
+  createTracker,
+  setAnalyticsOptOut,
+  setAnalyticsProgressConsent,
+} from '@/features/analytics/tracker';
 
 function db() {
   const d = createMemoryDriver();
@@ -158,8 +165,48 @@ describe('tracker', () => {
     expect(sent).toEqual([]);
   });
 
+  it('sends only the onboarding and purchase funnel without the progress opt-in', async () => {
+    const d = db();
+    const { t, sent } = tracker(d);
+    t.track('onboarding_started');
+    t.track('paywall_viewed');
+    t.track('experiment_started', { blinding_mode: 'sealed', length_days: 28 });
+    t.track('check_in_completed', { run_day: 3, phase: 'run' });
+    t.trackOnce('active:e1:2026-12-02', 'run_day_active', { run_day: 1, phase: 'run' });
+    await t.flush();
+    expect(sent).toEqual(['onboarding_started', 'paywall_viewed']);
+  });
+
+  it('sends progress events once the user opts in, and a skipped trackOnce can still fire later', async () => {
+    const d = db();
+    const { t, sent } = tracker(d);
+    t.trackOnce('active:e1:2026-12-02', 'run_day_active', { run_day: 1, phase: 'run' });
+    setAnalyticsProgressConsent(d, true);
+    t.trackOnce('active:e1:2026-12-02', 'run_day_active', { run_day: 1, phase: 'run' });
+    t.track('check_in_completed', { run_day: 1, phase: 'run' });
+    await t.flush();
+    expect(sent).toEqual(['run_day_active', 'check_in_completed']);
+  });
+
+  it('opting out wins over the progress opt-in', async () => {
+    const d = db();
+    setAnalyticsProgressConsent(d, true);
+    setAnalyticsOptOut(d, true);
+    const { t, sent } = tracker(d);
+    t.track('check_in_completed', { run_day: 1, phase: 'run' });
+    await t.flush();
+    expect(sent).toEqual([]);
+  });
+
+  it('needs opt-in for every event outside the short consent-free list', () => {
+    const all = Object.keys(ALLOWED_PROPS) as AnalyticsEvent[];
+    for (const e of all) expect(needsProgressConsent(e)).toBe(!CONSENT_FREE_EVENTS.includes(e));
+    expect(CONSENT_FREE_EVENTS).toEqual(['onboarding_started', 'quiz_completed', 'paywall_viewed', 'trial_started']);
+  });
+
   it('trackOnce sends an event once per key', async () => {
     const d = db();
+    setAnalyticsProgressConsent(d, true);
     const { t, sent } = tracker(d);
     t.trackOnce('active:e1:2026-12-02', 'run_day_active', { run_day: 1, phase: 'run' });
     t.trackOnce('active:e1:2026-12-02', 'run_day_active', { run_day: 1, phase: 'run' });

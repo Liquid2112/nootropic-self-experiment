@@ -229,14 +229,14 @@ export function trialTimeline(plan: Plan | undefined, today: Date): TrialStep[] 
       id: 'reminder',
       when: `Day ${days - lead}`,
       title: 'We remind you',
-      body: `A notification ${lead === 1 ? 'the day' : `${lead} days`} before your trial ends.`,
+      body: `A notification ${lead === 1 ? 'the day' : `${lead} days`} before your trial ends, if notifications are on.`,
       date: addDays(today, days - lead),
     },
     {
       id: 'billing',
       when: `Day ${days}`,
       title: `You're charged ${plan.priceString}/${per}`,
-      body: 'Unless you cancel before this. Cancel in two taps in your store settings.',
+      body: 'Unless you cancel at least 24 hours before. Cancel anytime in your App Store settings.',
       date: addDays(today, days),
     },
   ];
