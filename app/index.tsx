@@ -390,6 +390,14 @@ export default function TodayScreen() {
             iconColor={brand.mint}
             onPress={() => router.push('/dictionary')}
           />
+          <ActionTile
+            icon="moon"
+            title="Health sync"
+            subtitle="Sleep, heart rate, HRV"
+            tint={brand.lilacSoft}
+            iconColor={brand.lilacDeep}
+            onPress={() => router.push('/health')}
+          />
         </View>
       </Scaffold>
 

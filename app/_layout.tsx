@@ -16,6 +16,7 @@ import { OnboardingProvider } from '@/screens/onboarding/OnboardingContext';
 
 import { ThemeProvider, useTheme } from '@/ui';
 import { useWidgetSync } from '@/features/widget/useWidgetSync';
+import { useHealthSync } from '@/features/health/useHealthSync';
 
 /**
  * Root navigator. One stack with a route per MVP screen, wrapped in the
@@ -25,6 +26,7 @@ import { useWidgetSync } from '@/features/widget/useWidgetSync';
  */
 export default function RootLayout() {
   useWidgetSync();
+  useHealthSync();
   // Brand fonts. Render nothing until they load (the native splash stays up),
   // so text never flashes in the system font first.
   const [fontsLoaded, fontError] = useFonts({
@@ -80,6 +82,7 @@ function ThemedStack() {
         <Stack.Screen name="reaction-test" options={{ title: 'Reaction test' }} />
         <Stack.Screen name="dictionary/index" options={{ title: 'Library' }} />
         <Stack.Screen name="dictionary/[id]" options={{ title: '' }} />
+        <Stack.Screen name="health" options={{ title: 'Health sync' }} />
       </Stack>
     </>
   );

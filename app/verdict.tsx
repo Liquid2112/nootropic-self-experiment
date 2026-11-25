@@ -10,8 +10,8 @@ import {
   type MetricVerdict,
   type VerdictViewModel,
 } from '@/results';
-import { experiments, getDatabase } from '@/db';
-import { selfBlindPassphrase } from '@/engines/experiment';
+import { experiments, getDatabase, healthNights } from '@/db';
+import { addDays, selfBlindPassphrase } from '@/engines/experiment';
 import { useExperimentData } from '@/screens/useExperimentData';
 import { ShareCard, type ViewRef } from '@/screens/ShareCard';
 import { shareCard } from '@/screens/share';
@@ -52,6 +52,13 @@ export default function VerdictScreen() {
         schedule,
         sessions,
         unsealPassphrase: passphrase,
+        // Nights from Apple Health / Health Connect, matched to the dose the
+        // day before. Empty when Health isn't connected.
+        healthNights: healthNights.listBetween(
+          getDatabase(),
+          addDays(experiment.startDate, 1),
+          addDays(experiment.startDate, experiment.lengthDays),
+        ),
       });
     } catch {
       return null;
@@ -142,6 +149,15 @@ export default function VerdictScreen() {
             <Text tone="secondary">
               {vm.revealedMapping.supplementLabel} was the supplement;{' '}
               {vm.revealedMapping.placeboLabel} was the placebo.
+            </Text>
+          </View>
+        )}
+
+        {vm.primaryNote && (
+          <View style={styles.caveatCard}>
+            <Icon name="moon" size={18} color={brand.muted} />
+            <Text variant="footnote" tone="secondary" style={styles.flex}>
+              {vm.primaryNote}
             </Text>
           </View>
         )}

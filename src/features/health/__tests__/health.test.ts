@@ -19,7 +19,6 @@ import {
   type RawHealthData,
 } from '..';
 
-const H = 3_600_000;
 /** A UTC clock so the tests don't depend on the machine's timezone. */
 const utc: Clock = {
   dayStart: (d) => Date.parse(`${d}T00:00:00Z`),
