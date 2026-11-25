@@ -107,3 +107,18 @@ export type HealthNight = {
   source: string;
   syncedAt: string;
 };
+
+/** How bad a logged reaction is. `severe` gets the call-emergency-services message. */
+export type ReactionSeverity = 'severe' | 'unwell';
+
+/** A bad reaction logged during a run. Open (resolvedAt null) means the run is paused. */
+export type AdverseEvent = {
+  id: string;
+  experimentId: string;
+  loggedAt: string;
+  /** The schedule day it was logged on (negative during baseline), or null. */
+  dayIndex: number | null;
+  severity: ReactionSeverity;
+  resolvedAt: string | null;
+  resolution: 'resumed' | 'ended' | null;
+};

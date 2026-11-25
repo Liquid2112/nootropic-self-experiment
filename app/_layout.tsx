@@ -17,6 +17,7 @@ import { OnboardingProvider } from '@/screens/onboarding/OnboardingContext';
 import { ThemeProvider, useTheme } from '@/ui';
 import { useWidgetSync } from '@/features/widget/useWidgetSync';
 import { useHealthSync } from '@/features/health/useHealthSync';
+import { useAnalyticsFlush } from '@/features/analytics/useAnalyticsFlush';
 
 /**
  * Root navigator. One stack with a route per MVP screen, wrapped in the
@@ -27,6 +28,7 @@ import { useHealthSync } from '@/features/health/useHealthSync';
 export default function RootLayout() {
   useWidgetSync();
   useHealthSync();
+  useAnalyticsFlush();
   // Brand fonts. Render nothing until they load (the native splash stays up),
   // so text never flashes in the system font first.
   const [fontsLoaded, fontError] = useFonts({
@@ -83,6 +85,7 @@ function ThemedStack() {
         <Stack.Screen name="dictionary/index" options={{ title: 'Library' }} />
         <Stack.Screen name="dictionary/[id]" options={{ title: '' }} />
         <Stack.Screen name="health" options={{ title: 'Health sync' }} />
+        <Stack.Screen name="bad-reaction" options={{ title: '', presentation: 'modal' }} />
         <Stack.Screen name="invite" options={{ title: 'Invite friends' }} />
         <Stack.Screen name="keyholder-invite" options={{ title: 'Your keyholder', headerBackVisible: false }} />
         <Stack.Screen name="k/[token]" options={{ title: 'Keyholder' }} />

@@ -134,6 +134,24 @@ export const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    // The safety guardrail: a bad reaction the user logged mid-run. An open row
+    // (resolved_at NULL) pauses the experiment: no dose instruction, no dose
+    // reminders, until the user resumes or ends the run. Stays on the device.
+    version: 6,
+    statements: [
+      `CREATE TABLE adverse_event (
+        id TEXT PRIMARY KEY NOT NULL,
+        experiment_id TEXT NOT NULL REFERENCES experiment(id),
+        logged_at TEXT NOT NULL,
+        day_index INTEGER,
+        severity TEXT NOT NULL CHECK (severity IN ('severe', 'unwell')),
+        resolved_at TEXT,
+        resolution TEXT CHECK (resolution IN ('resumed', 'ended'))
+      )`,
+      `CREATE INDEX idx_adverse_event_experiment ON adverse_event (experiment_id)`,
+    ],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

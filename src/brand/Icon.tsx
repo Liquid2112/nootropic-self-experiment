@@ -38,7 +38,8 @@ export type IconName =
   | 'search'
   | 'flag'
   | 'medal'
-  | 'plus';
+  | 'plus'
+  | 'alert';
 
 export type IconProps = {
   name: IconName;
@@ -202,4 +203,10 @@ const GLYPHS: Record<IconName, (p: StrokeProps, color: string) => React.ReactNod
     </>
   ),
   plus: (p) => <Path {...p} d="M12 5v14M5 12h14" />,
+  alert: (p) => (
+    <>
+      <Path {...p} d="M10.3 4.3 2.9 17.5A2 2 0 0 0 4.6 20.5h14.8a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z" />
+      <Path {...p} d="M12 9.5v4.5M12 17.2v.1" />
+    </>
+  ),
 };
