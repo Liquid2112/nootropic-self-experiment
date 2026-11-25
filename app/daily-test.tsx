@@ -30,6 +30,8 @@ import {
   type FormFactor,
 } from '@/features/daily-loop';
 import { PvtTask } from '@/screens/PvtTask';
+import { claimProgress, type GameState, type ProgressDelta } from '@/features/gamification';
+import { Celebration } from '@/components/game';
 import {
   Button,
   Card,
@@ -98,6 +100,7 @@ export default function DailyTestScreen() {
   const [note, setNote] = useState('');
 
   const [recorded, setRecorded] = useState(true);
+  const [reward, setReward] = useState<{ game: GameState; delta: ProgressDelta } | null>(null);
 
   const startedAtRef = useRef<string>(new Date().toISOString());
   const startHourRef = useRef<number>(localHourOf(new Date()));
@@ -135,6 +138,8 @@ export default function DailyTestScreen() {
       note: note.trim().length > 0 ? note.trim() : null,
     });
     testSessions.insert(db, { id: genNumericId(), ...result.session });
+    // XP and badges only count that a check-in happened, never its scores.
+    setReward(claimProgress(db));
     setPhase('saved');
   }, [experiment, pvtSchedule, nbackSequence, context, focus, energy, mood, note]);
 
@@ -208,6 +213,19 @@ export default function DailyTestScreen() {
   }
 
   // saved
+  if (recorded && reward) {
+    return (
+      <Celebration
+        title="Check-in complete!"
+        subtitle="Another clean data point for your experiment."
+        delta={reward.delta}
+        game={reward.game}
+        footnote="Scores stay sealed until your verdict. See you tomorrow."
+        actionLabel="Back to today"
+        onContinue={() => router.replace('/')}
+      />
+    );
+  }
   return (
     <Scaffold inverse scroll={false}>
       <Text style={styles.invTitle}>{recorded ? 'Check-in saved' : 'Practice run done'}</Text>

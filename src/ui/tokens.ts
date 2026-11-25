@@ -1,9 +1,9 @@
 /**
  * Design tokens for the Nootropic Self-Experiment app.
  *
- * Direction: light-and-airy classic iOS. White / near-white surfaces, soft
- * grays, a single blue accent, system (SF-style) font, rounded cards with
- * gentle depth and generous whitespace.
+ * Direction: bright and playful. Lavender-tinted background, white cards, a
+ * single electric-violet accent, mint for success and a warm flame/gold pair
+ * for the game layer (streaks, XP), with rounded cards and chunky buttons.
  *
  * Tokens are grouped into two layers:
  *  - raw palettes / scales (private building blocks), and
@@ -93,7 +93,7 @@ export type ThemeColors = {
   textTertiary: string;
   /** Hairline borders and dividers. */
   border: string;
-  /** The single brand accent (interactive blue). */
+  /** The single brand accent (interactive violet). */
   accent: string;
   /** Pressed / darker variant of the accent. */
   accentPressed: string;
@@ -143,23 +143,40 @@ export type Theme = {
 };
 
 const lightColors: ThemeColors = {
-  background: '#F2F2F7',
+  background: '#F5F3FF',
   surface: '#FFFFFF',
   surfaceRaised: '#FFFFFF',
-  textPrimary: '#1C1C1E',
-  textSecondary: '#6E6E73',
-  textTertiary: '#AEAEB2',
-  border: '#E3E3E8',
-  accent: '#0A84FF',
-  accentPressed: '#0060DF',
+  textPrimary: '#1A1530',
+  textSecondary: '#625C7A',
+  textTertiary: '#A7A2BC',
+  border: '#E6E1F5',
+  accent: '#6B4EFF',
+  accentPressed: '#5236E0',
   onAccent: '#FFFFFF',
-  accentMuted: '#E6F0FF',
-  success: '#34C759',
-  warning: '#FF9F0A',
-  danger: '#FF3B30',
-  fill: '#E9E9EF',
-  scrim: 'rgba(0, 0, 0, 0.4)',
+  accentMuted: '#ECE7FF',
+  success: '#12B886',
+  warning: '#FF9F1C',
+  danger: '#F0435A',
+  fill: '#ECE9F6',
+  scrim: 'rgba(20, 12, 48, 0.45)',
 };
+
+/**
+ * Extra colors for the game layer (streak flame, XP, badges). Kept outside the
+ * semantic `ThemeColors` roles because only the gamified widgets use them.
+ */
+export const gameColors = {
+  flame: '#FF6B2C',
+  flameMuted: '#FFE9DD',
+  xp: '#FFB800',
+  xpMuted: '#FFF4D1',
+  mint: '#12B886',
+  mintMuted: '#DDF7EE',
+  violetDeep: '#2A1A6E',
+  heroStart: '#6B4EFF',
+  heroEnd: '#9B5CFF',
+  locked: '#D9D5E6',
+} as const;
 
 const lightShadows: ThemeShadows = {
   none: {

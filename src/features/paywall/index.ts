@@ -2,7 +2,7 @@
  * Paywall: the Pro subscription that unlocks running experiments.
  *
  * Business rule: the standalone reaction test is free; starting an experiment
- * (the Experiment setup "Confirm & start" step) requires Pro. The store
+ * (the Experiment setup "Start my experiment" step) requires Pro. The store
  * products carry a free trial (3 or 7 days, configured in App Store Connect /
  * Play Console and RevenueCat), so the first experiment starts on the trial.
  *
@@ -171,7 +171,7 @@ export function renewalTerms(plan: Plan | undefined): string {
 export type SetupGate = 'proceed' | 'paywall';
 
 /**
- * Whether "Confirm & start" may create the experiment or must show the paywall.
+ * Whether "Start my experiment" may create the experiment or must show the paywall.
  * Pro users proceed. When purchases are unavailable (no native module or key),
  * development builds proceed so the app stays testable; release builds show the
  * paywall, which explains that purchases could not load.

@@ -11,7 +11,9 @@ import {
   type QuickTestScore,
 } from '@/features/quick-test';
 import { PvtTask } from '@/screens/PvtTask';
-import { Button, Card, Scaffold, Text, spacing } from '@/ui';
+import { claimProgress, type ProgressDelta } from '@/features/gamification';
+import { Confetti, celebrate } from '@/components/game';
+import { Button, Card, Scaffold, Text, gameColors, spacing } from '@/ui';
 
 type Phase = 'intro' | 'test' | 'result';
 
@@ -31,6 +33,8 @@ export default function ReactionTestScreen() {
   const [schedule, setSchedule] = useState<number[]>([]);
   const [score, setScore] = useState<QuickTestScore | null>(null);
   const [comparison, setComparison] = useState<string | null>(null);
+  const [reward, setReward] = useState<ProgressDelta | null>(null);
+  const [newBest, setNewBest] = useState(false);
   const [history, setHistory] = useState<{ best: QuickTest | undefined; recent: QuickTest[] }>(() => {
     const db = getDatabase();
     return { best: quickTests.best(db), recent: quickTests.listRecent(db, 5) };
@@ -57,8 +61,13 @@ export default function ReactionTestScreen() {
           trials: result.trials,
         });
         setHistory({ best: quickTests.best(db), recent: quickTests.listRecent(db, 5) });
+        setNewBest(previousBest === null || result.medianMs < previousBest);
+        setReward(claimProgress(db).delta);
+        celebrate();
       } else {
         setComparison(null);
+        setReward(null);
+        setNewBest(false);
       }
       setPhase('result');
     },
@@ -76,7 +85,9 @@ export default function ReactionTestScreen() {
   }
 
   if (phase === 'result' && score) {
+    const party = score.ok && (newBest || (reward !== null && (reward.newBadges.length > 0 || reward.levelUp !== null)));
     return (
+      <View style={styles.flex}>
       <Scaffold
         footer={
           <View style={styles.footer}>
@@ -95,6 +106,26 @@ export default function ReactionTestScreen() {
               {speedLabel(score.medianMs)}
             </Text>
             {comparison && <Text tone="secondary">{comparison}</Text>}
+            {reward && (
+              <View style={styles.rewardRow}>
+                <View style={[styles.rewardPill, { backgroundColor: gameColors.xpMuted }]}>
+                  <Text style={styles.rewardText}>{reward.xpGained > 0 ? `+${reward.xpGained} XP` : 'Daily XP maxed'}</Text>
+                </View>
+                <View style={[styles.rewardPill, { backgroundColor: gameColors.flameMuted }]}>
+                  <Text style={styles.rewardText}>{`🔥 ${reward.streak}`}</Text>
+                </View>
+                {reward.newBadges.map((b) => (
+                  <View key={b.id} style={[styles.rewardPill, { backgroundColor: gameColors.mintMuted }]}>
+                    <Text style={styles.rewardText}>{`${b.emoji} ${b.title}`}</Text>
+                  </View>
+                ))}
+                {reward.levelUp !== null && (
+                  <View style={[styles.rewardPill, { backgroundColor: gameColors.xpMuted }]}>
+                    <Text style={styles.rewardText}>{`🚀 Level ${reward.levelUp}`}</Text>
+                  </View>
+                )}
+              </View>
+            )}
             <Button
               label="Share my score"
               variant="secondary"
@@ -130,6 +161,8 @@ export default function ReactionTestScreen() {
           medical test.
         </Text>
       </Scaffold>
+      {party ? <Confetti burstKey={runKey} /> : null}
+      </View>
     );
   }
 
@@ -170,4 +203,8 @@ const styles = StyleSheet.create({
   footer: {
     gap: spacing.sm,
   },
+  flex: { flex: 1 },
+  rewardRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  rewardPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  rewardText: { fontSize: 14, fontWeight: '800' },
 });

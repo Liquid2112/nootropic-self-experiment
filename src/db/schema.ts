@@ -105,6 +105,18 @@ export const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    // Small key/value store for app-level state that isn't experiment data:
+    // the gamification snapshot (last seen XP / level / streak / badges) used to
+    // decide what to celebrate. Nothing here feeds the stats engine.
+    version: 4,
+    statements: [
+      `CREATE TABLE app_state (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      )`,
+    ],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

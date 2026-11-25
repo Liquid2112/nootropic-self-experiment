@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card, CalendarCell, Text, colors, spacing } from '@/ui';
+import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import {
   adherencePercent,
   buildCalendar,
@@ -10,18 +9,23 @@ import {
   isRunComplete,
   summarizeAdherence,
 } from '@/results';
+import { BASELINE_DAYS } from '@/engines/experiment';
+import { getDatabase } from '@/db';
+import { loadGameState } from '@/features/gamification';
 import { useExperimentData } from '@/screens/useExperimentData';
-import { router } from 'expo-router';
+import { JourneyPath, StreakFlame } from '@/components/game';
+import { Button, Card, Scaffold, gameColors, lightTheme } from '@/ui';
 
 /**
- * Progress screen: the adherence calendar ONLY. It shows per-day taken / missed
- * / test-done status and never a metric value or trend, so the user cannot peek
- * at results and unblind themselves. During the mid-point window (days 10-14)
- * it shows the adherence summary with an explicit "results after it ends" note.
- * Results are revealed only once the run is complete, via the Verdict screen.
+ * Journey (progress) screen: the run as a winding trail of day stops with
+ * milestones, plus adherence and streak stats. It shows per-day done / missed
+ * status and never a metric value or trend, so the user cannot peek at results
+ * and unblind themselves. Results are revealed only once the run is complete,
+ * via the Verdict screen.
  */
 export default function ProgressScreen() {
   const { experiment, schedule, sessions, todayIndex, baselineDaysLeft } = useExperimentData();
+  const game = useMemo(() => loadGameState(getDatabase()), []);
 
   const calendar = useMemo(
     () => (experiment ? buildCalendar(schedule, sessions, todayIndex) : []),
@@ -34,118 +38,107 @@ export default function ProgressScreen() {
 
   if (!experiment || !summary) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <Scaffold>
         <View style={styles.empty}>
-          <Text variant="title">Progress</Text>
-          <Text tone="secondary" style={styles.center}>
-            Start an experiment to track your daily adherence here.
-          </Text>
+          <Text style={styles.emptyEmoji}>🗺️</Text>
+          <Text style={styles.title}>Your journey starts here</Text>
+          <Text style={styles.muted}>Start an experiment to see your run mapped out day by day.</Text>
         </View>
-      </SafeAreaView>
+      </Scaffold>
     );
   }
 
   const complete = isRunComplete(todayIndex, experiment.lengthDays);
   const midpoint = isMidpointWindow(todayIndex, experiment.lengthDays);
+  const pct = adherencePercent(summary);
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text variant="largeTitle">Progress</Text>
-        <Text tone="secondary">
-          {baselineDaysLeft > 0
-            ? `Baseline: the experiment starts in ${baselineDaysLeft} day${baselineDaysLeft === 1 ? '' : 's'}`
-            : `Day ${todayIndex + 1} of ${experiment.lengthDays}`}
-        </Text>
+    <Scaffold>
+      <Text style={styles.subtitle}>
+        {baselineDaysLeft > 0
+          ? `Baseline: the experiment starts in ${baselineDaysLeft} day${baselineDaysLeft === 1 ? '' : 's'}`
+          : `Day ${todayIndex + 1} of ${experiment.lengthDays}`}
+      </Text>
 
-        <Card style={styles.summaryCard}>
-          <Text variant="headline">Adherence</Text>
-          <Text variant="largeTitle" tone="accent">
-            {adherencePercent(summary)}%
-          </Text>
-          <Text tone="secondary">
-            {summary.takenDays} of {summary.scheduledDays} scheduled days taken and tested.
+      <View style={styles.row}>
+        <View style={[styles.tile, { backgroundColor: lightTheme.colors.accentMuted }]}>
+          <Text style={[styles.big, { color: lightTheme.colors.accent }]}>{pct}%</Text>
+          <Text style={styles.tileLabel}>Adherence</Text>
+        </View>
+        <View style={[styles.tile, { backgroundColor: gameColors.flameMuted }]}>
+          <StreakFlame count={game.streak.current} atRisk={game.streak.atRisk} size="lg" style={styles.clear} />
+          <Text style={styles.tileLabel}>Day streak</Text>
+        </View>
+      </View>
+      <Text style={styles.muted}>
+        {`${summary.takenDays} of ${summary.scheduledDays} scheduled days taken and tested. Keep it at 80% or more for a trustworthy verdict.`}
+      </Text>
+
+      {midpoint && !complete && (
+        <Card style={styles.card}>
+          <Text style={styles.cardTitle}>⭐ Halfway there</Text>
+          <Text style={styles.muted}>
+            We show adherence only for now. Your results stay sealed until the experiment ends, so the
+            wait can&apos;t sway what you measure.
           </Text>
         </Card>
+      )}
 
-        {midpoint && !complete && (
-          <Card style={styles.noteCard}>
-            <Text variant="headline">Mid-point check</Text>
-            <Text tone="secondary">
-              You\u2019re halfway. We show adherence only for now \u2014 your results stay sealed
-              until the experiment ends, so the wait can\u2019t sway what you measure.
-            </Text>
-          </Card>
-        )}
+      {complete && <Button label="Reveal my verdict 🏆" onPress={() => router.push('/verdict')} />}
 
-        <Card>
-          <Text variant="headline" style={styles.calendarTitle}>
-            Daily log
-          </Text>
-          <View style={styles.legend}>
-            <Legend color={colors.taken} label="Taken" />
-            <Legend color={colors.missed} label="Missed" />
-            <Legend color={colors.surfaceMuted} label="Upcoming" />
-            <Legend ring label="Test done" />
-          </View>
-          <View style={styles.grid}>
-            {calendar.map((day) => (
-              <CalendarCell
-                key={day.dayIndex}
-                day={day.dayNumber}
-                state={day.status}
-              />
-            ))}
-          </View>
-        </Card>
+      <Card style={styles.card}>
+        <Text style={styles.cardTitle}>Your trail</Text>
+        <View style={styles.legend}>
+          <Legend color={gameColors.mint} label="Dose + check-in" />
+          <Legend color={lightTheme.colors.accent} label="Half done" />
+          <Legend color="#C9C4D9" label="Missed" />
+          <Legend color={gameColors.locked} label="Ahead" />
+        </View>
+        <JourneyPath
+          days={calendar}
+          todayIndex={todayIndex}
+          baselineDaysLeft={baselineDaysLeft}
+          baselineDays={BASELINE_DAYS}
+        />
+      </Card>
 
-        {complete ? (
-          <Button label="See your verdict" onPress={() => router.push('/verdict')} />
-        ) : (
-          <Card style={styles.noteCard}>
-            <Text tone="secondary">
-              Results appear here once the experiment ends. Keep going \u2014 steady adherence is
-              what makes the verdict trustworthy.
-            </Text>
-          </Card>
-        )}
-
-        <Text variant="caption" tone="tertiary" style={styles.disclaimer}>
-          {COMPLIANCE_DISCLAIMER}
+      {!complete && (
+        <Text style={styles.muted}>
+          Results appear once the experiment ends. Steady days are what make the verdict trustworthy.
         </Text>
-      </ScrollView>
-    </SafeAreaView>
+      )}
+
+      <Text style={styles.disclaimer}>{COMPLIANCE_DISCLAIMER}</Text>
+    </Scaffold>
   );
 }
 
-function Legend({ color, ring, label }: { color?: string; ring?: boolean; label: string }) {
+function Legend({ color, label }: { color: string; label: string }) {
   return (
     <View style={styles.legendItem}>
-      <View
-        style={[
-          styles.legendSwatch,
-          { backgroundColor: color ?? colors.surface },
-          ring ? { borderWidth: 2, borderColor: colors.tested } : null,
-        ]}
-      />
-      <Text variant="caption" tone="secondary">
-        {label}
-      </Text>
+      <View style={[styles.swatch, { backgroundColor: color }]} />
+      <Text style={styles.legendText}>{label}</Text>
     </View>
   );
 }
 
+const c = lightTheme.colors;
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, gap: spacing.lg },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
-  center: { textAlign: 'center' },
-  summaryCard: { alignItems: 'flex-start', gap: spacing.xs },
-  noteCard: { gap: spacing.sm },
-  calendarTitle: { marginBottom: spacing.sm },
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.md },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  legendSwatch: { width: 16, height: 16, borderRadius: 4 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  disclaimer: { marginTop: spacing.sm, textAlign: 'center' },
+  empty: { alignItems: 'center', gap: 10, paddingTop: 60 },
+  emptyEmoji: { fontSize: 64 },
+  title: { fontSize: 24, fontWeight: '800', color: c.textPrimary, textAlign: 'center' },
+  subtitle: { fontSize: 16, fontWeight: '600', color: c.textSecondary },
+  row: { flexDirection: 'row', gap: 10 },
+  tile: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', gap: 6 },
+  clear: { backgroundColor: 'transparent' },
+  big: { fontSize: 36, fontWeight: '800' },
+  tileLabel: { fontSize: 13, fontWeight: '700', color: c.textSecondary },
+  card: { gap: 12 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary },
+  muted: { fontSize: 14, lineHeight: 19, color: c.textSecondary, textAlign: 'left' },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  swatch: { width: 14, height: 14, borderRadius: 7 },
+  legendText: { fontSize: 12, color: c.textSecondary },
+  disclaimer: { fontSize: 12, color: c.textTertiary, textAlign: 'center' },
 });
