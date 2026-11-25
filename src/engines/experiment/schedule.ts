@@ -18,19 +18,44 @@ import type {
  * baseline flag) plus the blinding state and sealed key the run needs. It is a
  * pure function: same input -> same output, no DB or RN dependency.
  *
- * BASELINE HANDLING (documented choice): the randomized ON/OFF balance and the
- * block layout both cover the FULL run length (14/14 for 28 days, 10/11 for 21),
- * matching the spec's stated counts. The 3-day baseline lead-in is NOT carved
- * out of those arm days — it is tracked SEPARATELY: the first `BASELINE_DAYS`
- * generated days are additionally flagged `isBaseline: true` so the app knows no
- * supplement is taken then, but they keep their assigned arm and still count
- * toward balance. Callers that want baseline as extra calendar days before the
- * run can offset `startDate`; the engine does not invent days the DB schema
- * would have to store without an arm.
+ * BASELINE HANDLING: the 3-day baseline is a lead-in BEFORE the run, not part
+ * of it. The randomized ON/OFF balance and the block layout cover the full run
+ * length (14/14 for 28 days, 10/11 for 21), and every generated day is a real
+ * arm day. The baseline occupies the `BASELINE_DAYS` calendar days before
+ * `startDate`: the user takes nothing new and just does the daily test so
+ * practice effects flatten. Baseline check-ins are stored with negative day
+ * indices (-3..-1), so they never join a schedule day and never enter the
+ * analysis or the adherence gate. See `baselineDayIndex`.
  */
 
 /** Number of lead-in baseline days at the start of a run. */
 export const BASELINE_DAYS = 3;
+
+/**
+ * Whole calendar days from ISO date `from` to ISO date `to` (negative when `to`
+ * is earlier). UTC math, so it is free of time-zone/DST drift.
+ */
+export function daysBetween(from: string, to: string): number {
+  const parse = (iso: string): number => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!match) {
+      throw new Error(`Expected an ISO YYYY-MM-DD date, got "${iso}"`);
+    }
+    return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  };
+  return Math.round((parse(to) - parse(from)) / (24 * 60 * 60 * 1000));
+}
+
+/**
+ * The baseline day index for `isoDate`, or null when that date is not a
+ * baseline day. Baseline days are the `BASELINE_DAYS` days right before the
+ * run's `startDate` and get indices -BASELINE_DAYS..-1 (so -3 is baseline day 1
+ * of 3 and -1 is the last one before the run starts).
+ */
+export function baselineDayIndex(startDate: string, isoDate: string): number | null {
+  const offset = daysBetween(startDate, isoDate);
+  return offset < 0 && offset >= -BASELINE_DAYS ? offset : null;
+}
 
 /** The two run lengths the MVP supports. */
 const SUPPORTED_LENGTHS: readonly number[] = [21, 28];
@@ -92,7 +117,6 @@ export function generateSchedule(
     dayIndex,
     date: addDays(input.startDate, dayIndex),
     arm,
-    isBaseline: dayIndex < BASELINE_DAYS,
   }));
 
   return {

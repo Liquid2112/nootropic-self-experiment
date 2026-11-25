@@ -21,7 +21,7 @@ import { router } from 'expo-router';
  * Results are revealed only once the run is complete, via the Verdict screen.
  */
 export default function ProgressScreen() {
-  const { experiment, schedule, sessions, todayIndex } = useExperimentData();
+  const { experiment, schedule, sessions, todayIndex, baselineDaysLeft } = useExperimentData();
 
   const calendar = useMemo(
     () => (experiment ? buildCalendar(schedule, sessions, todayIndex) : []),
@@ -53,7 +53,9 @@ export default function ProgressScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text variant="largeTitle">Progress</Text>
         <Text tone="secondary">
-          Day {todayIndex + 1} of {experiment.lengthDays}
+          {baselineDaysLeft > 0
+            ? `Baseline: the experiment starts in ${baselineDaysLeft} day${baselineDaysLeft === 1 ? '' : 's'}`
+            : `Day ${todayIndex + 1} of ${experiment.lengthDays}`}
         </Text>
 
         <Card style={styles.summaryCard}>
@@ -91,7 +93,7 @@ export default function ProgressScreen() {
               <CalendarCell
                 key={day.dayIndex}
                 day={day.dayNumber}
-                state={day.status === 'baseline' ? 'off' : day.status}
+                state={day.status}
               />
             ))}
           </View>

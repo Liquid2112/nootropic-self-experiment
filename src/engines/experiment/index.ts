@@ -20,6 +20,7 @@ export { MAX_RUN, balancedCounts, hasTooLongRun, buildAcuteSequence } from './ac
 export { blockLayoutFor, buildCumulativeSequence, type BlockLayout } from './cumulative';
 export {
   applyBlinding,
+  selfBlindPassphrase,
   type ArmMapping,
   type BlindingResult,
   type SealOptions,
@@ -31,6 +32,8 @@ export {
   MIDPOINT_START_DAY,
   MIDPOINT_END_DAY,
   addDays,
+  baselineDayIndex,
+  daysBetween,
   generateSchedule,
   toScheduleDayRows,
   isMidpointDay,

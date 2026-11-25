@@ -81,6 +81,16 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX idx_test_session_experiment ON test_session (experiment_id)`,
     ],
   },
+  {
+    // The schedule/blinding seed must survive past creation: a self-blinded run
+    // derives its unseal passphrase from the seed, so the verdict screen needs
+    // the exact seed used at seal time to recover the A/B -> ON/OFF mapping.
+    // Older rows (created before this column existed) keep a NULL seed; the
+    // verdict path treats a NULL self-blind seed as not-yet-unsealable, which is
+    // the same honest "can't unblind" state as a missing passphrase.
+    version: 2,
+    statements: [`ALTER TABLE experiment ADD COLUMN seed TEXT`],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

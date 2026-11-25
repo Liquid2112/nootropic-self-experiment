@@ -49,15 +49,21 @@ function session(dayIndex: number, valid = true): TestSession {
 }
 
 describe('buildCalendar', () => {
-  it('flags the first three days baseline, marks taken/missed up to today, future upcoming', () => {
+  it('treats every schedule day as a run day: taken/missed up to today, future upcoming', () => {
     const cal = buildCalendar(schedule((i) => i % 2 === 0), [session(4)], 10);
-    expect(cal[0]!.status).toBe('baseline');
-    expect(cal[2]!.status).toBe('baseline');
+    // baseline is before day 0 now, so day 0 is a real dosing day
+    expect(cal[0]!.status).toBe('taken');
+    expect(cal[1]!.status).toBe('missed');
     // day 4 taken (4 % 2 === 0), day 5 missed, both within today=10
     expect(cal[4]!.status).toBe('taken');
     expect(cal[5]!.status).toBe('missed');
     // day 20 is beyond today -> upcoming
     expect(cal[20]!.status).toBe('upcoming');
+  });
+
+  it('shows every day as upcoming during the baseline (todayIndex < 0)', () => {
+    const cal = buildCalendar(schedule(() => false), [], -2);
+    expect(cal.every((d) => d.status === 'upcoming')).toBe(true);
   });
 
   it('marks the tested ring only where a valid session exists', () => {
@@ -78,23 +84,38 @@ describe('buildCalendar', () => {
 });
 
 describe('summarizeAdherence', () => {
-  it('excludes baseline days and future days from the rate', () => {
-    // today = 13: elapsed non-baseline days are indices 3..13 = 11 days.
+  it('counts every elapsed run day and excludes future days from the rate', () => {
+    // today = 13: elapsed days are indices 0..13 = 14 days.
     const s = summarizeAdherence(schedule(() => true), Array.from({ length: LENGTH }, (_, i) => session(i)), 13);
-    expect(s.scheduledDays).toBe(11);
-    expect(s.takenDays).toBe(11);
-    expect(s.testedDays).toBe(11);
+    expect(s.scheduledDays).toBe(14);
+    expect(s.takenDays).toBe(14);
+    expect(s.testedDays).toBe(14);
     expect(s.rate).toBe(1);
     expect(s.meetsGate).toBe(true);
     expect(adherencePercent(s)).toBe(100);
   });
 
   it('rate is min(taken, tested)/scheduled', () => {
-    // taken on all, tested on none after baseline -> tested is the binding count.
+    // taken on all, tested on none -> tested is the binding count.
     const s = summarizeAdherence(schedule(() => true), [], 13);
-    expect(s.takenDays).toBe(11);
+    expect(s.takenDays).toBe(14);
     expect(s.testedDays).toBe(0);
     expect(s.rate).toBe(0);
+    expect(s.meetsGate).toBe(false);
+  });
+});
+
+describe('baseline check-ins', () => {
+  it('ignores baseline sessions (negative day index) in the adherence rate', () => {
+    const baseline = [session(-3), session(-2), session(-1)];
+    const s = summarizeAdherence(schedule(() => true), [...baseline, session(0)], 1);
+    expect(s.scheduledDays).toBe(2);
+    expect(s.testedDays).toBe(1);
+  });
+
+  it('reports nothing elapsed while still in the baseline', () => {
+    const s = summarizeAdherence(schedule(() => false), [session(-3)], -1);
+    expect(s.scheduledDays).toBe(0);
     expect(s.meetsGate).toBe(false);
   });
 });

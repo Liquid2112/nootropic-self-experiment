@@ -178,6 +178,7 @@ describe('assembleDailyTest — persistence mapping', () => {
       startDate: '2026-01-01',
       status: 'active',
       sealedKey: null,
+      seed: null,
     });
 
     const { session } = assembleDailyTest(baseInput());

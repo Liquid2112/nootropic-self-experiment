@@ -141,19 +141,31 @@ export default function TodayScreen() {
       </View>
 
       <View style={styles.ringRow}>
-        <ProgressRing progress={view.totalDays > 0 && view.hasDayForToday ? view.dayNumber / view.totalDays : 0}>
-          <Text style={styles.ringCenter}>{view.hasDayForToday ? String(view.dayNumber) : '—'}</Text>
+        <ProgressRing
+          progress={
+            view.totalDays > 0 && (view.hasDayForToday || view.isBaseline)
+              ? view.dayNumber / view.totalDays
+              : 0
+          }
+        >
+          <Text style={styles.ringCenter}>
+            {view.hasDayForToday || view.isBaseline ? String(view.dayNumber) : '—'}
+          </Text>
           <Text style={styles.ringCaption}>{`of ${view.totalDays}`}</Text>
         </ProgressRing>
         <Text style={styles.dayLabel}>
-          {view.hasDayForToday ? `Day ${view.dayNumber} of ${view.totalDays}` : 'Between days'}
+          {view.isBaseline
+            ? `Baseline ${view.dayNumber} of ${view.totalDays}`
+            : view.hasDayForToday
+              ? `Day ${view.dayNumber} of ${view.totalDays}`
+              : 'Between days'}
         </Text>
       </View>
 
       <Card>
-        <Text style={styles.cardTitle}>Today&apos;s dose</Text>
+        <Text style={styles.cardTitle}>{view.isBaseline ? 'Baseline' : 'Today\u2019s dose'}</Text>
         <Text style={styles.instruction}>{view.instruction}</Text>
-        <Text style={styles.windowLabel}>{windowLabel}</Text>
+        {!view.isBaseline && <Text style={styles.windowLabel}>{windowLabel}</Text>}
         {view.hasDayForToday &&
           (view.taken ? (
             <View style={styles.takenRow}>
@@ -169,7 +181,7 @@ export default function TodayScreen() {
         <Text style={styles.muted}>About 90 seconds: a quick reaction test, a memory task, and three sliders.</Text>
         <Button
           label="Start check-in"
-          variant={view.hasDayForToday ? 'primary' : 'secondary'}
+          variant={view.hasDayForToday || view.isBaseline ? 'primary' : 'secondary'}
           onPress={startCheckIn}
         />
       </Card>

@@ -64,6 +64,17 @@ export type SealOptions = {
   passphrase?: string;
 };
 
+/**
+ * The passphrase a self-blinded run seals/unseals with, derived from the seed.
+ * Seal time (applyBlinding) and unblind time (the verdict screen) MUST use this
+ * exact string, so it lives in one place. Weak by design — see SealOptions —
+ * but the seed is persisted with the experiment so the mapping stays
+ * recoverable at run end.
+ */
+export function selfBlindPassphrase(seed: string | number): string {
+  return `self-blind:${String(seed)}`;
+}
+
 function assignLabels(seed: string | number): {
   supplementLabel: NeutralLabel;
   placeboLabel: NeutralLabel;
@@ -119,7 +130,7 @@ export function applyBlinding(
   // requires the friend's passphrase and will not silently fall back.
   let passphrase = options.passphrase;
   if (mode === 'self_blind' && !passphrase) {
-    passphrase = `self-blind:${String(seed)}`;
+    passphrase = selfBlindPassphrase(seed);
   }
   if (!passphrase) {
     throw new Error(

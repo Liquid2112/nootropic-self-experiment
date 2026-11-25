@@ -1,6 +1,7 @@
 import type { Experiment, ScheduleDay } from '@/db';
 import {
   buildTodayView,
+  checkInDayIndex,
   computeStreak,
   findDayForDate,
   instructionForDay,
@@ -18,6 +19,7 @@ function makeExperiment(overrides: Partial<Experiment> = {}): Experiment {
     startDate: '2026-01-01',
     status: 'active',
     sealedKey: null,
+    seed: null,
     ...overrides,
   };
 }
@@ -134,5 +136,47 @@ describe('buildTodayView', () => {
     expect(view.instruction).toMatch(/No scheduled dose/);
     // Streak reflects the most recent taken run at/ before the date.
     expect(view.streak).toBe(0);
+  });
+
+  it('shows a baseline day (no dose, check-in only) in the 3 days before the start', () => {
+    const view = buildTodayView({
+      experiment: makeExperiment({ blindingMode: 'none' }),
+      schedule,
+      isoDate: '2025-12-30',
+    });
+    expect(view.isBaseline).toBe(true);
+    expect(view.hasDayForToday).toBe(false);
+    expect(view.dayNumber).toBe(2);
+    expect(view.totalDays).toBe(3);
+    expect(view.instruction).toMatch(/Baseline day 2 of 3/);
+    expect(view.instruction).toMatch(/don't take/);
+    expect(view.instruction).not.toMatch(/ON day|cup/);
+  });
+
+  it('is not a baseline day on the run itself or long before it', () => {
+    const onRun = buildTodayView({ experiment: makeExperiment(), schedule, isoDate: '2026-01-01' });
+    expect(onRun.isBaseline).toBe(false);
+    const early = buildTodayView({ experiment: makeExperiment(), schedule, isoDate: '2025-12-28' });
+    expect(early.isBaseline).toBe(false);
+    expect(early.hasDayForToday).toBe(false);
+  });
+});
+
+describe('checkInDayIndex', () => {
+  const schedule = [day({ dayIndex: 0, date: '2026-01-01' }), day({ dayIndex: 1, date: '2026-01-02' })];
+  const experiment = makeExperiment();
+
+  it('uses the schedule day index during the run', () => {
+    expect(checkInDayIndex(experiment, schedule, '2026-01-02')).toBe(1);
+  });
+
+  it('uses a negative index during the baseline', () => {
+    expect(checkInDayIndex(experiment, schedule, '2025-12-29')).toBe(-3);
+    expect(checkInDayIndex(experiment, schedule, '2025-12-31')).toBe(-1);
+  });
+
+  it('returns null outside the baseline and the run', () => {
+    expect(checkInDayIndex(experiment, schedule, '2025-12-01')).toBeNull();
+    expect(checkInDayIndex(experiment, schedule, '2026-03-01')).toBeNull();
   });
 });

@@ -12,6 +12,7 @@
  * is never returned to the UI. Only an unblinded ('none') run names ON/OFF.
  */
 import type { BlindingMode, Experiment, ScheduleDay } from '@/db';
+import { BASELINE_DAYS, baselineDayIndex } from '@/engines/experiment';
 
 export type TodayView = {
   /** 1-based day number within the experiment. */
@@ -28,7 +29,35 @@ export type TodayView = {
   streak: number;
   /** True when today falls inside the experiment window (a scheduled day). */
   hasDayForToday: boolean;
+  /**
+   * True during the 3-day baseline before the run. There is no dose to mark;
+   * the user only does the check-in. `dayNumber`/`totalDays` then count the
+   * baseline (1..3 of 3) instead of the run.
+   */
+  isBaseline: boolean;
 };
+
+/** What the user reads on a baseline day. */
+export function baselineInstruction(baselineDayNumber: number): string {
+  return `Baseline day ${baselineDayNumber} of ${BASELINE_DAYS}: don't take the supplement yet. Just do today's check-in so the test settles in before the experiment starts.`;
+}
+
+/**
+ * The day index a check-in on `isoDate` belongs to: the schedule day's index
+ * during the run, a negative baseline index (-3..-1) during the baseline, or
+ * null when the date is outside both (the check-in has no day to attach to).
+ */
+export function checkInDayIndex(
+  experiment: Pick<Experiment, 'startDate'>,
+  schedule: ScheduleDay[],
+  isoDate: string,
+): number | null {
+  const day = findDayForDate(schedule, isoDate);
+  if (day) {
+    return day.dayIndex;
+  }
+  return baselineDayIndex(experiment.startDate, isoDate);
+}
 
 /**
  * Map an arm to the instruction the user reads, respecting blinding.
@@ -113,6 +142,20 @@ export function buildTodayView({
   const today = findDayForDate(schedule, isoDate);
 
   if (!today) {
+    const baselineIndex = baselineDayIndex(experiment.startDate, isoDate);
+    if (baselineIndex !== null) {
+      const baselineDayNumber = BASELINE_DAYS + baselineIndex + 1;
+      return {
+        dayNumber: baselineDayNumber,
+        totalDays: BASELINE_DAYS,
+        instruction: baselineInstruction(baselineDayNumber),
+        taken: false,
+        takenAt: null,
+        streak: 0,
+        hasDayForToday: false,
+        isBaseline: true,
+      };
+    }
     return {
       dayNumber: 0,
       totalDays,
@@ -121,6 +164,7 @@ export function buildTodayView({
       takenAt: null,
       streak: computeLatestStreak(schedule, isoDate),
       hasDayForToday: false,
+      isBaseline: false,
     };
   }
 
@@ -132,6 +176,7 @@ export function buildTodayView({
     takenAt: today.takenAt,
     streak: computeStreak(schedule, today.dayIndex),
     hasDayForToday: true,
+    isBaseline: false,
   };
 }
 
