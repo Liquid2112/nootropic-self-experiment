@@ -8,7 +8,6 @@ import { scoreQuickTest, type QuickTestScore } from '@/features/quick-test';
 import {
   QUIZ_INTERSTITIALS,
   QUIZ_QUESTIONS,
-  baselinePercentile,
   planMilestones,
   quizGoal,
   quizTestWindow,
@@ -45,8 +44,8 @@ const OPTION_ICONS: Record<string, IconName> = {
 /**
  * Quiz onboarding. Sells the payoff of finishing a run before it asks for
  * anything: a few quick questions about the user's stack and spend, two short
- * facts about placebo, a Brain Baseline (the free reaction test, as an
- * approximate percentile), a "building your experiment" moment, and a dated
+ * facts about placebo, a Brain Baseline (the free reaction test, as a
+ * median in ms), a "building your experiment" moment, and a dated
  * plan to the verdict reveal. It ends by pre-filling the goal and test time
  * and handing off to the normal setup.
  */
@@ -331,7 +330,6 @@ function BaselineResult({ score, onNext, onRetry }: { score: QuickTestScore | nu
       />
     );
   }
-  const pct = baselinePercentile(score.medianMs);
   return (
     <View style={styles.flex}>
       <Animated.View style={[styles.centerBody, enterStyle(v)]}>
@@ -341,17 +339,13 @@ function BaselineResult({ score, onNext, onRetry }: { score: QuickTestScore | nu
             <Text style={styles.baselineBig}>{score.medianMs}</Text>
             <Text style={styles.baselineUnit}>ms</Text>
           </View>
-          <Text style={styles.baselinePct}>{`Faster than about ${pct}% of people`}</Text>
-          <View style={styles.baselineTrack}>
-            <View style={[styles.baselineFill, { width: `${pct}%` }]} />
-            <View style={[styles.baselineDot, { left: `${pct}%` }]} />
-          </View>
+          <Text style={styles.baselinePct}>Your starting line</Text>
           <Text style={styles.baselineNote}>
-            An estimate for phone reaction tests. What matters is how you move from here.
+            Median of your taps today. Every check-in is compared with this number, not with anyone else.
           </Text>
         </View>
         <Text style={[styles.subtitle, styles.centerText]}>
-          This is your starting line. Over the next 4 weeks we’ll see if your supplement moves it.
+          Over the next 4 weeks we’ll see if your supplement moves it.
         </Text>
       </Animated.View>
       <View style={styles.footer}>
@@ -517,19 +511,6 @@ const styles = StyleSheet.create({
   baselineBig: { fontSize: 76, lineHeight: 84, fontFamily: fonts.display, letterSpacing: -2.5, color: brand.ink },
   baselineUnit: { fontSize: 22, fontFamily: fonts.displayBold, color: brand.muted },
   baselinePct: { fontSize: 18, fontFamily: fonts.semibold, color: brand.ink },
-  baselineTrack: { alignSelf: 'stretch', height: 10, borderRadius: 5, backgroundColor: brand.paperDeep, marginTop: 6, marginBottom: 6 },
-  baselineFill: { height: '100%', borderRadius: 5, backgroundColor: brand.tang },
-  baselineDot: {
-    position: 'absolute',
-    top: -5,
-    marginLeft: -10,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: brand.white,
-    borderWidth: 3,
-    borderColor: brand.ink,
-  },
   baselineNote: { fontSize: 12, lineHeight: 16, fontFamily: fonts.regular, color: brand.faint, textAlign: 'center' },
   buildList: { alignSelf: 'stretch', gap: 14, marginTop: 12 },
   buildRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

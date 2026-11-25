@@ -1,6 +1,5 @@
 import {
   QUIZ_QUESTIONS,
-  baselinePercentile,
   planMilestones,
   quizGoal,
   quizTestWindow,
@@ -26,16 +25,6 @@ describe('quiz', () => {
     expect(yearlySpend({})).toBeNull();
     expect(stakesLine({ spend: '75_150', confidence: 'feel_it' })).toContain('$1,320 a year');
     expect(stakesLine({ confidence: 'no_idea' })).toContain('your money');
-  });
-});
-
-describe('baselinePercentile', () => {
-  it('centres on 300 ms and is monotone, clamped to 1..99', () => {
-    expect(baselinePercentile(300)).toBe(50);
-    expect(baselinePercentile(250)).toBeGreaterThan(80);
-    expect(baselinePercentile(360)).toBeLessThan(15);
-    expect(baselinePercentile(100)).toBe(99);
-    expect(baselinePercentile(900)).toBe(1);
   });
 });
 

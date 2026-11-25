@@ -4,8 +4,8 @@
  * A short quiz that sells the payoff of a full run before asking for anything:
  * what the user takes, what it costs them, and whether they actually know it
  * works. It ends with a Brain Baseline (the free reaction test, as a
- * percentile) and a dated plan to the verdict reveal. Everything here is pure
- * so tests pin the copy, the money math and the percentile.
+ * score) and a dated plan to the verdict reveal. Everything here is pure
+ * so tests pin the copy, and the money math.
  */
 import type { Goal, TestWindowId } from '@/engines/onboarding/types';
 
@@ -185,35 +185,6 @@ export function stakesLine(answers: QuizAnswers): string {
     default:
       return `Right now you're spending ${money} on a guess. In 4 weeks you'll have an answer.`;
   }
-}
-
-// --- Brain Baseline ------------------------------------------------------------
-
-/**
- * Rough reference distribution for a phone reaction-test median, in ms.
- * Phone touch latency adds tens of ms over lab numbers, so the centre sits
- * near 300 ms. Used only for an approximate, clearly labelled percentile.
- */
-export const BASELINE_REFERENCE = { meanMs: 300, sdMs: 45 } as const;
-
-/** Standard normal CDF (Abramowitz-Stegun 7.1.26 via erf). */
-function normalCdf(z: number): number {
-  const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
-  const y =
-    1 -
-    (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t) *
-      Math.exp(-(z * z) / 2);
-  return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
-}
-
-/**
- * Share of people (0..100) with a slower median than `medianMs`, clamped to
- * 1..99 so nobody is told they're the fastest or slowest person alive.
- */
-export function baselinePercentile(medianMs: number): number {
-  const z = (medianMs - BASELINE_REFERENCE.meanMs) / BASELINE_REFERENCE.sdMs;
-  const fasterThan = (1 - normalCdf(z)) * 100;
-  return Math.min(99, Math.max(1, Math.round(fasterThan)));
 }
 
 // --- Plan timeline -------------------------------------------------------------
