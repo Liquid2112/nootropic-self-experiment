@@ -1,5 +1,5 @@
 import {slideCard,camKeys,drawVerdict,drawCalendar,drawReaction,drawBanner} from './common.js';
-export const display=`You spend $90 _ a month on THIS. What if it had to PROVE it works? Placebo mixes your days. ON, or OFF. You don't know which. Every morning, a 60-second _ brain game. 21 _ days later… the verdict. Keep what works. Cut what doesn't. Either way, you WIN. Comment STACK for the free test.`;
+export const display=`You spend $90 _ a month on THIS. What if it had to PROVE it works? Placebo mixes your days. ON, or OFF. Picked totally at random. Every morning, a 60-second _ brain game. 21 _ days later… the verdict. Keep what works. Cut what doesn't. Either way, you WIN. Comment STACK for the free test.`;
 let B,J,cal,rx,ver,coinsA,desk,logo;
 export function build(S){
   B=S.makeChar('brian');J=S.jars(5);coinsA=S.coins(22);

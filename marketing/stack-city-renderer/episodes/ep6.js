@@ -1,5 +1,5 @@
 import {slideCard,camKeys,drawBanner,drawCalendar,drawEntry,drawMini} from './common.js';
-export const display=`A thousand nootropic TikToks. ZERO receipts. What if one app had them ALL? What it is. What studies ACTUALLY tested. REAL sources, not anecdotes. Then don't just read it. TEST it. Blind, on you. Read it. Test it. KNOW it. Comment a nootropic, and I'll look it up.`;
+export const display=`A thousand nootropic TikToks. ZERO receipts. What if one app had them ALL? What it is. What studies ACTUALLY tested. REAL sources, not anecdotes. Then don't just read it. TEST it. Daily, on you. Read it. Test it. KNOW it. Comment a nootropic, and I'll look it up.`;
 const E={name:'L-Theanine',tag:'The calm-focus amino acid from tea leaves.',evidence:'MODERATE',evColor:'#FFC23A',research:'May ease stress in people under stress. Trials are small.',chips:['PubMed','Systematic review']};
 let B,noise,minis,entry,cal,stamps,conf,logo;
 function drawComment(g,W,H,txt){g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-8,24);g.fill();g.fillStyle='#FF5A36';g.beginPath();g.arc(48,H/2,24,0,7);g.fill();g.fillStyle='#15131C';g.font='800 30px Inter';g.fillText(txt,86,H/2+11);}

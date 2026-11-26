@@ -1,5 +1,5 @@
 import {slideCard,camKeys,drawBanner} from './common.js';
-export const display=`Your brain LIES to you. But scientists have a trick. Expect to feel sharp, and you will. That's the placebo effect. So they HIDE which day is real. It's called a blind test. Now Placebo runs that trick on YOUR routine. We named the app after the effect, so you can BEAT it. Placebo. Link in bio.`;
+export const display=`Your brain LIES to you. But scientists have a trick. Expect to feel sharp, and you will. That's the placebo effect. So they don't trust the feeling. They MEASURE it. Every single day. Now Placebo runs that test on YOUR routine. We named the app after the effect, so you can BEAT it. Placebo. Link in bio.`;
 let B,mini,parts,bubble,mugs,phone,logo,conf,desk;
 function drawBubble(g,W,H,a){g.globalAlpha=a;g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-60,50);g.fill();
   g.beginPath();g.arc(W*.25,H-40,22,0,7);g.fill();g.beginPath();g.arc(W*.18,H-14,12,0,7);g.fill();

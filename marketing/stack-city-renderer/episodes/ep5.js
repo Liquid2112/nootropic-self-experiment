@@ -1,5 +1,5 @@
 import {camKeys,drawBanner} from './common.js';
-export const display=`Coffee versus tea. SETTLED. In 21 _ days. Not by the internet. By YOU. Blind days, a morning test, and a real verdict. Whatever wins, it's YOUR winner. Comment COFFEE or TEA, and I'll run it next.`;
+export const display=`Coffee versus tea. SETTLED. In 21 _ days. Not by the internet. By YOU. Random days, a morning test, and a real verdict. Whatever wins, it's YOUR winner. Comment COFFEE or TEA, and I'll run it next.`;
 let B,BN,TE,ring,comments,score,win,conf,poll;
 function drawComment(g,W,H,txt){g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-8,24);g.fill();g.fillStyle='#B7A6FF';g.beginPath();g.arc(48,H/2,24,0,7);g.fill();
   g.fillStyle='#15131C';g.font='800 30px Inter';g.fillText(txt,86,H/2+11);}
