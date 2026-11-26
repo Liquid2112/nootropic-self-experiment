@@ -5,14 +5,16 @@
  * before the app is opened.
  */
 import { getDatabase } from '@/db';
-import { seedDemoData } from './seed';
+import { seedCompletedDemo, seedDemoData } from './seed';
 
 type SeedWindow = { __SEED_RESULT__?: string };
 const w = window as unknown as SeedWindow;
 
 function run(): void {
   const db = getDatabase();
-  seedDemoData(db);
+  const scenario = new URLSearchParams(window.location.search).get('scenario');
+  if (scenario === 'completed') seedCompletedDemo(db);
+  else seedDemoData(db);
   const count = db.get('SELECT COUNT(*) AS c FROM test_session');
   w.__SEED_RESULT__ = `ok sessions=${count?.c}`;
 }

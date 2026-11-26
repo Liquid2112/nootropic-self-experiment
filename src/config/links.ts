@@ -1,3 +1,5 @@
+import { LINK_DOMAIN } from './domain';
+
 /**
  * Public URLs the app links to. The App Store needs the privacy policy URL in
  * App Store Connect and a link to it (plus the terms) on the paywall.
@@ -29,18 +31,20 @@ export const AFFILIATE_DISCLOSURE =
   'Affiliate links: we may earn a commission if you buy, at no extra cost to you. It never affects what this app says about a supplement or your results.';
 
 /**
- * Kill switch for the gray-market / prescription section of the Library. Flip
- * to false if App Review objects (guideline 1.4.3); the entries then disappear
- * from search, filters and direct links.
+ * Kill switch for the gray-market / prescription section of the Library. When
+ * false the entries disappear from search, filters and direct links.
+ *
+ * Off for 1.0 (Shubh's call, 2026-11-25): App Review guideline 1.4.3 risk and a
+ * higher age rating, for a section nobody needs to run an experiment. Turn it
+ * back on in an update once the app is approved (store/app-review.md #2).
  */
-export const SHOW_UNREGULATED_ENTRIES = true;
+export const SHOW_UNREGULATED_ENTRIES = false;
 
 /**
  * Base for shareable links: keyholder invites (/k/...), keys sent back (/u/...)
- * and referral codes (/r/CODE). PLACEHOLDER domain: register it, host the
- * apple-app-site-association and assetlinks.json files there plus a fallback
- * page that sends people without the app to the App Store / Play Store, then
- * update ios.associatedDomains and the Android intent filter in app.json if
- * the domain differs. Until then placebo:// links (the app scheme) still open the app.
+ * and referral codes (/r/CODE). The domain comes from src/config/domain.ts,
+ * which app.config.ts also uses for universal links; landing/.well-known/
+ * holds the files the domain must serve. Until it's live, placebo:// links
+ * (the app scheme) still open the app.
  */
-export const SHARE_LINK_BASE = 'https://placebo.app';
+export const SHARE_LINK_BASE = `https://${LINK_DOMAIN}`;

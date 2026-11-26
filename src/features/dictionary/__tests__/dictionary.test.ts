@@ -72,7 +72,7 @@ describe('dictionary content rules', () => {
 
 describe('searchDictionary', () => {
   it('splits supplements from gray-market entries and sorts by name', () => {
-    const { supplements, unregulated } = searchDictionary('');
+    const { supplements, unregulated } = searchDictionary('', 'all', DICTIONARY_ENTRIES, true);
     expect(supplements.every((e) => e.kind === 'supplement')).toBe(true);
     expect(unregulated.every((e) => e.kind === 'unregulated')).toBe(true);
     expect(supplements.length + unregulated.length).toBe(DICTIONARY_ENTRIES.length);
@@ -82,7 +82,7 @@ describe('searchDictionary', () => {
 
   it('matches aliases case-insensitively', () => {
     expect(searchDictionary('BRAHMI').supplements.map((e) => e.id)).toContain('bacopa-monnieri');
-    expect(searchDictionary('osavampator').unregulated.map((e) => e.id)).toEqual(['tak-653']);
+    expect(searchDictionary('osavampator', 'all', DICTIONARY_ENTRIES, true).unregulated.map((e) => e.id)).toEqual(['tak-653']);
   });
 
   it('filters by goal and by gray market', () => {
@@ -90,19 +90,25 @@ describe('searchDictionary', () => {
     expect(sleep.supplements.length).toBeGreaterThan(0);
     expect(sleep.supplements.every((e) => e.goals.includes('sleep'))).toBe(true);
 
-    const gray = searchDictionary('', 'unregulated');
+    const gray = searchDictionary('', 'unregulated', DICTIONARY_ENTRIES, true);
     expect(gray.supplements).toHaveLength(0);
     expect(gray.unregulated).toHaveLength(UNREGULATED_ENTRIES.length);
   });
 
   it('looks up entries by id and by seeded supplement', () => {
-    expect(getDictionaryEntry('bromantane')?.name).toBe('Bromantane');
+    expect(getDictionaryEntry('bromantane', true)?.name).toBe('Bromantane');
     expect(getDictionaryEntry('nope')).toBeUndefined();
     expect(getEntryForSupplement('dark-chocolate-flavanols')?.id).toBe('cocoa-flavanols');
   });
 });
 
 describe('gray-market kill switch', () => {
+  it('is off by default for 1.0, so gray-market entries are hidden', () => {
+    expect(searchDictionary('').unregulated).toHaveLength(0);
+    expect(searchDictionary('').supplements).toHaveLength(DICTIONARY_ENTRIES.length - UNREGULATED_ENTRIES.length);
+    expect(getDictionaryEntry('bromantane')).toBeUndefined();
+  });
+
   it('hides unregulated entries from search and lookup when off', () => {
     const { unregulated, supplements } = searchDictionary('', 'all', DICTIONARY_ENTRIES, false);
     expect(unregulated).toHaveLength(0);

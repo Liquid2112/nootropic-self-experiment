@@ -16,6 +16,9 @@
  *    its own on :8082 and stops it at the end; don't leave a stale one there.
  * 4. Opens each route at 390x844 @2x and saves <outDir>/<name>.png, logging
  *    console errors per route.
+ *
+ * --scenario=completed seeds a finished blinded run (for the verdict screen).
+ * --size=440x956 --scale=3 captures App Store sized raws (1320x2868).
  */
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -36,6 +39,9 @@ const BUILD = opt('build-dir') ?? '/tmp/claude-0/webbuild';
 const PORT = Number(opt('port') ?? 8099);
 const METRO = Number(opt('metro-port') ?? 8082);
 const SEED = !flag('no-seed');
+const SCENARIO = opt('scenario') ?? 'active';
+const [VW, VH] = (opt('size') ?? '390x844').split('x').map(Number);
+const SCALE = Number(opt('scale') ?? 2);
 const ROUTES = (opt('routes') ?? '/,/progress,/achievements,/reaction-test,/welcome,/goal-picker,/experiment-setup,/paywall,/dictionary,/verdict')
   .split(',');
 
@@ -121,6 +127,7 @@ function proxyToMetro(req, res) {
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   if (url.pathname === '/__seed') {
+    // The seed bundle reads ?scenario= from this page's own URL.
     res.writeHead(200, { 'Content-Type': TYPES['.html'], ...ISOLATION });
     return res.end(SEED_PAGE);
   }
@@ -153,8 +160,8 @@ if (flag('serve-only')) {
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 const context = await browser.newContext({
-  viewport: { width: 390, height: 844 },
-  deviceScaleFactor: 2,
+  viewport: { width: VW, height: VH },
+  deviceScaleFactor: SCALE,
   isMobile: true,
   hasTouch: true,
   colorScheme: 'light',
@@ -211,7 +218,7 @@ try {
   if (SEED) {
     const page = await context.newPage();
     page.on('pageerror', (e) => log('seed pageerror:', e.message));
-    await page.goto(`${BASE}/__seed`);
+    await page.goto(`${BASE}/__seed?scenario=${SCENARIO}`);
     await page.waitForFunction(() => window.__SEED_RESULT__, null, { timeout: 120000 });
     const result = await page.evaluate(() => window.__SEED_RESULT__);
     log('seed:', result.split('\n')[0]);
