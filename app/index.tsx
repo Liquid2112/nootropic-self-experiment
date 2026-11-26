@@ -6,26 +6,26 @@ import {
   getDatabase,
   scheduleDays,
   supplements,
+  testSessions,
   type AdverseEvent,
   type Experiment,
   type ScheduleDay,
 } from '@/db';
 import { BASELINE_DAYS } from '@/engines/experiment';
+import { goalLabel, type Goal } from '@/engines/onboarding';
+import { TEST_CATALOG, batteryOf, type TestId } from '@/features/battery';
 import {
   buildTodayView,
   DEFAULT_CHECK_IN_WINDOW,
   type TodayView,
 } from '@/features/daily-loop';
 import {
-  buildDailyQuests,
   claimProgress,
-  dailyGoalProgress,
   ensureSnapshot,
   loadGameState,
   localDay,
   type GameState,
   type ProgressDelta,
-  type Quest,
 } from '@/features/gamification';
 import { cancelDailyReminders, loadNotificationsAdapter, scheduleDailyReminders } from '@/features/notifications';
 import { RESUME_WARNING, activePause, endExperimentForSafety, resumeExperiment } from '@/features/safety';
@@ -35,14 +35,13 @@ import { refreshWidgets } from '@/features/widget/useWidgetSync';
 import {
   ActionTile,
   Confetti,
-  QuestList,
   StreakFlame,
   XpBar,
   celebrate,
   tapLight,
 } from '@/components/game';
-import { Icon, Logo, Brian } from '@/brand';
-import { Button, ProgressRing, Scaffold, brand, fonts } from '@/ui';
+import { Icon, Logo, Brian, type IconName } from '@/brand';
+import { Button, Scaffold, brand, fonts } from '@/ui';
 
 type Loaded = {
   experiment: Experiment;
@@ -50,16 +49,14 @@ type Loaded = {
   view: TodayView;
   supplementName: string;
   game: GameState;
+  /** Run day indexes (0-based) that have a check-in. */
+  checkedIn: Set<number>;
   /** Set while the run is paused after a logged bad reaction. */
   pause: AdverseEvent | null;
 };
 
-function greeting(now: Date): string {
-  const h = now.getHours();
-  if (h < 5) return 'Up late';
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+function longDate(now: Date): string {
+  return now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
 /** Days left until the verdict unlocks, counting the baseline when in it. */
@@ -121,6 +118,12 @@ export default function TodayScreen() {
       view,
       supplementName: supplements.getById(db, experiment.supplementId)?.name ?? 'your supplement',
       game: loadGameState(db),
+      checkedIn: new Set(
+        testSessions
+          .listForExperiment(db, experiment.id)
+          .map((t) => t.dayIndex)
+          .filter((d) => d >= 0),
+      ),
     });
     setReady(true);
   }, []);
@@ -159,16 +162,6 @@ export default function TodayScreen() {
     showToast(delta);
     load();
   }, [loaded, load, showToast]);
-
-  const onQuest = useCallback(
-    (quest: Quest) => {
-      tapLight();
-      if (quest.id === 'dose') markTaken();
-      if (quest.id === 'check_in') router.push('/daily-test');
-      if (quest.id === 'reaction') router.push('/reaction-test');
-    },
-    [markTaken, router],
-  );
 
   // Schedule the morning dose + check-in reminders for the active experiment.
   // Degrades to a no-op when notification permission is denied or the module is
@@ -250,32 +243,30 @@ export default function TodayScreen() {
       />
     );
   }
-  const quests = buildDailyQuests({
-    doseScheduled: view.hasDayForToday,
-    checkInScheduled: view.hasDayForToday || view.isBaseline,
-    game,
-    // Logging an OFF day (skipping it as planned) still counts as following the plan.
-    doseTitle: view.arm === 'OFF' ? 'Log your OFF day' : undefined,
-  });
-  const goal = dailyGoalProgress(quests);
-  const goalDone = quests.filter((q) => !q.bonus && q.done).length;
-  const goalTotal = quests.filter((q) => !q.bonus).length;
   const verdictIn = daysUntilVerdict(view, experiment.lengthDays);
-  const runProgress = view.isBaseline
-    ? 0
-    : view.isFinished
-      ? 1
-      : view.hasDayForToday
-        ? (view.dayNumber - 1) / Math.max(1, view.totalDays)
-        : 0;
+  const tests = batteryOf(experiment);
+  const checkInSeconds = tests.reduce((sum, id) => sum + TEST_CATALOG[id].seconds, 0);
   const checkInDue = (view.hasDayForToday || view.isBaseline) && !game.today.checkIn;
 
   return (
     <View style={styles.root}>
       <Scaffold>
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Logo size={22} />
+        {/* Header: date, run day, supplement + streak */}
+        <View style={styles.header}>
+          <View style={styles.flex}>
+            <Text style={styles.date}>{longDate(new Date())}</Text>
+            <View style={styles.dayRow}>
+              <Text style={styles.dayBig}>
+                {view.isFinished ? 'Done' : `${view.isBaseline ? 'Baseline' : 'Day'} ${view.dayNumber}`}
+              </Text>
+              {!view.isFinished && (
+                <Text style={styles.dayOf}>{`of ${view.isBaseline ? BASELINE_DAYS : view.totalDays}`}</Text>
+              )}
+            </View>
+            <Text style={styles.subGreeting} numberOfLines={1}>
+              {`${loaded.supplementName}, for ${goalLabel(experiment.goal as Goal).toLowerCase()}`}
+            </Text>
+          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Streak and achievements"
@@ -285,116 +276,100 @@ export default function TodayScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.greetingBlock}>
-          <Text style={styles.greeting}>{greeting(new Date())}</Text>
-          <Text style={styles.subGreeting} numberOfLines={1}>
-            {`Testing ${loaded.supplementName}`}
-          </Text>
-        </View>
-
         {game.streak.atRisk ? (
           <View style={styles.riskBanner}>
             <Icon name="flame" size={18} color={brand.tang} strokeWidth={2.4} />
             <Text style={styles.riskText}>
-              {`Your ${game.streak.current}-day streak ends at midnight. One quest keeps it alive.`}
+              {`Your ${game.streak.current}-day streak ends at midnight. One check-in keeps it alive.`}
             </Text>
           </View>
         ) : null}
 
-        {/* Hero: verdict countdown + run progress */}
-        <View style={styles.hero}>
-          <View style={styles.heroTop}>
-            <View style={styles.flex}>
-              <Text style={styles.heroEyebrow}>
-                {view.isFinished ? 'YOUR EXPERIMENT IS DONE' : 'VERDICT UNLOCKS IN'}
-              </Text>
-              {view.isFinished ? (
-                <Text style={styles.heroBig}>Ready</Text>
-              ) : (
-                <View style={styles.heroBigRow}>
-                  <Text style={styles.heroBig}>{verdictIn}</Text>
-                  <Text style={styles.heroUnit}>{verdictIn === 1 ? 'day' : 'days'}</Text>
-                </View>
-              )}
+        {view.isFinished ? (
+          <View style={styles.checkIn}>
+            <View style={styles.checkInHead}>
+              <View style={styles.flex}>
+                <Text style={styles.checkInTitle}>Your verdict is ready</Text>
+                <Text style={styles.checkInSub}>{`${experiment.lengthDays} days, all in.`}</Text>
+              </View>
+              <Brian size={64} mood="wow" />
             </View>
-            <View style={styles.heroMascot}>
-              <Brian size={96} mood={view.isFinished ? 'wow' : game.today.checkIn ? 'proud' : 'focused'} tilt={8} />
-            </View>
+            <Button variant="tang" label="Reveal my verdict" onPress={() => router.push('/verdict')} />
           </View>
-          <View style={styles.heroTrack}>
-            <View style={[styles.heroFill, { width: `${Math.max(3, Math.round(runProgress * 100))}%` }]} />
-          </View>
-          <View style={styles.heroMeta}>
-            <Text style={styles.heroMetaText}>
-              {view.isBaseline
-                ? `Baseline day ${view.dayNumber} of ${BASELINE_DAYS}`
-                : view.hasDayForToday
-                  ? `Day ${view.dayNumber} of ${view.totalDays}`
-                  : view.isFinished
-                    ? `${experiment.lengthDays} of ${experiment.lengthDays} days`
-                    : 'Between days'}
-            </Text>
-            <View style={styles.heroSealed}>
-              <Icon name={view.isFinished ? 'sparkle' : 'lock'} size={13} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.heroMetaText}>{view.isFinished ? 'Unsealed' : 'Results sealed'}</Text>
-            </View>
-          </View>
-          {view.isFinished ? (
-            <Pressable accessibilityRole="button" onPress={() => router.push('/verdict')} style={styles.heroButton}>
-              <Text style={styles.heroButtonText}>Reveal my verdict</Text>
-              <Icon name="arrowRight" size={18} color={brand.ink} />
-            </Pressable>
-          ) : null}
-        </View>
-
-        {/* Daily quests */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.flex}>
-              <Text style={styles.cardTitle}>Today&apos;s quests</Text>
-              <Text style={styles.muted}>
-                {goal >= 1 ? 'Daily goal done. See you tomorrow.' : 'Finish them to keep your streak.'}
-              </Text>
-            </View>
-            <ProgressRing progress={goal} size={44} thickness={5} color={goal >= 1 ? 'success' : 'accent'}>
-              {goal >= 1 ? (
-                <Icon name="check" size={18} color={brand.mint} strokeWidth={2.8} />
-              ) : (
-                <Text style={styles.ringText}>{`${goalDone}/${goalTotal}`}</Text>
-              )}
-            </ProgressRing>
-          </View>
-          <QuestList quests={quests} onPressQuest={onQuest} />
-        </View>
+        ) : null}
 
         {/* Today's ON/OFF call, revealed each morning */}
         {(view.hasDayForToday || view.isBaseline) && (
-          <View style={styles.card}>
-            <View style={styles.doseHeader}>
-              <View style={[styles.iconBubble, { backgroundColor: brand.lilacSoft }]}>
-                <Icon name={view.isBaseline ? 'clock' : view.arm === 'OFF' ? 'moon' : 'bolt'} size={20} color={brand.lilacDeep} />
-              </View>
-              <View style={styles.flex}>
-                <Text style={styles.cardTitle}>
-                  {view.isBaseline ? 'Baseline' : view.arm ? `Today\u2019s call: ${view.arm}` : 'Today\u2019s dose'}
-                </Text>
-                {!view.isBaseline && <Text style={styles.muted}>{windowLabel}</Text>}
-              </View>
+          <View style={styles.doseCard}>
+            <ArmTile arm={view.isBaseline ? null : view.arm} />
+            <View style={styles.doseText}>
+              <Text style={styles.doseTitle}>
+                {view.isBaseline ? 'Baseline day' : view.arm ? `Today: ${view.arm}` : 'Today\u2019s dose'}
+              </Text>
+              <Text style={styles.doseBody}>{view.instruction}</Text>
+              {view.hasDayForToday &&
+                (view.taken ? (
+                  <View style={styles.takenRow}>
+                    <Icon name="check" size={18} color={brand.mintInk} strokeWidth={2.6} />
+                    <Text style={styles.takenText}>
+                      {view.arm === 'OFF'
+                        ? 'OFF day logged'
+                        : view.takenAt
+                          ? `Taken at ${new Date(view.takenAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
+                          : 'Dose logged'}
+                    </Text>
+                  </View>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityHint={view.arm === 'OFF' ? 'Records that you skipped it as planned' : "Records that you took today's dose"}
+                    onPress={() => {
+                      tapLight();
+                      markTaken();
+                    }}
+                    style={({ pressed }) => [styles.doseButton, pressed && styles.pressed]}
+                  >
+                    <Text style={styles.doseButtonText}>
+                      {view.arm === 'OFF' ? 'I skipped it today' : 'Mark taken'}
+                    </Text>
+                  </Pressable>
+                ))}
+              {view.arm === 'ON' && !view.taken ? (
+                <Text style={styles.windowText}>{windowLabel}</Text>
+              ) : null}
             </View>
-            <Text style={styles.body}>{view.instruction}</Text>
-            {view.hasDayForToday &&
-              (view.taken ? (
-                <View style={styles.takenRow}>
-                  <Icon name="check" size={18} color={brand.mint} strokeWidth={2.6} />
-                  <Text style={styles.takenText}>{view.arm === 'OFF' ? 'OFF day logged' : 'Dose logged'}</Text>
+          </View>
+        )}
+
+        {/* Today's check-in */}
+        {(view.hasDayForToday || view.isBaseline) && (
+          <View style={styles.checkIn}>
+            <View style={styles.checkInHead}>
+              <View style={styles.flex}>
+                <Text style={styles.checkInTitle}>Today&apos;s check-in</Text>
+                <Text style={styles.checkInSub}>
+                  {checkInDue
+                    ? `${tests.length} test${tests.length === 1 ? '' : 's'}, about ${Math.max(1, Math.round(checkInSeconds / 60))} minute${Math.round(checkInSeconds / 60) > 1 ? 's' : ''}`
+                    : 'Done for today. See you tomorrow.'}
+                </Text>
+              </View>
+              <Brian size={64} mood={checkInDue ? 'focused' : 'proud'} />
+            </View>
+            {checkInDue ? (
+              <>
+                <View style={styles.testList}>
+                  {tests.map((id, i) => (
+                    <TestRow key={id} id={id} color={TEST_DOT[i % TEST_DOT.length]!} />
+                  ))}
                 </View>
-              ) : (
-                <Button
-                  label={view.arm === 'OFF' ? 'I skipped it today' : 'Mark taken'}
-                  onPress={markTaken}
-                  accessibilityHint={view.arm === 'OFF' ? 'Records that you skipped it as planned' : "Records that you took today's dose"}
-                />
-              ))}
+                <Button variant="tang" label="Start check-in" onPress={() => router.push('/daily-test')} />
+              </>
+            ) : (
+              <View style={styles.doneRow}>
+                <Icon name="check" size={18} color={brand.mint} strokeWidth={2.8} />
+                <Text style={styles.doneText}>Check-in saved</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -410,9 +385,14 @@ export default function TodayScreen() {
           </Pressable>
         )}
 
-        {checkInDue && (
-          <Button label="Start today's check-in" onPress={() => router.push('/daily-test')} />
-        )}
+        {/* The 28-day grid, filled in one check-in at a time */}
+        <RunGrid
+          totalDays={view.isBaseline ? experiment.lengthDays : view.totalDays}
+          todayIndex={view.isBaseline ? -1 : view.isFinished ? view.totalDays : view.dayNumber - 1}
+          checkedIn={loaded.checkedIn}
+          verdictIn={verdictIn}
+          finished={view.isFinished}
+        />
 
         {/* Level */}
         <Pressable accessibilityRole="button" onPress={() => router.push('/achievements')} style={styles.card}>
@@ -503,6 +483,114 @@ export default function TodayScreen() {
   );
 }
 
+/** Icon circle colors for the check-in test rows, in battery order. */
+const TEST_DOT = [brand.tang, brand.lilac, brand.mint, brand.sun] as const;
+
+/** One test in today's check-in: icon dot, name, what to do, rough time. */
+function TestRow({ id, color }: { id: TestId; color: string }) {
+  const t = TEST_CATALOG[id];
+  return (
+    <View style={styles.testRow}>
+      <View style={[styles.testDot, { backgroundColor: color }]}>
+        <Icon name={t.icon as IconName} size={20} color={brand.ink} />
+      </View>
+      <View style={styles.flex}>
+        <Text style={styles.testName}>{t.name}</Text>
+        <Text style={styles.testBlurb} numberOfLines={1}>
+          {t.blurb.replace(/\.$/, '')}
+        </Text>
+      </View>
+      <Text style={styles.testTime}>{`${t.seconds} s`}</Text>
+    </View>
+  );
+}
+
+/** Today's call as a tilted card: tang ON, white OFF, lilac during baseline. */
+function ArmTile({ arm }: { arm: 'ON' | 'OFF' | null }) {
+  const fill = arm === 'ON' ? brand.tang : arm === 'OFF' ? brand.white : brand.lilac;
+  return (
+    <View style={[styles.armTile, { backgroundColor: fill }]}>
+      {arm ? (
+        <Text style={styles.armText}>{arm}</Text>
+      ) : (
+        <Icon name="clock" size={26} color={brand.ink} />
+      )}
+    </View>
+  );
+}
+
+type RunGridProps = {
+  totalDays: number;
+  /** 0-based index of today in the run; -1 before day 1, totalDays when done. */
+  todayIndex: number;
+  checkedIn: Set<number>;
+  verdictIn: number;
+  finished: boolean;
+};
+
+/**
+ * The run as a grid of days: ink with a check for each check-in, a dash for a
+ * missed day (shown, not shamed), today ringed in tang, the rest outlined.
+ * Which days were ON or OFF stays off this grid; results stay locked.
+ */
+function RunGrid({ totalDays, todayIndex, checkedIn, verdictIn, finished }: RunGridProps) {
+  const days = Array.from({ length: totalDays }, (_, i) => i);
+  const done = days.filter((i) => checkedIn.has(i)).length;
+  const missed = days.filter((i) => i < todayIndex && !checkedIn.has(i)).length;
+  const toGo = Math.max(0, totalDays - Math.max(0, todayIndex) - (checkedIn.has(todayIndex) ? 1 : 0));
+  const unlock = new Date();
+  unlock.setDate(unlock.getDate() + verdictIn);
+  return (
+    <View style={styles.gridCard}>
+      <View style={styles.gridHead}>
+        <Icon name={finished ? 'sparkle' : 'lock'} size={22} color={brand.ink} />
+        <Text style={styles.gridTitle}>
+          {finished
+            ? 'Results unlocked'
+            : `Results locked until ${unlock.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+        </Text>
+      </View>
+      <Text style={styles.gridBody}>
+        {finished
+          ? 'Every day is in. Open your verdict to see whether your ON days beat your OFF days.'
+          : `Every check-in adds to your result. On day ${totalDays} you see whether your ON days beat your OFF days.`}
+      </Text>
+      <View style={styles.dayGrid}>
+        {days.map((i) => {
+          const isToday = i === todayIndex;
+          if (checkedIn.has(i)) {
+            return (
+              <View key={i} style={[styles.cell, styles.cellDone]}>
+                <Icon name="check" size={16} color={brand.white} strokeWidth={3} />
+              </View>
+            );
+          }
+          if (i < todayIndex) {
+            return (
+              <View key={i} style={[styles.cell, styles.cellMissed]}>
+                <View style={styles.missDash} />
+              </View>
+            );
+          }
+          if (isToday) {
+            return (
+              <View key={i} style={[styles.cell, styles.cellToday]}>
+                <Text style={styles.cellTodayText}>{i + 1}</Text>
+              </View>
+            );
+          }
+          return <View key={i} style={[styles.cell, styles.cellFuture]} />;
+        })}
+      </View>
+      <View style={styles.gridFoot}>
+        <Text style={styles.gridFootStrong}>{`${done} done`}</Text>
+        <Text style={styles.gridFootText}>{`${missed} missed`}</Text>
+        <Text style={styles.gridFootText}>{`${toGo} to go`}</Text>
+      </View>
+    </View>
+  );
+}
+
 type PausedProps = {
   loggedAt: string;
   confirm: 'resume' | 'end' | null;
@@ -573,6 +661,86 @@ function formatHour(hour24: number): string {
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  date: { fontSize: 15, fontFamily: fonts.medium, color: brand.muted },
+  dayRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  dayBig: { fontSize: 38, letterSpacing: -1.2, fontFamily: fonts.display, color: brand.ink },
+  dayOf: { fontSize: 22, letterSpacing: -0.4, fontFamily: fonts.displayBold, color: brand.muted },
+  doseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 20,
+    borderRadius: 28,
+    backgroundColor: brand.lilacSoft,
+  },
+  armTile: {
+    width: 64,
+    height: 76,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: brand.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ rotate: '6deg' }],
+  },
+  armText: { fontSize: 22, fontFamily: fonts.display, color: brand.ink },
+  doseText: { flex: 1, gap: 6 },
+  doseTitle: { fontSize: 22, letterSpacing: -0.4, fontFamily: fonts.displayBold, color: brand.ink },
+  doseBody: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
+  doseButton: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: brand.ink,
+  },
+  doseButtonText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.paper },
+  windowText: { fontSize: 13, fontFamily: fonts.medium, color: brand.muted },
+  pressed: { opacity: 0.7 },
+  checkIn: { backgroundColor: brand.ink, borderRadius: 28, paddingHorizontal: 20, paddingVertical: 22, gap: 16 },
+  checkInHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  checkInTitle: { fontSize: 26, letterSpacing: -0.6, fontFamily: fonts.display, color: brand.paper },
+  checkInSub: { fontSize: 15, fontFamily: fonts.regular, color: 'rgba(247,244,238,0.72)', marginTop: 4 },
+  testList: { gap: 8 },
+  testRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: brand.ink2,
+  },
+  testDot: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  testName: { fontSize: 16, fontFamily: fonts.semibold, color: brand.paper },
+  testBlurb: { fontSize: 13, fontFamily: fonts.regular, color: 'rgba(247,244,238,0.62)' },
+  testTime: { fontSize: 13, fontFamily: fonts.medium, color: 'rgba(247,244,238,0.62)' },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  doneText: { fontSize: 16, fontFamily: fonts.semibold, color: brand.paper },
+  gridCard: {
+    backgroundColor: brand.white,
+    borderWidth: 1,
+    borderColor: brand.line,
+    borderRadius: 24,
+    padding: 20,
+    gap: 14,
+  },
+  gridHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  gridTitle: { flex: 1, fontSize: 20, letterSpacing: -0.3, fontFamily: fonts.displayBold, color: brand.ink },
+  gridBody: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
+  dayGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  cell: { width: '12.5%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  cellDone: { backgroundColor: brand.ink },
+  cellMissed: { backgroundColor: brand.paperDeep },
+  missDash: { width: 12, height: 2.5, borderRadius: 2, backgroundColor: brand.muted },
+  cellToday: { backgroundColor: brand.tangSoft, borderWidth: 2.5, borderColor: brand.tang },
+  cellTodayText: { fontSize: 13, fontFamily: fonts.bold, color: brand.tangInk },
+  cellFuture: { borderWidth: 1.5, borderColor: brand.line },
+  gridFoot: { flexDirection: 'row', justifyContent: 'space-between' },
+  gridFootStrong: { fontSize: 13, fontFamily: fonts.semibold, color: brand.ink },
+  gridFootText: { fontSize: 13, fontFamily: fonts.semibold, color: brand.muted },
   root: { flex: 1, backgroundColor: brand.paper },
   flex: { flex: 1 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
