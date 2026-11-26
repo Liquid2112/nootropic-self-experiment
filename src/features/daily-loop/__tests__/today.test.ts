@@ -5,6 +5,7 @@ import {
   computeStreak,
   findDayForDate,
   instructionForDay,
+  revealedArm,
 } from '../today';
 
 function makeExperiment(overrides: Partial<Experiment> = {}): Experiment {
@@ -36,27 +37,38 @@ function day(overrides: Partial<ScheduleDay>): ScheduleDay {
   };
 }
 
-describe('instructionForDay — blinding', () => {
-  it('reveals ON/OFF only when unblinded', () => {
+describe('instructionForDay — solo open-label runs', () => {
+  it('reveals today\'s ON/OFF call on an open run', () => {
     expect(instructionForDay('none', day({ arm: 'ON' }))).toContain('ON day');
-    expect(instructionForDay('none', day({ arm: 'OFF' }))).toContain('No capsule');
-    expect(instructionForDay('none', day({ arm: 'A' }))).toContain('cup A');
-    expect(instructionForDay('none', day({ arm: 'B' }))).toContain('cup B');
+    expect(instructionForDay('none', day({ arm: 'OFF' }))).toContain('OFF day');
+    expect(instructionForDay('none', day({ arm: 'OFF' }))).toContain('check-in');
   });
 
-  it('never leaks ON/OFF under self_blind or sealed', () => {
-    for (const mode of ['self_blind', 'sealed'] as const) {
+  it('never mentions capsules or cups', () => {
+    for (const mode of ['none', 'self_blind', 'sealed'] as const) {
       for (const arm of ['ON', 'OFF', 'A', 'B'] as const) {
-        const text = instructionForDay(mode, day({ arm }));
-        expect(text).not.toMatch(/ON day|OFF day|No capsule/);
-        expect(text).toMatch(/cup A|cup B/);
+        expect(instructionForDay(mode, day({ arm }))).not.toMatch(/capsule|cup/i);
       }
     }
   });
 
-  it('maps ON->cup A and OFF->cup B under blinding deterministically', () => {
-    expect(instructionForDay('sealed', day({ arm: 'ON' }))).toContain('cup A');
-    expect(instructionForDay('sealed', day({ arm: 'OFF' }))).toContain('cup B');
+  it('keeps legacy blinded runs neutral', () => {
+    for (const mode of ['self_blind', 'sealed'] as const) {
+      for (const arm of ['ON', 'OFF', 'A', 'B'] as const) {
+        const text = instructionForDay(mode, day({ arm }));
+        expect(text).not.toMatch(/ON day|OFF day/);
+        expect(text).toMatch(/day A|day B/);
+      }
+    }
+  });
+});
+
+describe('revealedArm', () => {
+  it('returns today\'s arm only for an open run', () => {
+    expect(revealedArm('none', day({ arm: 'ON' }))).toBe('ON');
+    expect(revealedArm('none', day({ arm: 'OFF' }))).toBe('OFF');
+    expect(revealedArm('sealed', day({ arm: 'ON' }))).toBeNull();
+    expect(revealedArm('none', undefined)).toBeNull();
   });
 });
 
@@ -110,8 +122,9 @@ describe('buildTodayView', () => {
     expect(view.totalDays).toBe(14);
     expect(view.hasDayForToday).toBe(true);
     expect(view.taken).toBe(false);
-    expect(view.instruction).toMatch(/cup A|cup B/);
+    expect(view.instruction).toMatch(/day A|day B/);
     expect(view.instruction).not.toMatch(/ON day|OFF day/);
+    expect(view.arm).toBeNull();
   });
 
   it('reflects taken + takenAt and computes the streak', () => {

@@ -7,7 +7,7 @@ import {
 
 describe('emptyContext', () => {
   it('defaults to no sleep answer, no caffeine, phone', () => {
-    expect(emptyContext()).toEqual({ sleepHours: null, caffeine: false, formFactor: 'phone' });
+    expect(emptyContext()).toEqual({ sleepHours: null, caffeine: false, formFactor: 'phone', expectation: null });
   });
 });
 

@@ -268,7 +268,7 @@ describe('computeExperimentVerdict — blinding', () => {
     const sessions = makeSessions(exp.id, () => true);
     const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
     expect(vm.blindingState).toBe('unblinded');
-    expect(vm.unblindedCaveat).toBe('Unblinded run, placebo effect possible.');
+    expect(vm.unblindedCaveat).toMatch(/You knew which days were ON/);
     expect(vm.revealedMapping).toBeNull();
   });
 
