@@ -1,18 +1,14 @@
 import { createMemoryDriver } from '@/db/__tests__/memoryDriver';
 import { migrate } from '@/db/schema';
 import { seedSupplements } from '@/db/seed';
-import { experiments } from '@/db/repositories';
-import { computeExperimentVerdict } from '@/results/verdict';
 import {
   canSendKey,
-  clearPendingInvite,
   decodeKeyholderPayload,
   decodeUnlockPayload,
   encodePayload,
   heldKeys,
   holdKey,
   isFriendCode,
-  isOwnRun,
   keyholderInviteMessage,
   keyholderLink,
   lookupCode,
@@ -21,11 +17,9 @@ import {
   newReferralCode,
   normalizeKey,
   parseLink,
-  pendingInvite,
   referralState,
   setCreatorCode,
   setReferredBy,
-  startKeyholderRun,
   type KeyholderPayload,
 } from '..';
 
@@ -131,37 +125,3 @@ describe('referral state', () => {
   });
 });
 
-describe('startKeyholderRun', () => {
-  it('seals the run with a fresh key whose link unblinds the verdict', () => {
-    const d = db();
-    const p = startKeyholderRun(
-      d,
-      {
-        goal: 'focus',
-        supplement: { kind: 'other', name: 'Caffeine', type: 'acute' },
-        lengthDays: 21,
-        blindingMode: 'sealed',
-        testWindow: 'morning',
-        startDate: '2026-12-04',
-      },
-      { experimentId: 'exp_k', seed: 'seed-1' },
-      'Shubh',
-    );
-    expect(p.reveal).toBe('2026-12-25');
-    expect(p.supplement).toBe('Caffeine');
-    expect(isOwnRun(d, p.run)).toBe(true);
-    expect(pendingInvite(d)).toEqual(p);
-    clearPendingInvite(d);
-    expect(pendingInvite(d)).toBeNull();
-
-    // The key in the link is the one the run was sealed with.
-    const experiment = experiments.getById(d, 'exp_k')!;
-    const vm = computeExperimentVerdict(d, {
-      experiment,
-      schedule: [],
-      sessions: [],
-      unsealPassphrase: p.key,
-    });
-    expect(vm.revealedMapping?.supplementLabel).toBe(p.cup);
-  });
-});

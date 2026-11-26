@@ -88,9 +88,6 @@ function ThemedStack() {
         <Stack.Screen name="privacy-settings" options={{ title: 'Privacy' }} />
         <Stack.Screen name="bad-reaction" options={{ title: '', presentation: 'modal' }} />
         <Stack.Screen name="invite" options={{ title: 'Invite friends' }} />
-        <Stack.Screen name="keyholder-invite" options={{ title: 'Your keyholder', headerBackVisible: false }} />
-        <Stack.Screen name="k/[token]" options={{ title: 'Keyholder' }} />
-        <Stack.Screen name="u/[token]" options={{ title: 'Unlock' }} />
         <Stack.Screen name="r/[code]" options={{ headerShown: false }} />
       </Stack>
     </>

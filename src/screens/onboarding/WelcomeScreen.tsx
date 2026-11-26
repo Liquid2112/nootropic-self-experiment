@@ -83,17 +83,17 @@ export function WelcomeScreen() {
         </View>
         <Text style={styles.promise}>Does your nootropic actually work?</Text>
         <Text style={styles.subtitle}>
-          Run a blinded 3 to 4 week experiment on one supplement and get a real answer, measured
-          on your own phone.
+          Run a 3 to 4 week experiment on one supplement and get a real answer, measured on your
+          own phone. Nothing to buy, no one else needed.
         </Text>
       </View>
 
       <View style={styles.benefits}>
         <BenefitRow
-          icon="eyeOff"
+          icon="calendar"
           tint={brand.lilacSoft}
-          title="Blinded, like a real trial"
-          body="You won't know which days are the real thing, so hype can't fake the result."
+          title="Randomized, like a real trial"
+          body="The app picks your ON and OFF days and your brain tests do the judging, so hype can't fake the result."
         />
         <BenefitRow
           icon="flame"

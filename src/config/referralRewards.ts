@@ -17,7 +17,7 @@ export const REFERRAL_REWARDS_LIVE = false;
 
 const COPY = {
   /** Home tile subtitle. */
-  homeTile: { live: 'You both get a month free', off: 'Blind-test with a friend' },
+  homeTile: { live: 'You both get a month free', off: 'Share Placebo with a friend' },
   /** Invite screen kicker. */
   inviteKicker: { live: 'GIVE A MONTH, GET A MONTH', off: 'SHARE PLACEBO' },
   /** Invite screen body. */
@@ -38,8 +38,6 @@ const COPY = {
   shareCardSuffix: { live: ' = a free month', off: '' },
   /** Appended to share messages; starts with a space. */
   messageSuffix: { live: ' We both get a free month of Placebo.', off: '' },
-  /** Keyholder mode description on Experiment setup; starts with a space. */
-  keyholderModeSuffix: { live: ' You both get a free month.', off: '' },
 } as const;
 
 export type RewardCopyKey = keyof typeof COPY;

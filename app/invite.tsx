@@ -1,40 +1,24 @@
 import { useCallback, useState } from 'react';
-import { Share, StyleSheet, Text, TextInput, View } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { Share, StyleSheet, Text } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { getDatabase } from '@/db';
 import { rewardCopy } from '@/config/referralRewards';
-import { Icon } from '@/brand';
-import {
-  canSendKey,
-  heldKeys,
-  markKeySent,
-  parseLink,
-  referralMessage,
-  referralState,
-  unlockMessage,
-  type HeldKey,
-  type ReferralState,
-} from '@/features/referral';
+import { referralMessage, referralState, type ReferralState } from '@/features/referral';
 import { WhoSentYou } from '@/features/referral/WhoSentYou';
-import { localDay } from '@/features/gamification';
-import { shortDateLabel } from '@/features/widget/model';
 import { Button, Card, Scaffold, brand, fonts, radius, spacing } from '@/ui';
 
-type Loaded = { me: ReferralState; keys: HeldKey[]; today: string };
+type Loaded = { me: ReferralState };
 
 function load(): Loaded {
-  const db = getDatabase();
-  return { me: referralState(db), keys: heldKeys(db), today: localDay(new Date()) };
+  return { me: referralState(getDatabase()) };
 }
 
 /**
- * Invite hub: your referral code, "Who sent you?", and the keys you hold for
- * friends (with a Send button that unlocks on their reveal day).
+ * Invite hub: your code to share with a friend, and "Who sent you?". Runs are
+ * solo, so there is no keyholder role any more; sharing is a plain invite.
  */
 export default function InviteScreen() {
   const [state, setState] = useState<Loaded>(load);
-  const [paste, setPaste] = useState('');
-  const [pasteError, setPasteError] = useState<string | null>(null);
   useFocusEffect(
     useCallback(() => {
       setState(load());
@@ -49,28 +33,6 @@ export default function InviteScreen() {
     }
   }
 
-  async function sendKey(k: HeldKey) {
-    try {
-      const res = await Share.share({ message: unlockMessage({ v: 1, run: k.run, key: k.key }, k.supplement) });
-      if (res.action !== Share.dismissedAction) {
-        markKeySent(getDatabase(), k.run);
-        setState(load());
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  function openPasted() {
-    const link = parseLink(paste);
-    if (!link || link.kind === 'r') {
-      setPasteError('That doesn’t look like a Placebo key link.');
-      return;
-    }
-    setPasteError(null);
-    router.push(link.kind === 'k' ? { pathname: '/k/[token]', params: { token: link.token } } : { pathname: '/u/[token]', params: { token: link.token } });
-  }
-
   return (
     <Scaffold>
       <Card style={styles.hero}>
@@ -79,52 +41,6 @@ export default function InviteScreen() {
         <Text style={styles.code}>{state.me.myCode}</Text>
         <Text style={styles.heroBody}>{rewardCopy('inviteBody')}</Text>
         <Button label="Share my code" onPress={() => void shareCode()} />
-      </Card>
-
-      <Card style={styles.card}>
-        <View style={styles.row}>
-          <Icon name="lock" size={20} color={brand.lilacDeep} />
-          <Text style={styles.cardTitle}>Keys you’re holding</Text>
-        </View>
-        {state.keys.length === 0 ? (
-          <Text style={styles.muted}>
-            When a friend makes you the keyholder for their blind test, their key shows up here.
-          </Text>
-        ) : (
-          state.keys.map((k) => {
-            const ready = canSendKey(k.reveal, state.today);
-            return (
-              <View key={k.run} style={styles.keyRow}>
-                <Text style={styles.keyTitle}>{`${k.from || 'A friend'}’s ${k.supplement} test`}</Text>
-                <Text style={styles.muted}>
-                  {`Cup ${k.cup} is the real one. Key ${k.key}. `}
-                  {k.sentAt ? 'Sent.' : ready ? 'Reveal day is here.' : `Unlocks ${shortDateLabel(k.reveal)}.`}
-                </Text>
-                {ready ? (
-                  <Button
-                    label={k.sentAt ? 'Send the key again' : 'Send the key'}
-                    variant={k.sentAt ? 'subtle' : 'primary'}
-                    onPress={() => void sendKey(k)}
-                  />
-                ) : null}
-              </View>
-            );
-          })
-        )}
-        <TextInput
-          value={paste}
-          onChangeText={(t) => {
-            setPaste(t);
-            setPasteError(null);
-          }}
-          placeholder="Paste a key link from a friend"
-          placeholderTextColor={brand.faint}
-          autoCapitalize="none"
-          autoCorrect={false}
-          style={styles.input}
-        />
-        {pasteError ? <Text style={styles.error}>{pasteError}</Text> : null}
-        {paste.trim().length > 0 ? <Button label="Open link" variant="secondary" onPress={openPasted} /> : null}
       </Card>
 
       {!state.me.referredBy && !state.me.creatorCode ? (

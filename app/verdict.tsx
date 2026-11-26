@@ -133,19 +133,6 @@ export default function VerdictScreen() {
           <PrimaryVerdict primary={vm.primary} monthlyCost={vm.monthlyCost} />
         )}
 
-        {vm.revealedMapping && (
-          <View style={styles.revealCard}>
-            <View style={styles.cupsRow}>
-              <Icon name="cups" size={22} color={brand.ink} />
-              <Text variant="headline">Unblinded</Text>
-            </View>
-            <Text tone="secondary">
-              {vm.revealedMapping.supplementLabel} was the supplement;{' '}
-              {vm.revealedMapping.placeboLabel} was the placebo.
-            </Text>
-          </View>
-        )}
-
         {vm.primaryNote && (
           <View style={styles.caveatCard}>
             <Icon name="moon" size={18} color={brand.muted} />

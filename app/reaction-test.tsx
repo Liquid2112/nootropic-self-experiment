@@ -160,7 +160,7 @@ export default function ReactionTestScreen() {
               </View>
               <Text variant="title3">Does your nootropic change this?</Text>
               <Text tone="secondary">
-                Run a blinded 3 to 4 week experiment with this test every day and get a real verdict
+                Run a randomized 3 to 4 week experiment with this test every day and get a real verdict
                 on whether it works for you.
               </Text>
               <Button label="Start an experiment" variant="secondary" onPress={() => router.push('/welcome')} />

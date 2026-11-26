@@ -3,14 +3,14 @@ import type { Quest } from '@/features/gamification';
 
 /** Icon for each quest and badge, so the UI never renders the engine's emoji. */
 export const QUEST_ICON: Record<Quest['id'], IconName> = {
-  dose: 'cups',
+  dose: 'bolt',
   check_in: 'brain',
   reaction: 'bolt',
 };
 
 export const BADGE_ICON: Record<string, IconName> = {
   first_checkin: 'flask',
-  first_dose: 'cups',
+  first_dose: 'bolt',
   perfect_day: 'sparkle',
   streak_3: 'flame',
   streak_7: 'calendar',

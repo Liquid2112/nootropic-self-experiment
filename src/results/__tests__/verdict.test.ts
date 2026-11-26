@@ -272,6 +272,17 @@ describe('computeExperimentVerdict — blinding', () => {
     expect(vm.revealedMapping).toBeNull();
   });
 
+  it('adds a belief check when check-ins carry an expectation rating', () => {
+    const { db, exp } = setup({ blindingMode: 'none' });
+    const schedule = makeSchedule(exp.id, () => true);
+    const plain = makeSessions(exp.id, () => true);
+    expect(computeExperimentVerdict(db, { experiment: exp, schedule, sessions: plain }).belief).toBeNull();
+    const rated = plain.map((s) => ({ ...s, expectation: 1 + (s.dayIndex % 5) }));
+    const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions: rated });
+    expect(vm.belief?.metric).toBe(vm.primary.metric);
+    expect(vm.belief?.sentence.length).toBeGreaterThan(0);
+  });
+
   it('unblinds a sealed run from the key and recovers the true ON effect', () => {
     const db = freshDb();
     // Build a sealed A/B schedule from the real blinding engine with a passphrase.

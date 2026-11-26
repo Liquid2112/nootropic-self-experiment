@@ -60,7 +60,7 @@ export const ShareCard = forwardRef<ViewRef, ShareCardProps>(function ShareCard(
         <View style={styles.cta}>
           <Text style={styles.ctaTitle}>Is yours working, or is it you?</Text>
           <Text style={styles.ctaBody}>
-            {`Test it blind on Placebo. Code `}
+            {`Test yours on Placebo. Code `}
             <Text style={styles.ctaCode}>{referralCode}</Text>
             {rewardCopy('shareCardSuffix')}
           </Text>

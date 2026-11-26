@@ -9,7 +9,6 @@ const KEYS: RewardCopyKey[] = [
   'codeSavedFriend',
   'shareCardSuffix',
   'messageSuffix',
-  'keyholderModeSuffix',
 ];
 
 describe('referral reward copy', () => {
