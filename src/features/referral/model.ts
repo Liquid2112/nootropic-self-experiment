@@ -20,6 +20,7 @@
 
 import { SHARE_LINK_BASE } from '@/config/links';
 import { shortDateLabel } from '@/features/widget/model';
+import { REFERRAL_REWARDS_LIVE, rewardCopy } from '@/config/referralRewards';
 
 /** Public base for shareable links (universal links / App Links). */
 export const LINK_BASE = SHARE_LINK_BASE;
@@ -186,7 +187,7 @@ export function parseLink(text: string): ParsedLink | null {
 export function keyholderInviteMessage(p: KeyholderPayload): string {
   return [
     `I'm running a blind test of ${p.supplement} on Placebo and I need you to be my keyholder.`,
-    `Open this on your phone (not mine!). It tells you how to fill two cups and keeps the key until ${shortDateLabel(p.reveal)}. We both get a free month of Placebo.`,
+    `Open this on your phone (not mine!). It tells you how to fill two cups and keeps the key until ${shortDateLabel(p.reveal)}.${rewardCopy('messageSuffix')}`,
     keyholderLink(p),
   ].join('\n\n');
 }
@@ -197,7 +198,7 @@ export function unlockMessage(p: UnlockPayload, supplement: string): string {
 
 export function referralMessage(code: string): string {
   return [
-    `I'm testing whether my supplements actually work, blind, with Placebo. Use my code ${code} and we both get a free month.`,
+    `I'm testing whether my supplements actually work, blind, with Placebo. Use my code ${code}${REFERRAL_REWARDS_LIVE ? ' and we both get a free month' : ''}.`,
     referralLink(code),
   ].join('\n\n');
 }

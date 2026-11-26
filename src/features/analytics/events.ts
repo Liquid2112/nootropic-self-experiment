@@ -31,6 +31,29 @@ export type AnalyticsEvent =
   | 'check_in_completed'
   | 'dose_logged';
 
+/**
+ * Events that may be sent without the user's opt-in: the onboarding and
+ * purchase funnel, which happens before any experiment or health data exists
+ * and says nothing about the person's health. Every other event (anything
+ * about a running experiment: starting it, check-ins, doses, run days, the
+ * verdict, invites around it) is health-adjacent, so it is sent only after the
+ * user opts in to "share anonymous progress counts" (FTC Health Breach
+ * Notification Rule and Washington's My Health My Data Act both treat sharing
+ * health-app activity without consent as a violation). Default-deny: a new
+ * event needs opt-in unless it is added here on purpose.
+ */
+export const CONSENT_FREE_EVENTS: readonly AnalyticsEvent[] = [
+  'onboarding_started',
+  'quiz_completed',
+  'paywall_viewed',
+  'trial_started',
+];
+
+/** True when this event may only be sent after the progress-counts opt-in. */
+export function needsProgressConsent(event: AnalyticsEvent): boolean {
+  return !CONSENT_FREE_EVENTS.includes(event);
+}
+
 export type PropValue = string | number | boolean;
 export type EventProps = Record<string, PropValue>;
 

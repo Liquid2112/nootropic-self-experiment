@@ -6,10 +6,11 @@
 import type { SqlDriver } from '@/db/driver';
 import { appState } from '@/db/repositories';
 import { createClient, type AnalyticsClient, type Transport } from './client';
-import type { AnalyticsEvent, EventProps } from './events';
+import { needsProgressConsent, type AnalyticsEvent, type EventProps } from './events';
 
 const ANON_ID_KEY = 'analytics_anon_id';
 const OPT_OUT_KEY = 'analytics_opt_out';
+const PROGRESS_CONSENT_KEY = 'analytics_progress_consent';
 const ONCE_PREFIX = 'analytics_once:';
 
 /** A random install id. Not tied to the Apple/Google account or the device. */
@@ -28,6 +29,24 @@ export function analyticsOptedOut(db: SqlDriver): boolean {
 
 export function setAnalyticsOptOut(db: SqlDriver, optOut: boolean): void {
   appState.set(db, OPT_OUT_KEY, optOut ? '1' : '0');
+}
+
+/**
+ * Whether the user opted in to sharing anonymous progress counts (run days,
+ * check-ins, doses, verdict reached). Off until they say yes.
+ */
+export function analyticsProgressConsent(db: SqlDriver): boolean {
+  return appState.get(db, PROGRESS_CONSENT_KEY) === '1';
+}
+
+export function setAnalyticsProgressConsent(db: SqlDriver, consent: boolean): void {
+  appState.set(db, PROGRESS_CONSENT_KEY, consent ? '1' : '0');
+}
+
+/** May this event be sent right now, given the user's choices? */
+export function mayTrack(db: SqlDriver, event: AnalyticsEvent): boolean {
+  if (analyticsOptedOut(db)) return false;
+  return !needsProgressConsent(event) || analyticsProgressConsent(db);
 }
 
 /**
@@ -78,7 +97,8 @@ export function createTracker(deps: TrackerDeps): Tracker {
   return {
     track(event, props) {
       try {
-        ready()?.client.capture(event, props);
+        const r = ready();
+        if (r && mayTrack(r.db, event)) r.client.capture(event, props);
       } catch {
         // Analytics must never break a screen.
       }
@@ -86,7 +106,9 @@ export function createTracker(deps: TrackerDeps): Tracker {
     trackOnce(onceKey, event, props) {
       try {
         const r = ready();
-        if (r && claimOnce(r.db, onceKey)) r.client.capture(event, props);
+        // Check consent before claiming, so an event skipped without consent
+        // isn't marked as sent.
+        if (r && mayTrack(r.db, event) && claimOnce(r.db, onceKey)) r.client.capture(event, props);
       } catch {
         // ignore
       }

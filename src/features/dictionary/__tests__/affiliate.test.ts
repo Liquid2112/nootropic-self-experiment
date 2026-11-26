@@ -29,3 +29,23 @@ describe('affiliateLinks', () => {
     }
   });
 });
+
+/**
+ * An entry with a buy button is advertising for that supplement (FTC: an
+ * affiliate is responsible for the claims next to its links), and FDA rules
+ * let supplements make structure/function claims, never disease claims. So
+ * the marketing-shaped lines of any entry with a buy link (tagline and the
+ * "what people claim" list) must not name a disease. The research section can
+ * still cite disease trials honestly.
+ */
+const DISEASE_TERMS =
+  /depress|alzheimer|dementia|parkinson|cancer|tumou?r|diabet|bipolar|insomnia|adhd|cognitive impairment|disorder|schizo|hypertens|mania|suicid|disease|ptsd|\bocd\b|seizure|epilep|covid|infection|\bcure|\btreat|prevent/i;
+
+describe('affiliate entries make no disease claims', () => {
+  it('keeps disease words out of the tagline and claims of every entry with a buy link', () => {
+    const offenders = DICTIONARY_ENTRIES.filter((e) => affiliateLinks(e).length > 0)
+      .filter((e) => DISEASE_TERMS.test([e.tagline, ...e.claims].join(' | ')))
+      .map((e) => e.id);
+    expect(offenders).toEqual([]);
+  });
+});

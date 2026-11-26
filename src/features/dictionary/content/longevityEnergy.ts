@@ -134,10 +134,10 @@ export const LONGEVITY_ENERGY_ENTRIES: DictionaryEntry[] = [
     kind: 'supplement',
     category: 'Antioxidant',
     goals: ['energy', 'longevity'],
-    tagline: 'An antioxidant with real data for diabetic nerve pain.',
+    tagline: 'An antioxidant with real data on nerve health.',
     mechanism:
       'A mitochondrial cofactor that works as an antioxidant and helps recycle other antioxidants such as vitamins C and E.',
-    claims: ['Anti-aging antioxidant', 'Better blood sugar control', 'Nerve health', 'More energy'],
+    claims: ['Anti-aging antioxidant', 'Healthy blood sugar', 'Nerve health', 'More energy'],
     research:
       'Meta-analyses of trials in diabetic neuropathy show symptom relief, mainly with intravenous use; oral results are weaker. Evidence for anti-aging or energy benefits in healthy people is lacking.',
     evidence: 'moderate',
@@ -236,7 +236,7 @@ export const LONGEVITY_ENERGY_ENTRIES: DictionaryEntry[] = [
     tagline: 'The broccoli sprout compound that flips on cell defenses.',
     mechanism:
       'Activates Nrf2, a switch that turns on the body’s own antioxidant and detoxification genes.',
-    claims: ['Detox support', 'Anti-inflammatory', 'Brain health', 'Cancer protection'],
+    claims: ['Detox support', 'Anti-inflammatory', 'Brain health', 'Cell protection'],
     research:
       'Small human trials show it engages detox pathways, and one small trial in young men with autism found better social behavior scores. Cancer and longevity claims come mainly from cell and animal studies.',
     evidence: 'limited',
@@ -385,10 +385,10 @@ export const LONGEVITY_ENERGY_ENTRIES: DictionaryEntry[] = [
     kind: 'supplement',
     category: 'Vitamin B1 derivative',
     goals: ['memory', 'longevity'],
-    tagline: 'A high-absorption B1 being tested in Alzheimer’s.',
+    tagline: 'A high-absorption form of vitamin B1.',
     mechanism:
       'A fat-soluble thiamine form that raises thiamine levels more than plain B1 and may block the buildup of glycation end products.',
-    claims: ['Nerve protection', 'Better memory', 'Blood sugar damage defense', 'Healthy aging'],
+    claims: ['Nerve protection', 'Better memory', 'Energy metabolism', 'Healthy aging'],
     research:
       'Small trials suggest benefit for diabetic nerve symptoms. A pilot trial in early Alzheimer’s found less decline on some measures than placebo, but it was small; larger trials are underway.',
     evidence: 'limited',

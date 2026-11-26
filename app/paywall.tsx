@@ -409,7 +409,10 @@ const styles = StyleSheet.create({
   stepTitle: { fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
   stepBody: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
   footer: { gap: 10 },
-  terms: { fontSize: 12, lineHeight: 16, fontFamily: fonts.regular, color: brand.muted, textAlign: 'center' },
+  // Auto-renewal terms must be clear and conspicuous next to the button
+  // (ROSCA, California's auto-renewal law, App Store 3.1.2): readable size,
+  // full-contrast muted ink, never the faint fine-print color.
+  terms: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted, textAlign: 'center' },
   links: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   link: { fontSize: 13, fontFamily: fonts.medium, color: brand.muted },
   noThanks: { alignSelf: 'center', paddingVertical: 6 },

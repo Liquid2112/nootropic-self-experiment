@@ -30,6 +30,7 @@ import {
 import { cancelDailyReminders, loadNotificationsAdapter, scheduleDailyReminders } from '@/features/notifications';
 import { RESUME_WARNING, activePause, endExperimentForSafety, resumeExperiment } from '@/features/safety';
 import { track, trackOnce } from '@/features/analytics';
+import { rewardCopy } from '@/config/referralRewards';
 import { refreshWidgets } from '@/features/widget/useWidgetSync';
 import {
   ActionTile,
@@ -472,7 +473,7 @@ export default function TodayScreen() {
           <ActionTile
             icon="gift"
             title="Invite friends"
-            subtitle="You both get a month free"
+            subtitle={rewardCopy('homeTile')}
             tint={brand.tangSoft}
             iconColor={brand.tang}
             onPress={() => router.push('/invite')}

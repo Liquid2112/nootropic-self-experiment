@@ -4,6 +4,7 @@ import { Icon, Logo, Brian } from '@/brand';
 import { brand, fonts } from '@/ui';
 import type { MetricVerdict } from '@/results';
 import { COMPLIANCE_DISCLAIMER } from '@/results';
+import { rewardCopy } from '@/config/referralRewards';
 
 /** The element type a ref to a View resolves to under the new RN architecture. */
 export type ViewRef = ComponentRef<typeof View>;
@@ -25,8 +26,8 @@ export type ShareCardProps = {
   blinded?: boolean;
   /**
    * The sharer's referral code. Printed as a call to action so every posted
-   * verdict is an invite: the viewer gets a free month with it, and so does
-   * the sharer.
+   * verdict is an invite (with a free month for both, once referral rewards
+   * are live: see src/config/referralRewards.ts).
    */
   referralCode?: string | null;
 };
@@ -61,7 +62,7 @@ export const ShareCard = forwardRef<ViewRef, ShareCardProps>(function ShareCard(
           <Text style={styles.ctaBody}>
             {`Test it blind on Placebo. Code `}
             <Text style={styles.ctaCode}>{referralCode}</Text>
-            {` = a free month`}
+            {rewardCopy('shareCardSuffix')}
           </Text>
         </View>
       ) : null}
