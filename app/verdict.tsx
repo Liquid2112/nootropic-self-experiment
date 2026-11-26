@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   center: { textAlign: 'center' },
   header: { gap: spacing.xs },
-  eyebrow: { fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 1.2, color: brand.tang },
+  eyebrow: { fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 1.2, color: brand.tangInk },
   hero: {
     backgroundColor: brand.ink,
     borderRadius: 28,

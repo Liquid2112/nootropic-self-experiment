@@ -9,7 +9,7 @@ import {
 
 import { AppText } from './AppText';
 import { useTheme } from './theme';
-import type { Theme } from './tokens';
+import { brand, type Theme } from './tokens';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'subtle';
 
@@ -31,7 +31,7 @@ type VariantColors = {
   background: string;
   backgroundPressed: string;
   border: string;
-  text: 'onAccent' | 'accent' | 'textPrimary';
+  text: 'onAccent' | 'accent' | 'textPrimary' | 'textSecondary';
   spinner: string;
 };
 
@@ -42,7 +42,7 @@ function variantColors(theme: Theme, variant: ButtonVariant): VariantColors {
       // free to mean "signature / reward" instead of "every button".
       return {
         background: theme.colors.textPrimary,
-        backgroundPressed: '#2B2836',
+        backgroundPressed: brand.ink2,
         border: theme.colors.textPrimary,
         text: 'onAccent',
         spinner: theme.colors.onAccent,
@@ -81,7 +81,17 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const theme = useTheme();
-  const colors = variantColors(theme, variant);
+  // Disabled reads as "not yet" in the brand's own paper tones, not as a
+  // washed-out grey copy of the live button.
+  const colors: VariantColors = disabled
+    ? {
+        background: theme.colors.fill,
+        backgroundPressed: theme.colors.fill,
+        border: theme.colors.border,
+        text: 'textSecondary',
+        spinner: theme.colors.textSecondary,
+      }
+    : variantColors(theme, variant);
   const isInactive = disabled || loading;
 
   return (
@@ -104,7 +114,6 @@ export function Button({
               paddingHorizontal: theme.spacing.xl,
             },
             fullWidth ? styles.fullWidth : null,
-            disabled ? styles.disabled : null,
             style,
           ]}
         >
@@ -130,8 +139,5 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     alignSelf: 'stretch',
-  },
-  disabled: {
-    opacity: 0.4,
   },
 });

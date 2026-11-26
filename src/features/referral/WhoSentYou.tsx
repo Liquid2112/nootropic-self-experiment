@@ -93,6 +93,6 @@ const styles = StyleSheet.create({
     backgroundColor: brand.white,
   },
   actions: { gap: spacing.sm },
-  ok: { fontFamily: fonts.medium, fontSize: 14, color: brand.mint },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: brand.rose },
+  ok: { fontFamily: fonts.medium, fontSize: 14, color: brand.mintInk },
+  error: { fontFamily: fonts.medium, fontSize: 14, color: brand.roseInk },
 });

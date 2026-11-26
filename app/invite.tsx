@@ -140,7 +140,7 @@ export default function InviteScreen() {
 
 const styles = StyleSheet.create({
   hero: { gap: spacing.sm, backgroundColor: brand.tangSoft, borderColor: brand.tangSoft },
-  kicker: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 1.2, color: brand.tangDeep },
+  kicker: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 1.2, color: brand.tangInk },
   heroTitle: { fontFamily: fonts.medium, fontSize: 14, color: brand.muted },
   code: { fontFamily: fonts.display, fontSize: 40, letterSpacing: 3, color: brand.ink },
   heroBody: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: brand.ink2, marginBottom: spacing.sm },
@@ -161,5 +161,5 @@ const styles = StyleSheet.create({
     color: brand.ink,
     backgroundColor: brand.white,
   },
-  error: { fontFamily: fonts.medium, fontSize: 13, color: brand.rose },
+  error: { fontFamily: fonts.medium, fontSize: 13, color: brand.roseInk },
 });

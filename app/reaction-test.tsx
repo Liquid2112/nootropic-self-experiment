@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  speedText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.tangDeep },
+  speedText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.tangInk },
   footer: {
     gap: spacing.sm,
   },
