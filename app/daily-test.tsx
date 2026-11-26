@@ -32,6 +32,7 @@ import {
   emptyContext,
   localHourOf,
   SLEEP_HOUR_OPTIONS,
+  EXPECTATION_OPTIONS,
   type DailyContext,
   type DeviceInfoReader,
   type FormFactor,
@@ -510,6 +511,15 @@ function normalizeResponses(
 
 // --- Context step ----------------------------------------------------------
 
+/** Chip labels for the 1-5 belief check. */
+const EXPECTATION_LABELS: Record<number, string> = {
+  1: '1 Foggy',
+  2: '2',
+  3: '3',
+  4: '4',
+  5: '5 Sharp',
+};
+
 function ContextStep({
   total,
   tests,
@@ -535,8 +545,8 @@ function ContextStep({
         title="Before you start"
         subtitle={
           askSleep
-            ? 'Three quick taps so the analysis can account for your day.'
-            : 'Two quick taps so the analysis can account for your day.'
+            ? 'Four quick taps so the analysis can account for your day.'
+            : 'Three quick taps so the analysis can account for your day.'
         }
       />
 
@@ -574,6 +584,24 @@ function ContextStep({
           <InkChip label="No" selected={!context.caffeine} onPress={() => onChange({ ...context, caffeine: false })} />
           <InkChip label="Yes" selected={context.caffeine} onPress={() => onChange({ ...context, caffeine: true })} />
         </View>
+      </View>
+
+      <View style={ink.darkCard}>
+        <View style={styles.labelRow}>
+          <Icon name="sparkle" size={18} color={brand.lilac} />
+          <Text style={ink.label}>How sharp do you expect to be right now?</Text>
+        </View>
+        <View style={ink.chipRow}>
+          {EXPECTATION_OPTIONS.map((v) => (
+            <InkChip
+              key={v}
+              label={EXPECTATION_LABELS[v] ?? String(v)}
+              selected={context.expectation === v}
+              onPress={() => onChange({ ...context, expectation: v })}
+            />
+          ))}
+        </View>
+        <Text style={styles.beliefHint}>Gut feeling, no wrong answer. It shows how much belief moves your scores.</Text>
       </View>
 
       <View style={ink.darkCard}>
@@ -672,6 +700,7 @@ const styles = StyleSheet.create({
   sleepSyncedRow: { gap: spacing.xs },
   sleepOverride: { fontSize: 15, fontFamily: fonts.semibold, color: brand.lilac },
   hidden: { display: 'none' },
+  beliefHint: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.6)' },
   lightCard: { gap: spacing.lg, borderRadius: 24 },
   lineup: { gap: spacing.sm, paddingTop: spacing.xs },
   lineupRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

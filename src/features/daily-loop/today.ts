@@ -6,10 +6,8 @@
  * today, whether the dose is already marked taken, and the consecutive-day
  * streak. All UI-free and deterministic so a test pins every branch.
  *
- * Blinding rule (critical): during a blinded run the user must never see which
- * arm today is. For a sealed/self-blind experiment the instruction is phrased
- * in terms of a numbered cup (A/B map to cups, not to ON/OFF), and the raw arm
- * is never returned to the UI. Only an unblinded ('none') run names ON/OFF.
+ * Reveal rule: runs are solo and open-label, so today's ON/OFF call is shown,
+ * but only today's. Nothing here returns a future day's arm.
  */
 import type { BlindingMode, Experiment, ScheduleDay } from '@/db';
 import { BASELINE_DAYS, baselineDayIndex } from '@/engines/experiment';
@@ -19,8 +17,10 @@ export type TodayView = {
   dayNumber: number;
   /** Total planned days. */
   totalDays: number;
-  /** Human instruction for today's dose. Never reveals the arm when blinded. */
+  /** Human instruction for today's dose. */
   instruction: string;
+  /** Today's ON/OFF call, or null outside the run (baseline, finished). */
+  arm: 'ON' | 'OFF' | null;
   /** True once the dose for today is marked taken. */
   taken: boolean;
   /** ISO timestamp the dose was marked taken, or null. */
@@ -62,37 +62,32 @@ export function checkInDayIndex(
 }
 
 /**
- * Map an arm to the instruction the user reads, respecting blinding.
+ * Map an arm to the instruction the user reads.
  *
- * - none (unblinded): the real arm is shown ("Take your capsule" / "No capsule
- *   today").
- * - self_blind / sealed: the arm is hidden behind cup labels. A/B map directly
- *   to cup A/B; an ON/OFF schedule under blinding is still phrased as a cup so
- *   the assignment is not leaked.
+ * Runs are solo and open-label: the app randomizes the ON/OFF days and reveals
+ * only today's call each morning, so the user can't save the supplement for
+ * days they already feel good. Future days are never shown.
+ *
+ * Legacy blinded runs (A/B arms from before blinding was dropped) fall back to
+ * a neutral "day A / day B" wording so nothing reveals a sealed assignment.
  */
 export function instructionForDay(
   blindingMode: BlindingMode,
   day: ScheduleDay,
 ): string {
-  if (blindingMode === 'none') {
-    switch (day.arm) {
-      case 'ON':
-        return 'Take your capsule today (ON day).';
-      case 'OFF':
-        return 'No capsule today (OFF day).';
-      case 'A':
-        return 'Take the capsule from cup A today.';
-      case 'B':
-        return 'Take the capsule from cup B today.';
-    }
+  if (blindingMode === 'none' && day.arm === 'ON') {
+    return 'ON day. Take your usual dose, then do your check-in.';
   }
-  // Blinded: never reveal ON/OFF. Present a cup to take from. An ON/OFF day is
-  // mapped to a cup label by parity of the day so the user still has a concrete
-  // instruction without learning the assignment.
-  if (day.arm === 'A' || day.arm === 'ON') {
-    return 'Take the capsule from cup A today.';
+  if (blindingMode === 'none' && day.arm === 'OFF') {
+    return 'OFF day. Skip it today, but still do your check-in.';
   }
-  return 'Take the capsule from cup B today.';
+  return day.arm === 'A' || day.arm === 'ON' ? 'Today is day A.' : 'Today is day B.';
+}
+
+/** Today's revealed arm for an open run, or null when there's none to show. */
+export function revealedArm(blindingMode: BlindingMode, day: ScheduleDay | undefined): 'ON' | 'OFF' | null {
+  if (!day || blindingMode !== 'none') return null;
+  return day.arm === 'ON' ? 'ON' : day.arm === 'OFF' ? 'OFF' : null;
 }
 
 /** Find the schedule day whose date matches the given ISO date (YYYY-MM-DD). */
@@ -151,6 +146,7 @@ export function buildTodayView({
         dayNumber: baselineDayNumber,
         totalDays: BASELINE_DAYS,
         instruction: baselineInstruction(baselineDayNumber),
+        arm: null,
         taken: false,
         takenAt: null,
         streak: 0,
@@ -163,6 +159,7 @@ export function buildTodayView({
       dayNumber: 0,
       totalDays,
       instruction: 'No scheduled dose for today.',
+      arm: null,
       taken: false,
       takenAt: null,
       streak: computeLatestStreak(schedule, isoDate),
@@ -176,6 +173,7 @@ export function buildTodayView({
     dayNumber: today.dayIndex + 1,
     totalDays,
     instruction: instructionForDay(experiment.blindingMode, today),
+    arm: revealedArm(experiment.blindingMode, today),
     taken: today.taken,
     takenAt: today.takenAt,
     streak: computeStreak(schedule, today.dayIndex),

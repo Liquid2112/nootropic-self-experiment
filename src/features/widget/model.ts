@@ -8,10 +8,9 @@
  * schedule and the activity already recorded, so it is unit tested without the
  * native widget module (see ./native.ts for the glue).
  *
- * Blinding rule (critical): nothing here reads a test score, and a blinded run
- * only ever names a cup letter (the same wording `instructionForDay` uses on the
- * Today screen). The widget can't leak which days are active, because it never
- * knows.
+ * Reveal rule: nothing here reads a test score, and only today's ON/OFF call
+ * is shown (the same call `instructionForDay` makes on the Today screen), never
+ * a future day's.
  */
 import type { BlindingMode, Experiment, ScheduleDay } from '@/db/types';
 import { BASELINE_DAYS, addDays, baselineDayIndex } from '@/engines/experiment';
@@ -28,7 +27,7 @@ export type WidgetSnapshot = {
   phase: WidgetPhase;
   /** "Day 9 of 28", "Baseline 2 of 3", "Verdict ready". */
   headline: string;
-  /** Short instruction: "Cup A", "Capsule day", "No capsule", "Test only". */
+  /** Short instruction: "ON day", "OFF day", "Test only". */
   instruction: string;
   /** One-line nudge under the instruction. */
   nudge: string;
@@ -97,16 +96,16 @@ function ymd(iso: string): [number, number, number] {
 }
 
 /**
- * The short instruction the widget shows. Mirrors `instructionForDay`: a
- * blinded run only ever names a cup, an open run names ON/OFF.
+ * The short instruction the widget shows. Mirrors `instructionForDay`: an open
+ * run names today's ON/OFF, a legacy blinded run only a neutral day letter.
  */
 export function shortInstruction(blindingMode: BlindingMode, day: ScheduleDay): string {
   if (blindingMode === 'none') {
-    if (day.arm === 'ON') return 'Capsule day';
-    if (day.arm === 'OFF') return 'No capsule';
-    return `Cup ${day.arm}`;
+    if (day.arm === 'ON') return 'ON day';
+    if (day.arm === 'OFF') return 'OFF day';
+    return `Day ${day.arm}`;
   }
-  return day.arm === 'A' || day.arm === 'ON' ? 'Cup A' : 'Cup B';
+  return day.arm === 'A' || day.arm === 'ON' ? 'Day A' : 'Day B';
 }
 
 /**
@@ -142,7 +141,7 @@ export function buildWidgetSnapshot(input: WidgetInput): WidgetSnapshot {
     return {
       phase: 'empty',
       headline: 'Is it working, or is it you?',
-      instruction: 'Start a blind test',
+      instruction: 'Start an experiment',
       nudge: 'Find out in 28 days',
       doseDone: false,
       checkInDone: false,

@@ -19,6 +19,9 @@ import type { Experiment, HealthMetric, HealthNight, Result, ScheduleDay, TestSe
 import { type ArmMapping, addDays, unsealArmMapping } from '@/engines/experiment';
 import {
   analyzeMetric,
+  beliefCheck,
+  type BeliefCheck,
+  type BeliefObservation,
   CORE_METRICS,
   HEALTH_METRICS,
   HEALTH_PRIMARY_DB,
@@ -96,6 +99,12 @@ export type VerdictViewModel = {
   blindingState: 'blinded' | 'unblinded';
   /** Shown only for open (unblinded) runs. */
   unblindedCaveat: string | null;
+  /**
+   * How much of the primary metric's ON effect could be expectation, from the
+   * daily "how sharp do you expect to be" rating. Null when too few check-ins
+   * carry a rating, or the primary is a Health metric (no same-day rating).
+   */
+  belief: BeliefCheck | null;
   /** The revealed A/B -> ON/OFF mapping for a blinded run, else null. */
   revealedMapping: RevealedMapping | null;
   /** "$X/month" or null when no price is known. */
@@ -257,6 +266,26 @@ function healthObservationsFor(
   return rows.sort((a, b) => a.t - b.t);
 }
 
+/** Belief-check rows: valid check-ins with both a metric value and a belief rating. */
+function beliefObservationsFor(
+  metric: MetricKey,
+  sessions: TestSession[],
+  onByDay: Map<number, 0 | 1>,
+): BeliefObservation[] {
+  const column = METRIC_COLUMN[metric];
+  if (!column) return [];
+  const rows: BeliefObservation[] = [];
+  for (const s of sessions) {
+    if (!s.valid) continue;
+    const on = onByDay.get(s.dayIndex);
+    const raw = s[column];
+    const belief = s.expectation;
+    if (on === undefined || typeof raw !== 'number' || typeof belief !== 'number') continue;
+    rows.push({ y: raw, on, t: s.dayIndex, belief });
+  }
+  return rows.sort((a, b) => a.t - b.t);
+}
+
 /** Build the not-enough-data verdict for a metric that can't be analyzed. */
 function notEnoughDataVerdict(metric: MetricKey): MetricVerdict {
   return {
@@ -409,6 +438,10 @@ export function computeExperimentVerdict(
     adherenceMet: adherence.meetsGate,
     blindingState,
     unblindedCaveat: blindingState === 'unblinded' ? UNBLINDED_CAVEAT : null,
+    belief:
+      blindingState === 'unblinded' && adherence.meetsGate
+        ? beliefCheck(primary, beliefObservationsFor(primary, sessions, onByDay))
+        : null,
     revealedMapping: revealed,
     monthlyCost,
     disclaimer: COMPLIANCE_DISCLAIMER,

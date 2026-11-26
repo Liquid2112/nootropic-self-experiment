@@ -85,6 +85,8 @@ export type TestSession = {
   recallScore?: number | null;
   /** Calm check: 0..100, higher is calmer. */
   calmScore?: number | null;
+  /** Expected sharpness before the check-in, 1 (foggy) to 5 (sharp). Null when skipped. */
+  expectation?: number | null;
   note: string | null;
   valid: boolean;
 };
