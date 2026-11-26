@@ -13,7 +13,7 @@ Planned screens (one per `app/` route):
 | `goal-picker`         | Goal + Supplement picker   |
 | `experiment-setup`    | Experiment setup           |
 | `index`               | Today (home)               |
-| `daily-test`          | Daily test (PVT + n-back)  |
+| `daily-test`          | Daily test (picked battery) |
 | `progress`            | Progress charts            |
 | `verdict`             | Verdict                    |
 | `evidence-card`       | Evidence card              |

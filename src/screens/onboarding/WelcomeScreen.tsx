@@ -78,7 +78,7 @@ export function WelcomeScreen() {
         <BenefitRow
           icon="flame"
           tint={brand.tangSoft}
-          title="90 seconds a day"
+          title="2 minutes a day"
           body="A quick reaction and memory check-in. Keep your streak, earn XP, unlock badges."
         />
         <BenefitRow

@@ -54,7 +54,8 @@ export function GoalPickerScreen() {
 
   function selectGoal(goal: Goal) {
     tapLight();
-    update({ goal });
+    // A new goal starts from that goal's own default tests.
+    update({ goal, battery: null });
   }
 
   function selectCurated(s: Supplement) {

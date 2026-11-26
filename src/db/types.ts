@@ -41,6 +41,12 @@ export type Experiment = {
    * stored (treated as not-yet-unsealable for self-blind).
    */
   seed: string | null;
+  /**
+   * Test ids in the daily battery picked at setup (see features/battery).
+   * Null or absent on runs created before the battery could be chosen; those
+   * ran the reaction test and 2-back.
+   */
+  battery?: string[] | null;
 };
 
 export type ScheduleArm = 'ON' | 'OFF' | 'A' | 'B';
@@ -69,6 +75,16 @@ export type TestSession = {
   mood: number | null;
   sleepHours: number | null;
   caffeine: boolean;
+  /** Stroop: incongruent minus congruent median RT (ms). Null when not run. */
+  stroopInterferenceMs?: number | null;
+  /** Stroop: share of correct answers, 0..1. Stored for context, not analyzed. */
+  stroopAccuracy?: number | null;
+  /** Symbol-digit coding: correct answers per minute. */
+  symbolPerMin?: number | null;
+  /** Word memory: hits minus false alarms. */
+  recallScore?: number | null;
+  /** Calm check: 0..100, higher is calmer. */
+  calmScore?: number | null;
   note: string | null;
   valid: boolean;
 };

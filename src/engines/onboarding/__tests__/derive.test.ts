@@ -11,7 +11,7 @@ import { selectPrimaryMetric } from '@/engines/stats/metrics';
 describe('primaryMetricForGoal', () => {
   it('maps each goal to a distinct test_session metric column', () => {
     const metrics = GOALS.map(primaryMetricForGoal);
-    expect(metrics).toEqual(['pvt_median_ms', 'nback_dprime', 'mood', 'energy']);
+    expect(metrics).toEqual(['pvt_median_ms', 'nback_dprime', 'calm_score', 'energy']);
     // All distinct so each goal is judged on its own column.
     expect(new Set(metrics).size).toBe(GOALS.length);
   });

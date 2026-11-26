@@ -143,6 +143,41 @@ describe('computeExperimentVerdict — primary/secondary selection', () => {
   });
 });
 
+describe('computeExperimentVerdict — the picked battery', () => {
+  /** Calm scores that rise ~12 points on ON days. */
+  function withCalm(sessions: TestSession[]): TestSession[] {
+    return sessions.map((s) => {
+      const on = s.dayIndex % 2 === 0 ? 1 : 0;
+      return { ...s, calmScore: 55 + noise(s.dayIndex) + (on ? 12 : 0), stroopInterferenceMs: 90 + noise(s.dayIndex * 3) };
+    });
+  }
+
+  it('judges a calm goal on the calm check and lists only the battery\u2019s metrics', () => {
+    const { db, exp } = setup({ goal: 'calm', primaryMetric: 'calm_score', battery: ['calm', 'pvt', 'stroop'] });
+    const schedule = makeSchedule(exp.id, () => true);
+    const sessions = withCalm(makeSessions(exp.id, () => true));
+    const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
+
+    expect(vm.primary.metric).toBe('calmScore');
+    expect(vm.primary.verdictSentence).toBe('Measurable improvement for you.');
+    expect(vm.primary.effectSentence).toContain('calm score');
+    const secondary = vm.secondary.map((s) => s.metric);
+    expect(secondary).toContain('stroopInterferenceMs');
+    expect(secondary).toContain('pvtMedianMs');
+    // No 2-back in this battery, so it isn't listed.
+    expect(secondary).not.toContain('nbackDprime');
+  });
+
+  it('keeps an older calm run (no battery saved) on the mood rating', () => {
+    const { db, exp } = setup({ goal: 'calm', primaryMetric: 'mood' });
+    const schedule = makeSchedule(exp.id, () => true);
+    const sessions = makeSessions(exp.id, () => true);
+    const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
+    expect(vm.primary.metric).toBe('mood');
+    expect(vm.secondary.map((s) => s.metric)).not.toContain('calmScore');
+  });
+});
+
 describe('computeExperimentVerdict — verdict + plain-unit formatting', () => {
   it('reports a measurable improvement with a plain-unit "faster" sentence', () => {
     const { db, exp } = setup();

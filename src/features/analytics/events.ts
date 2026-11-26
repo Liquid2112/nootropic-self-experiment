@@ -40,12 +40,12 @@ export const ALLOWED_PROPS: Record<AnalyticsEvent, readonly string[]> = {
   quiz_completed: [],
   paywall_viewed: ['source'],
   trial_started: ['plan_period', 'trial_days'],
-  experiment_started: ['blinding_mode', 'length_days'],
+  experiment_started: ['blinding_mode', 'length_days', 'tests_count', 'tests_customized'],
   baseline_completed: [],
   experiment_completed: ['length_days', 'days_checked_in'],
   verdict_shared: [],
   run_day_active: ['run_day', 'phase'],
-  check_in_completed: ['run_day', 'phase'],
+  check_in_completed: ['run_day', 'phase', 'tests_count'],
   dose_logged: ['run_day'],
 };
 

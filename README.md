@@ -71,7 +71,7 @@ src/
     seed.ts           Curated ~30-supplement seed list
     index.ts          getDatabase() + public re-exports
     __tests__/        Jest tests + in-memory test driver
-  engines/            Cognitive-test engine (PVT + 2-back); stats reserved
+  engines/            Cognitive-test engine (PVT, 2-back, Stroop, symbol code, word memory, calm check); stats
   features/
     daily-loop/       Pure Today-view, context, off-window, timer, device,
                       session-assembly logic (UI-free, fully unit-tested)
@@ -87,10 +87,14 @@ src/
 - **Today (`app/index.tsx`)** — the hub: Day X of N, today's dose instruction,
   Mark taken, Start check-in, and the streak. During a blinded run the arm is
   never revealed; the instruction is phrased as a numbered cup.
-- **Daily test (`app/daily-test.tsx`)** — a full-screen ~90-second flow: pre-test
-  context (sleep, caffeine, phone/tablet), a PVT timed with the high-resolution
-  clock (`performance.now`), a letter 2-back, and three 0–10 sliders plus an
-  optional note. Raw trials are scored through the cognitive-test engine; one
+- **Daily test (`app/daily-test.tsx`)** — a full-screen ~2-minute flow: pre-test
+  context (sleep, caffeine, phone/tablet), then the run's own test battery, then
+  three 0–10 sliders plus an optional note. The battery is picked at setup from
+  six tests (`src/features/battery`): reaction time (PVT, high-resolution
+  clock), letter 2-back, color clash (Stroop), symbol code (digit-symbol
+  substitution), word memory (delayed recognition), and a four-item calm check.
+  The goal's own test is locked on; runs created before the picker use PVT +
+  2-back. Raw trials are scored through the cognitive-test engine; one
   `test_session` row is persisted, with off-window and abandoned/invalid runs
   flagged.
 - **Notifications** — a morning dose reminder and a check-in-window reminder,

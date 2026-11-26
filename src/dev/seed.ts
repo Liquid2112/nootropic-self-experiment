@@ -62,6 +62,8 @@ export function seedDemoData(db: SqlDriver): void {
       lengthDays: 21,
       blindingMode: 'none',
       testWindow: 'morning',
+      // The focus defaults plus the two optional tasks, so the demo shows all six.
+      battery: ['pvt', 'stroop', 'symbol', 'recall', 'calm'],
       startDate: localDay(daysAgo(START_AGO)),
     },
     { experimentId: EXPERIMENT_ID, seed: 'demo-seed-1' },
@@ -129,6 +131,11 @@ function insertSession(db: SqlDriver, dayIndex: number, at: Date, arm: string, i
     mood: Math.min(10, 6 + Math.round(rand(i + 13) * 2)),
     sleepHours: Math.round((6.5 + rand(i + 3) * 1.5) * 10) / 10,
     caffeine: on,
+    stroopInterferenceMs: Math.round((on ? 78 : 96) + jitter * 20),
+    stroopAccuracy: Math.round((0.92 + jitter * 0.06) * 100) / 100,
+    symbolPerMin: Math.round((on ? 54 : 49) + jitter * 5 + i * 0.3),
+    recallScore: Math.min(10, (on ? 7 : 6) + Math.round(rand(i + 5) * 2)),
+    calmScore: Math.min(100, (on ? 63 : 58) + Math.round(rand(i + 11) * 17)),
     note: null,
     valid: true,
   });

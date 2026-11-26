@@ -109,6 +109,7 @@ export function createExperiment(
     status: 'active',
     sealedKey: schedule.sealedKey,
     seed: deps.seed,
+    battery: selections.battery && selections.battery.length > 0 ? [...selections.battery] : null,
   };
 
   experiments.insert(db, experiment);

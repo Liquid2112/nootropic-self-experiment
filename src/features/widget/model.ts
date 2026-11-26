@@ -197,7 +197,7 @@ export function buildWidgetSnapshot(input: WidgetInput): WidgetSnapshot {
       instruction: 'Test only',
       nudge: input.checkInDone
         ? 'Baseline logged. No capsule yet.'
-        : 'No capsule yet. Just the 90-second test.',
+        : 'No capsule yet. Just the 2-minute test.',
       doseDone: false,
       checkInDone: input.checkInDone,
       windowStartMs,
@@ -249,7 +249,7 @@ export function nudgeFor(s: {
   streak: number;
 }): string {
   if (!s.doseDone && !s.checkInDone) return 'Dose + 90-sec check-in';
-  if (!s.checkInDone) return 'Check-in left: 90 seconds';
+  if (!s.checkInDone) return 'Check-in left: 2 minutes';
   if (!s.doseDone) return 'Log your dose';
   if (s.daysToVerdict <= 3) return `${s.daysToVerdict} day${s.daysToVerdict === 1 ? '' : 's'} to the reveal`;
   if (s.streak >= 3) return `${s.streak}-day streak. See you tomorrow.`;

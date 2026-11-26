@@ -15,6 +15,8 @@ import {
   type OnboardingSelections,
 } from '@/engines/onboarding';
 import { Button, Chip, Scaffold, brand, fonts } from '@/ui';
+import { TestPicker } from './TestPicker';
+import { DEFAULT_BATTERY, validateBattery } from '@/features/battery';
 import { Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
@@ -25,7 +27,7 @@ import { track } from '@/features/analytics';
  * Screen 3 — Experiment setup.
  *
  * Length (21 / 28 days), blinding mode (open / friend-blinded / self-blinded),
- * and a daily test-time window. On confirm it validates and calls the
+ * the daily test battery, and a daily test-time window. On confirm it validates and calls the
  * experiment-design engine via createExperiment, which stores the experiment
  * row and schedule_day rows. The generated arm assignment is never surfaced
  * here: a blinded run stores only its sealed key.
@@ -68,6 +70,13 @@ export function ExperimentSetupScreen() {
   const { state, update, reset } = useOnboarding();
   const [submitting, setSubmitting] = useState(false);
 
+  // The tests the run will use: the user's picks, or the goal's defaults.
+  const battery = useMemo(
+    () => state.battery ?? (state.goal ? DEFAULT_BATTERY[state.goal] : []),
+    [state.battery, state.goal],
+  );
+  const batteryError = state.goal ? validateBattery(state.goal, battery) : null;
+
   const selectedBlinding = useMemo(
     () => BLINDING_OPTIONS.find((o) => o.mode === state.blindingMode) ?? BLINDING_OPTIONS[0],
     [state.blindingMode],
@@ -84,6 +93,7 @@ export function ExperimentSetupScreen() {
             lengthDays: state.lengthDays,
             blindingMode: state.blindingMode,
             testWindow: state.testWindow,
+            battery,
             // The run starts after the 3-day baseline: today through the next
             // two days are baseline (test only, no supplement), day 0 is day 4.
             startDate: addDays(state.startDate, BASELINE_DAYS),
@@ -92,11 +102,11 @@ export function ExperimentSetupScreen() {
             friendPassphrase: state.blindingMode === 'sealed' ? 'generated-on-start' : state.friendPassphrase,
           }
         : null,
-    [state],
+    [state, battery],
   );
 
   const errors = selections ? validateSelections(selections) : [];
-  const canConfirm = selections !== null && errors.length === 0 && !submitting;
+  const canConfirm = selections !== null && errors.length === 0 && batteryError === null && !submitting;
 
   // Set when the paywall was shown for this confirm, so returning from a
   // successful purchase finishes starting the experiment.
@@ -110,7 +120,13 @@ export function ExperimentSetupScreen() {
       const db = getDatabase();
       const deps = { experimentId: newExperimentId(), seed: newScheduleSeed() };
       // Funnel: onboarding finished. Only the run's shape, never the supplement or goal.
-      const started = { blinding_mode: selections.blindingMode, length_days: selections.lengthDays };
+      // Test count and whether the defaults were changed; never which tests.
+      const started = {
+        blinding_mode: selections.blindingMode,
+        length_days: selections.lengthDays,
+        tests_count: battery.length,
+        tests_customized: state.battery !== null,
+      };
       if (selections.blindingMode === 'sealed') {
         // Seal with a fresh key and hand it to a keyholder next.
         startKeyholderRun(db, selections, deps, state.keyholderFromName);
@@ -128,7 +144,7 @@ export function ExperimentSetupScreen() {
       const message = err instanceof Error ? err.message : 'Could not create the experiment.';
       Alert.alert('Setup failed', message);
     }
-  }, [selections, reset, router, state.keyholderFromName]);
+  }, [selections, reset, router, state.keyholderFromName, state.battery, battery.length]);
 
   async function onConfirm() {
     if (!selections) {
@@ -256,6 +272,16 @@ export function ExperimentSetupScreen() {
           </View>
         ) : null}
       </Section>
+
+      {state.goal ? (
+        <Section
+          icon="brain"
+          title="Your daily tests"
+          caption="Your goal's test is locked in. Add or swap the rest. You keep the same set for the whole run so every day compares fairly."
+        >
+          <TestPicker goal={state.goal} tests={battery} onChange={(tests) => update({ battery: tests })} />
+        </Section>
+      ) : null}
 
       <Section icon="calendar" title="Daily test time" caption="Test at the same time each day for a fair comparison.">
         <View style={styles.chipRow} testID="test-window-slider">
