@@ -71,7 +71,7 @@ export function SymbolTask({
       <View style={styles.keyRow} accessibilityLabel="Symbol key">
         {keyByDigit.map(({ digit, symbolId }) => (
           <View key={digit} style={styles.keyCell}>
-            <SymbolGlyph id={symbolId} size={22} color={brand.white} />
+            <SymbolGlyph id={symbolId} size={22} color={brand.ink} />
             <View style={styles.keyRule} />
             <Text style={styles.keyDigit}>{digit}</Text>
           </View>
@@ -79,7 +79,7 @@ export function SymbolTask({
       </View>
 
       <View style={styles.target}>
-        <SymbolGlyph id={symbol} size={84} color={brand.lilac} strokeWidth={1.8} />
+        <SymbolGlyph id={symbol} size={84} color={brand.lilacDeep} strokeWidth={1.8} />
       </View>
 
       <View style={styles.pad}>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   keyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: brand.ink2,
+    backgroundColor: brand.white,
     borderRadius: 18,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
@@ -113,14 +113,14 @@ const styles = StyleSheet.create({
     borderColor: HAIRLINE,
   },
   keyCell: { alignItems: 'center', gap: 6, flex: 1 },
-  keyRule: { width: 16, height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.3)' },
-  keyDigit: { fontSize: 15, fontFamily: fonts.semibold, color: brand.white },
+  keyRule: { width: 16, height: StyleSheet.hairlineWidth, backgroundColor: brand.faint },
+  keyDigit: { fontSize: 15, fontFamily: fonts.semibold, color: brand.ink },
   target: {
     alignSelf: 'center',
     width: 148,
     height: 148,
     borderRadius: 36,
-    backgroundColor: brand.ink2,
+    backgroundColor: brand.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
     alignItems: 'center',
@@ -131,12 +131,12 @@ const styles = StyleSheet.create({
     width: '31.5%',
     height: 58,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: brand.paperDeep,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  keyPressed: { backgroundColor: brand.white },
-  keyText: { fontSize: 24, fontFamily: fonts.displayBold, color: brand.white },
+  keyPressed: { backgroundColor: brand.line },
+  keyText: { fontSize: 24, fontFamily: fonts.displayBold, color: brand.ink },
 });
