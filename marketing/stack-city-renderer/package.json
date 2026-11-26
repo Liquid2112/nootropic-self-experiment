@@ -1,0 +1,6 @@
+{
+  "name": "stack-city-renderer",
+  "private": true,
+  "description": "Code-rendered blocky 3D TikTok videos for Placebo marketing",
+  "dependencies": { "three": "0.170.0", "playwright": "^1.48.0" }
+}
