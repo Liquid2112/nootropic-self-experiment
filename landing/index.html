@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Placebo Waitlist</title>
-<meta name="description" content="Placebo runs a blinded on/off experiment on the supplement you already take, and tells you if it actually works. Join the waitlist.">
+<meta name="description" content="Placebo runs a randomized on/off experiment on the supplement you already take, and tells you if it actually works. Join the waitlist.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE occasion, playful but honest: a lab result you can trust
-   IDEA a sealed 28-day lab schedule: two identical cups, days you can't peek at, one reveal
-   PICTURE Brian beside a 28-cell sealed calendar that unlocks on verdict day
+   IDEA a 28-day lab schedule: the app calls ON or OFF each morning, results locked until verdict day
+   PICTURE Brian beside a 28-cell ON/OFF calendar that ends in the verdict
    COLOUR paper #F7F4EE ground, ink #15131C, tang #FF5A36 and lilac #B7A6FF (the brain's halves), mint for done
    TYPE Bricolage Grotesque 800 (brand display) + Inter
    LAYOUT laptop: title left, calendar card right; phone: title, Brian, calendar, form */
@@ -52,6 +52,8 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:16px;paddi
 .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:18px}
 .day{aspect-ratio:1;border-radius:10px;background:var(--seal);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--muted)}
 .day.done{background:color-mix(in srgb,var(--mint) 20%,var(--card));color:var(--mint)}
+.day.on{background:color-mix(in srgb,var(--tang) 22%,var(--card));color:var(--ink);font-size:10px}
+.day.off{font-size:10px}
 .day.today{outline:2px solid var(--ink);color:var(--ink)}
 .day.base{background:var(--lilacsoft);color:var(--ink)}
 .day.reveal{background:var(--ink);color:var(--bg)}
@@ -130,13 +132,13 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
   <div class="wrap hero">
     <div>
       <h1>Does your supplement actually work?</h1>
-      <p class="lede">Placebo runs a blinded on/off experiment on the stack you already take. A 2-minute brain check-in each day, results sealed until the end, and a real verdict in 4 weeks.</p>
+      <p class="lede">Placebo turns the stack you already take into a real experiment. The app picks ON and OFF days at random, you do a 2-minute brain check-in, and in 4 weeks you get a verdict backed by numbers.</p>
       <form class="form" id="join" novalidate>
         <input id="email" type="email" name="email" autocomplete="email" placeholder="you@example.com" aria-label="Email address" required>
         <button class="btn" type="submit">Get early access</button>
       </form>
       <p class="msg" id="msg" role="status" hidden></p>
-      <p class="fine">One email when the app is ready, nothing else. <a href="https://github.com/Liquid2112/nootropic-self-experiment/blob/main/docs/privacy-policy.md">Privacy policy</a></p>
+      <p class="fine">One email when the app is ready, nothing else. <a href="/privacy">Privacy policy</a></p>
     </div>
     <div class="lab" aria-label="A sample 4-week Placebo experiment">
       <div class="labtop">
@@ -144,21 +146,21 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
         <div><div class="labtitle">Your experiment, week 2</div><div class="labsub">Example run · Lion’s mane · focus</div></div>
       </div>
       <div class="grid" id="cal"></div>
-      <div class="legend"><span><i style="background:var(--lilacsoft)"></i>Baseline</span><span><i style="background:color-mix(in srgb,var(--mint) 20%,var(--card))"></i>Checked in</span><span><i style="background:var(--seal)"></i>Sealed</span><span><i style="background:var(--ink)"></i>Verdict</span></div>
-      <div class="seal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Which days were real is hidden from you until the reveal.</div>
+      <div class="legend"><span><i style="background:var(--lilacsoft)"></i>Baseline</span><span><i style="background:color-mix(in srgb,var(--tang) 22%,var(--card))"></i>ON</span><span><i style="background:var(--seal)"></i>OFF / upcoming</span><span><i style="background:var(--ink)"></i>Verdict</span></div>
+      <div class="seal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Results stay locked until day 28, so you can't talk yourself into an answer.</div>
     </div>
   </div>
 </section>
 
 <section class="band" style="padding-top:0">
   <div class="wrap">
-    <h2>How the blind test works</h2>
+    <h2>How the experiment works</h2>
     <div class="steps">
       <article class="step">
-        <svg viewBox="0 0 240 120" aria-hidden="true"><ellipse cx="120" cy="108" rx="90" ry="6" fill="var(--line)"/><path d="M58 30 h44 l-6 76 h-32 z" fill="var(--tang)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><path d="M138 30 h44 l-6 76 h-32 z" fill="var(--lilac)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><text x="80" y="76" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="26" fill="var(--ink)">A</text><text x="160" y="76" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="26" fill="var(--ink)">B</text></svg>
-        <div class="when">Day 1</div>
-        <h3>Two identical cups</h3>
-        <p>Fill one with your capsule and one with a look-alike, or have a friend do it. The app shuffles which cup you take each day.</p>
+        <svg viewBox="0 0 240 120" aria-hidden="true"><ellipse cx="120" cy="108" rx="90" ry="6" fill="var(--line)"/><rect x="34" y="34" width="80" height="60" rx="16" fill="var(--tang)" stroke="var(--ink)" stroke-width="3"/><rect x="126" y="34" width="80" height="60" rx="16" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/><text x="74" y="72" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="24" fill="#15131C">ON</text><text x="166" y="72" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="24" fill="var(--ink)">OFF</text></svg>
+        <div class="when">Every morning</div>
+        <h3>The app calls ON or OFF</h3>
+        <p>Days are randomized, so a good week or a bad night can't fake a result. Take it on ON days, skip it on OFF days. Nothing to buy.</p>
       </article>
       <article class="step">
         <svg viewBox="0 0 240 120" aria-hidden="true"><rect x="40" y="14" width="160" height="96" rx="18" fill="#15131C"/><circle cx="150" cy="56" r="18" fill="var(--tang)"/><rect x="58" y="88" width="124" height="5" rx="2.5" fill="#34303F"/><rect x="58" y="88" width="74" height="5" rx="2.5" fill="var(--lilac)"/><text x="64" y="46" font-family="Inter" font-weight="700" font-size="15" fill="#F7F4EE">7 / 12</text></svg>
@@ -169,8 +171,8 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
       <article class="step">
         <svg viewBox="0 0 240 120" aria-hidden="true"><rect x="54" y="20" width="132" height="88" rx="16" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/><path d="M76 84 L102 66 L124 74 L162 42" stroke="var(--tang)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="162" cy="42" r="7" fill="var(--tang)"/><path d="M76 92 h88" stroke="var(--line)" stroke-width="3"/></svg>
         <div class="when">Week 4</div>
-        <h3>The sealed verdict</h3>
-        <p>We unblind your days and compare them properly. You see whether it helped, by how much, and how sure we are.</p>
+        <h3>The verdict</h3>
+        <p>We compare your ON and OFF days properly. You see whether it helped, by how much, how sure we are, and how much your expectations moved the numbers.</p>
       </article>
     </div>
   </div>
@@ -182,7 +184,8 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
       <h2>An answer, not a vibe</h2>
       <p class="sub">Feeling a supplement work isn’t the same as it working. Placebo is powerful, which is exactly why we named the app after it.</p>
       <ul>
-        <li>Built on the method researchers use: randomized on and off days, blinded to you.</li>
+        <li>Built on the method researchers use for single-person trials: randomized on and off days, scored by objective brain tests.</li>
+        <li>A daily belief check shows how much your expectations track your scores.</li>
         <li>Your data stays on your phone. No account needed to run an experiment.</li>
         <li>A shareable result card when you finish.</li>
       </ul>
@@ -190,7 +193,7 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
     <div class="vcard" aria-label="Example verdict card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-weight:600;color:#A9A3B3">Example verdict</span><svg width="56" height="52" viewBox="0 0 120 110" aria-hidden="true"><use href="#brian"/></svg></div>
       <div class="vbig">No clear effect</div>
-      <p style="color:#A9A3B3;margin-bottom:16px">On your capsule days, reaction time moved by less than the day-to-day noise.</p>
+      <p style="color:#A9A3B3;margin-bottom:16px">On your ON days, reaction time moved by less than the day-to-day noise.</p>
       <div class="vrow"><span>Days logged</span><b>27 of 28</b></div>
       <div class="vrow"><span>Reaction time, on vs off</span><b>−4 ms</b></div>
       <div class="vrow"><span>Range we’re confident in</span><b>−15 to +7 ms</b></div>
@@ -203,7 +206,7 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
   <div class="wrap">
     <h2>Questions</h2>
     <div class="faq">
-      <div><h3>Which supplements can I test?</h3><p>Anything you take as a capsule or powder you can hide in a cup: lion’s mane, L-theanine, creatine, magnesium, and more. Effects that build over weeks get a longer design.</p></div>
+      <div><h3>Which supplements can I test?</h3><p>Anything you can take some days and skip others: lion’s mane, L-theanine, caffeine, magnesium, and more. Effects that build over weeks get a longer design.</p></div>
       <div><h3>Is it medical advice?</h3><p>No. Placebo measures how you perform on simple tests. It doesn’t diagnose or treat anything. Talk to a doctor before changing medication.</p></div>
       <div><h3>What does it cost?</h3><p>The reaction test is free. Running experiments is a subscription with a free trial, and we remind you before the trial ends.</p></div>
       <div><h3>When does it launch?</h3><p>Soon on iPhone and Android. Waitlist members get in first.</p></div>
@@ -230,7 +233,7 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
 <footer class="band" style="padding-block:28px">
   <div class="wrap">
     <span>© 2026 Placebo · Not medical advice</span>
-    <nav><a href="https://github.com/Liquid2112/nootropic-self-experiment/blob/main/docs/privacy-policy.md">Privacy policy</a><a href="https://github.com/Liquid2112/nootropic-self-experiment/blob/main/docs/privacy-policy.md#consumer-health-data-washington-nevada-connecticut-and-similar-laws">Consumer health data</a><a href="#join">Waitlist</a></nav>
+    <nav><a href="/privacy">Privacy policy</a><a href="/privacy#consumer-health-data-washington-nevada-connecticut-and-similar-laws">Consumer health data</a><a href="#join">Waitlist</a></nav>
   </div>
 </footer>
 
@@ -243,15 +246,18 @@ footer nav{all:unset;display:flex;gap:20px;flex-wrap:wrap}
 
   const cal = document.getElementById('cal');
   const today = 11;
+  // Example run: 3 baseline days, then a random ON/OFF schedule. Days before
+  // today show their call; later days are unknown until each morning.
+  const arms = 'XXXNFNNFFNFNFFNNFNFFNFNNFFNV';
   cal.innerHTML = Array.from({ length: 28 }, (_, i) => {
     const d = i + 1;
-    let cls = 'day';
-    if (d <= 3) cls += ' base';
-    else if (d < today) cls += ' done';
-    else if (d === today) cls += ' today';
-    if (d === 28) cls = 'day reveal';
-    const label = d === 28 ? 'Verdict' : d <= 3 ? 'Baseline' : 'Sealed';
-    return `<div class="${cls}" title="Day ${d}: ${label}">${d}</div>`;
+    const a = arms[i];
+    let cls = 'day', label = 'Upcoming', txt = d;
+    if (a === 'X') { cls += ' base'; label = 'Baseline'; }
+    else if (a === 'V') { cls = 'day reveal'; label = 'Verdict'; }
+    else if (d <= today) { cls += a === 'N' ? ' on' : ' off'; label = a === 'N' ? 'ON' : 'OFF'; txt = label; }
+    if (d === today) cls += ' today';
+    return `<div class="${cls}" title="Day ${d}: ${label}">${txt}</div>`;
   }).join('');
 
   const valid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);

@@ -24,8 +24,8 @@ Once the domain points at this site:
   account (Membership page).
 - `/.well-known/assetlinks.json`: replace `ANDROID_SHA256_CERT_FINGERPRINT` with
   the fingerprint from `eas credentials` (Android, production keystore).
-- `/k/…`, `/u/…` and `/r/…` fall back to the waitlist page for people without
-  the app (`vercel.json`). Swap that for an App Store redirect at launch.
+- `/r/…` (referral links) falls back to the waitlist page for people without
+  the app (`vercel.json`). Swap it for an App Store redirect at launch.
 
 Email (`support@` the domain) uses Cloudflare Email Routing, which forwards to
 an existing inbox for free. See the steps in `store/README.md`.
