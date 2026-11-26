@@ -231,6 +231,7 @@ describe('repositories round-trip', () => {
       symbolPerMin: 52,
       recallScore: 7,
       calmScore: 67,
+      expectation: 4,
       note: 'felt sharp',
       valid: true,
     };

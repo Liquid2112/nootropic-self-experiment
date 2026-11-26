@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Icon, Brian, type IconName, type BrianMood } from '@/brand';
-import { Button, Card, Text, brand, fonts, spacing, radius } from '@/ui';
+import { Button, Text, brand, fonts, spacing, radius } from '@/ui';
 import {
   COMPLIANCE_DISCLAIMER,
   computeExperimentVerdict,
@@ -15,15 +15,16 @@ import { addDays, selfBlindPassphrase } from '@/engines/experiment';
 import { useExperimentData } from '@/screens/useExperimentData';
 import { ShareCard, type ViewRef } from '@/screens/ShareCard';
 import { shareCard } from '@/screens/share';
-import { normalizeKey, referralMessage, referralState } from '@/features/referral';
+import { referralMessage, referralState } from '@/features/referral';
 import { track, trackOnce } from '@/features/analytics';
 import { localDay } from '@/features/gamification';
 
 /**
  * Verdict screen: the payoff. It runs the stats engine over the finished run,
  * persists the result rows, and shows the primary metric prominently with the
- * engine's plain-language verdict, secondary metrics below, the unblinded A/B
- * mapping for a blinded run, a monthly cost line, and the compliance copy.
+ * engine's plain-language verdict, secondary metrics below, the belief check
+ * (how much of the ON effect could be expectation), a monthly cost line, and
+ * the compliance copy.
  * Below the 80% adherence gate it shows the improve-adherence state instead of
  * a verdict. A branded share card can be exported to the OS share sheet.
  */
@@ -31,13 +32,6 @@ export default function VerdictScreen() {
   const { experiment, schedule, sessions, supplement } = useExperimentData();
   const shareRef = useRef<ViewRef>(null);
   const [shareNote, setShareNote] = useState<string | null>(null);
-  // Friend-blinded runs need the friend's passphrase typed in at run end; held
-  // here until entered. Self-blind and open runs never use it.
-  // A keyholder's unlock link opens this screen with the key filled in.
-  const params = useLocalSearchParams<{ key?: string }>();
-  const [friendPassphrase, setFriendPassphrase] = useState(() =>
-    typeof params.key === 'string' ? normalizeKey(params.key) : '',
-  );
   const [referralCode] = useState(() => {
     try {
       return referralState(getDatabase()).myCode;
@@ -45,48 +39,35 @@ export default function VerdictScreen() {
       return null;
     }
   });
-  const [unsealError, setUnsealError] = useState<string | null>(null);
 
   const vm: VerdictViewModel | null = useMemo(() => {
     if (!experiment) return null;
-    // Resolve the unseal passphrase per blinding mode:
-    //   - open ('none')      : no passphrase needed.
-    //   - self-blind         : derived from the seed persisted at seal time, so
-    //                          the same key input is used to seal and unseal.
-    //   - friend-blind       : the friend's passphrase, typed in below.
-    //                          A keyholder key ("K7QX-M2PA-...") may be typed
-    //                          without dashes, so its normalized form is tried
-    //                          first, then the text exactly as typed.
-    const candidates: (string | undefined)[] = [];
-    if (experiment.blindingMode === 'self_blind') {
-      candidates.push(experiment.seed ? selfBlindPassphrase(experiment.seed) : undefined);
-    } else if (experiment.blindingMode === 'sealed') {
-      const typed = friendPassphrase.trim();
-      if (typed.length > 0) candidates.push(normalizeKey(typed), friendPassphrase);
-    }
-    if (candidates.length === 0) candidates.push(undefined);
+    // Runs are open-label now. A legacy self-blinded run unseals with the
+    // passphrase derived from its persisted seed.
+    const passphrase =
+      experiment.blindingMode === 'self_blind' && experiment.seed
+        ? selfBlindPassphrase(experiment.seed)
+        : undefined;
     const nights = healthNights.listBetween(
       getDatabase(),
       addDays(experiment.startDate, 1),
       addDays(experiment.startDate, experiment.lengthDays),
     );
-    for (const passphrase of candidates) {
-      try {
-        return computeExperimentVerdict(getDatabase(), {
-          experiment,
-          schedule,
-          sessions,
-          unsealPassphrase: passphrase,
-          // Nights from Apple Health / Health Connect, matched to the dose the
-          // day before. Empty when Health isn't connected.
-          healthNights: nights,
-        });
-      } catch {
-        // Wrong passphrase form; try the next one.
-      }
+    try {
+      return computeExperimentVerdict(getDatabase(), {
+        experiment,
+        schedule,
+        sessions,
+        unsealPassphrase: passphrase,
+        // Nights from Apple Health / Health Connect, matched to the dose the
+        // day before. Empty when Health isn't connected.
+        healthNights: nights,
+      });
+    } catch {
+      // A legacy friend-sealed run can't be unsealed any more.
+      return null;
     }
-    return null;
-  }, [experiment, schedule, sessions, friendPassphrase]);
+  }, [experiment, schedule, sessions]);
 
   // Funnel: the run reached its verdict. Counts only, never the result.
   const unlocked = vm !== null;
@@ -100,31 +81,6 @@ export default function VerdictScreen() {
       days_checked_in: daysCheckedIn,
     });
   }, [experiment, unlocked, schedule, sessions]);
-
-  // A friend-blinded run can't be unblinded until the friend enters the
-  // passphrase. Show the entry step (not the permanent placeholder) so the run
-  // can actually reach its verdict.
-  if (experiment && experiment.blindingMode === 'sealed' && !vm) {
-    return (
-      <FriendPassphraseEntry
-        value={friendPassphrase}
-        error={unsealError}
-        onChange={(t) => {
-          setFriendPassphrase(t);
-          setUnsealError(null);
-        }}
-        onSubmit={() => {
-          if (friendPassphrase.trim().length === 0) {
-            setUnsealError('Enter the passphrase your friend sealed the run with.');
-          } else {
-            // vm stays null until the passphrase unseals; surface a wrong-phrase
-            // message rather than silently showing the placeholder.
-            setUnsealError('That passphrase didn\u2019t unlock the run. Check it and try again.');
-          }
-        }}
-      />
-    );
-  }
 
   if (!experiment || !vm) {
     return (
@@ -177,25 +133,22 @@ export default function VerdictScreen() {
           <PrimaryVerdict primary={vm.primary} monthlyCost={vm.monthlyCost} />
         )}
 
-        {vm.revealedMapping && (
-          <View style={styles.revealCard}>
-            <View style={styles.cupsRow}>
-              <Icon name="cups" size={22} color={brand.ink} />
-              <Text variant="headline">Unblinded</Text>
-            </View>
-            <Text tone="secondary">
-              {vm.revealedMapping.supplementLabel} was the supplement;{' '}
-              {vm.revealedMapping.placeboLabel} was the placebo.
-            </Text>
-          </View>
-        )}
-
         {vm.primaryNote && (
           <View style={styles.caveatCard}>
             <Icon name="moon" size={18} color={brand.muted} />
             <Text variant="footnote" tone="secondary" style={styles.flex}>
               {vm.primaryNote}
             </Text>
+          </View>
+        )}
+
+        {vm.belief && (
+          <View style={styles.revealCard}>
+            <View style={styles.cupsRow}>
+              <Icon name="sparkle" size={22} color={brand.ink} />
+              <Text variant="headline">Belief check</Text>
+            </View>
+            <Text tone="secondary">{vm.belief.sentence}</Text>
           </View>
         )}
 
@@ -339,59 +292,6 @@ function LinkRow({
       </Text>
       <Icon name="chevronRight" size={18} color={brand.faint} />
     </Pressable>
-  );
-}
-
-/**
- * Friend-blinded unblinding step. The friend sealed the A/B -> supplement
- * mapping with a passphrase they kept off-device; at run end they enter it here
- * to unseal and reveal the verdict. Without this step a friend-blinded run can
- * never leave the placeholder.
- */
-function FriendPassphraseEntry({
-  value,
-  error,
-  onChange,
-  onSubmit,
-}: {
-  value: string;
-  error: string | null;
-  onChange: (text: string) => void;
-  onSubmit: () => void;
-}) {
-  return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.lockBadge}>
-          <Icon name="lock" size={26} color={brand.white} />
-        </View>
-        <Text variant="largeTitle">Unblind your run</Text>
-        <Text tone="secondary">
-          Your run is over. Ask your friend for the passphrase they sealed the A/B assignment
-          with, then enter it to reveal your verdict.
-        </Text>
-        <Card style={styles.primaryCard}>
-          <Text variant="headline">Sealing passphrase</Text>
-          <TextInput
-            testID="friend-unseal-passphrase"
-            value={value}
-            onChangeText={onChange}
-            placeholder="Enter the sealed passphrase"
-            placeholderTextColor={brand.faint}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-          />
-          {error && (
-            <Text variant="caption" tone="negative">
-              {error}
-            </Text>
-          )}
-          <Button label="Reveal verdict" testID="friend-unseal-submit" onPress={onSubmit} />
-        </Card>
-      </ScrollView>
-    </SafeAreaView>
   );
 }
 

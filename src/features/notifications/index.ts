@@ -30,15 +30,15 @@ export type ReminderPlan = {
 export type BuildRemindersInput = {
   /** The experiment's check-in window (drives the two fire times). */
   window: CheckInWindow;
-  /** Instruction text to show in the morning notification (already blinded). */
+  /** Instruction text to show in the morning notification (today's call only). */
   morningInstruction: string;
 };
 
 /**
  * Pure: decide the two daily reminders from the window. The morning instruction
  * fires at the window start; the check-in reminder fires one hour before the
- * window closes (clamped to at least the start hour). The caller passes an
- * already-blinded instruction string, so no arm assignment leaks into a
+ * window closes (clamped to at least the start hour). The caller passes a
+ * today-only instruction string, so no future day's arm leaks into a
  * notification.
  */
 export function buildDailyReminders(input: BuildRemindersInput): ReminderPlan[] {

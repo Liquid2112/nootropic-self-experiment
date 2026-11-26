@@ -1,10 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { loadPurchasesAdapter, setupGate } from '@/features/paywall';
-import type { BlindingMode } from '@/db';
 import { getDatabase } from '@/db';
-import { rewardCopy } from '@/config/referralRewards';
 import { BASELINE_DAYS, addDays, type RunLength } from '@/engines/experiment';
 import {
   TEST_WINDOWS,
@@ -21,44 +19,27 @@ import { DEFAULT_BATTERY, validateBattery } from '@/features/battery';
 import { Icon, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { useOnboarding } from './OnboardingContext';
-import { startKeyholderRun } from '@/features/referral';
 import { track } from '@/features/analytics';
 
 /**
  * Screen 3 — Experiment setup.
  *
- * Length (21 / 28 days), blinding mode (open / friend-blinded / self-blinded),
- * the daily test battery, and a daily test-time window. On confirm it validates and calls the
- * experiment-design engine via createExperiment, which stores the experiment
- * row and schedule_day rows. The generated arm assignment is never surfaced
- * here: a blinded run stores only its sealed key.
+ * Length (21 / 28 days), the daily test battery, and a daily test-time window.
+ * Runs are solo and open-label: no capsules, no keyholder. The app randomizes
+ * the ON/OFF days and reveals only today's call each morning. On confirm it
+ * validates and calls the experiment-design engine via createExperiment, which
+ * stores the experiment row and schedule_day rows.
  */
 
-type BlindingOption = {
-  mode: BlindingMode;
-  label: string;
-  instructions: string;
-};
-
-const BLINDING_OPTIONS: readonly [BlindingOption, ...BlindingOption[]] = [
-  {
-    mode: 'none',
-    label: 'Open',
-    instructions:
-      'You know which days are ON and OFF. Simplest to run, but your expectations can color the result, so mark the verdict as unblinded.',
-  },
-  {
-    mode: 'sealed',
-    label: 'Friend-blinded',
-    instructions:
-      'The gold standard. A friend becomes your keyholder: Placebo sends them a link that says which cup gets the real supplement. They fill cups A and B, you take the cup the app names each day, and on reveal day they send the key that unlocks your verdict.' + rewardCopy('keyholderModeSuffix'),
-  },
-  {
-    mode: 'self_blind',
-    label: 'Self-blinded',
-    instructions:
-      'You prepare numbered envelopes from a one-time shuffled list, sealing each day’s dose inside without looking. The app shows only the envelope number to open, so you stay blind to ON vs OFF.',
-  },
+/**
+ * How a solo run stays fair without capsules or a friend. Shown as a read-only
+ * explainer: there is nothing to choose, the app does all of it.
+ */
+const FAIRNESS_POINTS: { icon: IconName; text: string }[] = [
+  { icon: 'calendar', text: 'The app picks your ON and OFF days at random and reveals each one that morning, so you can\u2019t save it for good days.' },
+  { icon: 'brain', text: 'Your brain tests are the main score, not how you feel. They\u2019re much harder to fool.' },
+  { icon: 'sparkle', text: 'A one-tap belief check each day shows how much expectation moved your scores.' },
+  { icon: 'eyeOff', text: 'Your results stay hidden until verdict day, so you can\u2019t stop the moment it looks good.' },
 ];
 
 const LENGTH_OPTIONS: { value: RunLength; label: string }[] = [
@@ -78,11 +59,6 @@ export function ExperimentSetupScreen() {
   );
   const batteryError = state.goal ? validateBattery(state.goal, battery) : null;
 
-  const selectedBlinding = useMemo(
-    () => BLINDING_OPTIONS.find((o) => o.mode === state.blindingMode) ?? BLINDING_OPTIONS[0],
-    [state.blindingMode],
-  );
-
   // Build the selections object the engine validates/consumes. Guarded below;
   // goal and supplement are set on the previous screen before reaching here.
   const selections = useMemo<OnboardingSelections | null>(
@@ -92,15 +68,13 @@ export function ExperimentSetupScreen() {
             goal: state.goal,
             supplement: state.supplement,
             lengthDays: state.lengthDays,
-            blindingMode: state.blindingMode,
+            // Solo, open-label: the app randomizes ON/OFF and reveals each day.
+            blindingMode: 'none',
             testWindow: state.testWindow,
             battery,
             // The run starts after the 3-day baseline: today through the next
             // two days are baseline (test only, no supplement), day 0 is day 4.
             startDate: addDays(state.startDate, BASELINE_DAYS),
-            // Friend-blinded runs are sealed with a key Placebo generates when
-            // the run starts (see startKeyholderRun), so nothing is typed here.
-            friendPassphrase: state.blindingMode === 'sealed' ? 'generated-on-start' : state.friendPassphrase,
           }
         : null,
     [state, battery],
@@ -128,14 +102,6 @@ export function ExperimentSetupScreen() {
         tests_count: battery.length,
         tests_customized: state.battery !== null,
       };
-      if (selections.blindingMode === 'sealed') {
-        // Seal with a fresh key and hand it to a keyholder next.
-        startKeyholderRun(db, selections, deps, state.keyholderFromName);
-        track('experiment_started', started);
-        reset();
-        router.replace('/keyholder-invite');
-        return;
-      }
       createExperiment(db, selections, deps);
       track('experiment_started', started);
       reset();
@@ -145,7 +111,7 @@ export function ExperimentSetupScreen() {
       const message = err instanceof Error ? err.message : 'Could not create the experiment.';
       Alert.alert('Setup failed', message);
     }
-  }, [selections, reset, router, state.keyholderFromName, state.battery, battery.length]);
+  }, [selections, reset, router, state.battery, battery.length]);
 
   async function onConfirm() {
     if (!selections) {
@@ -239,39 +205,15 @@ export function ExperimentSetupScreen() {
         </View>
       </Section>
 
-      <Section icon="eyeOff" title="Blinding" caption="Blinding keeps your expectations out of the result.">
-        <View style={styles.chipRow}>
-          {BLINDING_OPTIONS.map((option) => (
-            <Chip
-              key={option.mode}
-              testID={`blinding-${option.mode}`}
-              label={option.label}
-              selected={state.blindingMode === option.mode}
-              onPress={() => {
-                tapLight();
-                update({ blindingMode: option.mode });
-              }}
-            />
+      <Section icon="target" title="How it stays fair" caption="No pills to make, nothing to buy, no friend needed.">
+        <View style={styles.instructionsCard}>
+          {FAIRNESS_POINTS.map((p) => (
+            <View key={p.icon} style={styles.fairRow}>
+              <Icon name={p.icon} size={16} color={brand.lilacDeep} />
+              <Text style={[styles.instructions, styles.fairText]}>{p.text}</Text>
+            </View>
           ))}
         </View>
-        <View style={styles.instructionsCard}>
-          <Text style={styles.instructions}>{selectedBlinding.instructions}</Text>
-        </View>
-        {state.blindingMode === 'sealed' ? (
-          <View style={styles.passphraseBlock}>
-            <Text style={styles.fieldLabel}>Your first name</Text>
-            <TextInput
-              testID="keyholder-from-name"
-              value={state.keyholderFromName}
-              onChangeText={(text) => update({ keyholderFromName: text })}
-              placeholder="So your keyholder knows it’s you"
-              placeholderTextColor={brand.faint}
-              autoCapitalize="words"
-              autoCorrect={false}
-              style={styles.input}
-            />
-          </View>
-        ) : null}
       </Section>
 
       {state.goal ? (
@@ -362,20 +304,9 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontFamily: fonts.displayBold, color: brand.ink },
   sectionCaption: { fontSize: 13, lineHeight: 19, fontFamily: fonts.regular, color: brand.muted, marginTop: -4 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  instructionsCard: { backgroundColor: brand.paper, borderRadius: 14, padding: 14 },
+  instructionsCard: { backgroundColor: brand.paper, borderRadius: 14, padding: 14, gap: 6 },
   instructions: { fontSize: 13, lineHeight: 20, fontFamily: fonts.regular, color: brand.ink },
-  passphraseBlock: { gap: 8 },
-  fieldLabel: { fontSize: 13, fontFamily: fonts.semibold, color: brand.ink },
-  input: {
-    borderWidth: 1.5,
-    borderColor: brand.line,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: fonts.regular,
-    color: brand.ink,
-    backgroundColor: brand.white,
-  },
+  fairRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 4 },
+  fairText: { flex: 1 },
   errorText: { fontSize: 12, fontFamily: fonts.medium, color: brand.roseInk },
 });

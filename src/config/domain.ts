@@ -1,6 +1,6 @@
 /**
- * The one place the app's web domain lives. Share links (keyholder, unlock,
- * referral), universal links / Android app links (app.config.ts) and the
+ * The one place the app's web domain lives. Referral share links,
+ * universal links / Android app links (app.config.ts) and the
  * support email all derive from it. Change it here, rebuild, and host
  * landing/.well-known/ on the same domain.
  *

@@ -243,6 +243,7 @@ function rowToTestSession(row: SqlRow): TestSession {
     symbolPerMin: toInt(row.symbol_per_min),
     recallScore: toInt(row.recall_score),
     calmScore: toInt(row.calm_score),
+    expectation: toInt(row.expectation),
     note: toText(row.note),
     valid: toBool(row.valid),
   };
@@ -254,8 +255,8 @@ export const testSessions = {
       `INSERT INTO test_session
         (id, experiment_id, day_index, started_at, device_model, pvt_median_ms, pvt_lapses,
          nback_accuracy, nback_dprime, focus, energy, mood, sleep_hours, caffeine, note, valid,
-         stroop_interference_ms, stroop_accuracy, symbol_per_min, recall_score, calm_score)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         stroop_interference_ms, stroop_accuracy, symbol_per_min, recall_score, calm_score, expectation)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         t.id,
         t.experimentId,
@@ -278,6 +279,7 @@ export const testSessions = {
         t.symbolPerMin ?? null,
         t.recallScore ?? null,
         t.calmScore ?? null,
+        t.expectation ?? null,
       ],
     );
   },

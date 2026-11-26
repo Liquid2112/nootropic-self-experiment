@@ -41,8 +41,7 @@ export const AFFILIATE_DISCLOSURE =
 export const SHOW_UNREGULATED_ENTRIES = false;
 
 /**
- * Base for shareable links: keyholder invites (/k/...), keys sent back (/u/...)
- * and referral codes (/r/CODE). The domain comes from src/config/domain.ts,
+ * Base for shareable links: referral codes (/r/CODE). The domain comes from src/config/domain.ts,
  * which app.config.ts also uses for universal links; landing/.well-known/
  * holds the files the domain must serve. Until it's live, placebo:// links
  * (the app scheme) still open the app.

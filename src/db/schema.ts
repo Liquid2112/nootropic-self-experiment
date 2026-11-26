@@ -168,6 +168,13 @@ export const MIGRATIONS: Migration[] = [
       `ALTER TABLE test_session ADD COLUMN calm_score REAL`,
     ],
   },
+  {
+    // Solo, open-label runs: before each check-in the user rates how sharp they
+    // expect to be (1-5). The verdict's belief check uses it to show how much of
+    // an ON-day difference could be expectation. NULL on older check-ins.
+    version: 8,
+    statements: [`ALTER TABLE test_session ADD COLUMN expectation INTEGER`],
+  },
 ];
 
 /** Read the schema version recorded in the database. */

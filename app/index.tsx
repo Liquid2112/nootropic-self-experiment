@@ -82,9 +82,9 @@ function daysUntilVerdict(view: TodayView, lengthDays: number): number {
  * then shortcut tiles to the reaction test, journey map, badges and the
  * nootropic library.
  *
- * Blinding: nothing here shows a score. XP and streaks only count that the
- * dose and check-in happened, and the dose instruction stays the blinded cup
- * wording from `buildTodayView`.
+ * Results stay hidden: nothing here shows a score. XP and streaks only count
+ * that the dose and check-in happened. Today's ON/OFF call is revealed here
+ * each morning; future days never are.
  */
 export default function TodayScreen() {
   const router = useRouter();
@@ -254,13 +254,9 @@ export default function TodayScreen() {
     doseScheduled: view.hasDayForToday,
     checkInScheduled: view.hasDayForToday || view.isBaseline,
     game,
-    // Only an open (unblinded) run ever says "No capsule today"; logging that
-    // day still counts as following the plan.
-    doseTitle: view.instruction.startsWith('No capsule') ? 'Log your off day' : undefined,
+    // Logging an OFF day (skipping it as planned) still counts as following the plan.
+    doseTitle: view.arm === 'OFF' ? 'Log your OFF day' : undefined,
   });
-  // Open runs say "No capsule today" on OFF days; "Mark taken" would read as
-  // "I took something", so the action names what is actually logged.
-  const offDay = view.instruction.startsWith('No capsule');
   const goal = dailyGoalProgress(quests);
   const goalDone = quests.filter((q) => !q.bonus && q.done).length;
   const goalTotal = quests.filter((q) => !q.bonus).length;
@@ -371,15 +367,17 @@ export default function TodayScreen() {
           <QuestList quests={quests} onPressQuest={onQuest} />
         </View>
 
-        {/* Dose instruction (blinded wording) */}
+        {/* Today's ON/OFF call, revealed each morning */}
         {(view.hasDayForToday || view.isBaseline) && (
           <View style={styles.card}>
             <View style={styles.doseHeader}>
               <View style={[styles.iconBubble, { backgroundColor: brand.lilacSoft }]}>
-                <Icon name={view.isBaseline ? 'clock' : 'cups'} size={20} color={brand.lilacDeep} />
+                <Icon name={view.isBaseline ? 'clock' : view.arm === 'OFF' ? 'moon' : 'bolt'} size={20} color={brand.lilacDeep} />
               </View>
               <View style={styles.flex}>
-                <Text style={styles.cardTitle}>{view.isBaseline ? 'Baseline' : 'Today\u2019s dose'}</Text>
+                <Text style={styles.cardTitle}>
+                  {view.isBaseline ? 'Baseline' : view.arm ? `Today\u2019s call: ${view.arm}` : 'Today\u2019s dose'}
+                </Text>
                 {!view.isBaseline && <Text style={styles.muted}>{windowLabel}</Text>}
               </View>
             </View>
@@ -388,13 +386,13 @@ export default function TodayScreen() {
               (view.taken ? (
                 <View style={styles.takenRow}>
                   <Icon name="check" size={18} color={brand.mint} strokeWidth={2.6} />
-                  <Text style={styles.takenText}>{offDay ? 'Off day logged' : 'Dose logged'}</Text>
+                  <Text style={styles.takenText}>{view.arm === 'OFF' ? 'OFF day logged' : 'Dose logged'}</Text>
                 </View>
               ) : (
                 <Button
-                  label={offDay ? 'Log off day' : 'Mark taken'}
+                  label={view.arm === 'OFF' ? 'I skipped it today' : 'Mark taken'}
                   onPress={markTaken}
-                  accessibilityHint={offDay ? 'Records that you skipped the capsule as planned' : "Records that you took today's dose"}
+                  accessibilityHint={view.arm === 'OFF' ? 'Records that you skipped it as planned' : "Records that you took today's dose"}
                 />
               ))}
           </View>

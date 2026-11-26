@@ -141,6 +141,7 @@ describe('assembleDailyTest — persistence mapping', () => {
         'dayIndex',
         'deviceModel',
         'energy',
+        'expectation',
         'experimentId',
         'focus',
         'mood',

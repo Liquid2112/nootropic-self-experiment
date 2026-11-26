@@ -251,7 +251,7 @@ export default function PaywallScreen() {
       <View style={styles.titleBlock}>
         <Text style={styles.title}>Find out if it actually works</Text>
         <Text style={styles.subtitle}>
-          A blinded experiment, six science-backed brain tests to choose from, and a real verdict in 4 weeks.
+          A randomized experiment, six science-backed brain tests to choose from, and a real verdict in 4 weeks.
         </Text>
       </View>
 

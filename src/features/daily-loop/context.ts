@@ -1,9 +1,11 @@
 /**
  * Pre-test context capture — pure logic.
  *
- * Before each daily test the user answers three quick questions that confound
+ * Before each daily test the user answers quick questions that confound
  * cognitive scores if ignored: how many hours they slept, whether they have had
- * caffeine, and whether they are on a phone or a tablet. Form factor is relevant
+ * caffeine, how sharp they expect to be today (the belief check: runs are
+ * open-label, so expectation is measured instead of blinded away), and whether
+ * they are on a phone or a tablet. Form factor is relevant
  * because screen size and touch latency differ. This module defines the captured
  * shape, the sleep picker options, and validation; the persistence mapping
  * (context -> TestSession columns) lives in session.ts.
@@ -21,11 +23,16 @@ export type DailyContext = {
   caffeine: boolean;
   /** Phone or tablet, chosen by the user (device model is captured separately). */
   formFactor: FormFactor;
+  /** Expected sharpness today, 1 (foggy) to 5 (sharp). null when skipped. */
+  expectation?: number | null;
 };
+
+/** The belief-check scale: 1 (foggy) to 5 (sharp). */
+export const EXPECTATION_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 /** A fresh context with sensible defaults for the pre-test questions. */
 export function emptyContext(): DailyContext {
-  return { sleepHours: null, caffeine: false, formFactor: 'phone' };
+  return { sleepHours: null, caffeine: false, formFactor: 'phone', expectation: null };
 }
 
 export type ContextValidation = {
@@ -49,6 +56,12 @@ export function validateContext(context: DailyContext): ContextValidation {
     } else if (context.sleepHours > 24) {
       issues.push('sleep_hours_out_of_range');
     }
+  }
+  if (
+    context.expectation != null &&
+    !(EXPECTATION_OPTIONS as readonly number[]).includes(context.expectation)
+  ) {
+    issues.push('expectation_invalid');
   }
   if (context.formFactor !== 'phone' && context.formFactor !== 'tablet') {
     issues.push('form_factor_invalid');

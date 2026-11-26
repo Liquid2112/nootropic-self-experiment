@@ -55,14 +55,14 @@ describe('dates', () => {
 
 describe('shortInstruction', () => {
   it('only names a cup on a blinded run, whatever the stored arm', () => {
-    expect(shortInstruction('sealed', day(0, 'x', 'A'))).toBe('Cup A');
-    expect(shortInstruction('sealed', day(0, 'x', 'ON'))).toBe('Cup A');
-    expect(shortInstruction('self_blind', day(0, 'x', 'B'))).toBe('Cup B');
-    expect(shortInstruction('self_blind', day(0, 'x', 'OFF'))).toBe('Cup B');
+    expect(shortInstruction('sealed', day(0, 'x', 'A'))).toBe('Day A');
+    expect(shortInstruction('sealed', day(0, 'x', 'ON'))).toBe('Day A');
+    expect(shortInstruction('self_blind', day(0, 'x', 'B'))).toBe('Day B');
+    expect(shortInstruction('self_blind', day(0, 'x', 'OFF'))).toBe('Day B');
   });
   it('names ON/OFF only on an open run', () => {
-    expect(shortInstruction('none', day(0, 'x', 'ON'))).toBe('Capsule day');
-    expect(shortInstruction('none', day(0, 'x', 'OFF'))).toBe('No capsule');
+    expect(shortInstruction('none', day(0, 'x', 'ON'))).toBe('ON day');
+    expect(shortInstruction('none', day(0, 'x', 'OFF'))).toBe('OFF day');
   });
 });
 
@@ -71,7 +71,7 @@ describe('buildWidgetSnapshot', () => {
     const s = buildWidgetSnapshot(input());
     expect(s.phase).toBe('run');
     expect(s.headline).toBe('Day 1 of 21');
-    expect(s.instruction).toBe('Cup A');
+    expect(s.instruction).toBe('Day A');
     expect(s.doseDone).toBe(true);
     expect(s.daysToVerdict).toBe(21);
     expect(s.verdictDateLabel).toBe('Dec 22');
@@ -124,7 +124,7 @@ describe('buildTimeline', () => {
       MIDNIGHT + 48 * H,
     ]);
     expect(entries[3]!.props.headline).toBe('Day 2 of 21');
-    expect(entries[3]!.props.instruction).toBe('Cup B');
+    expect(entries[3]!.props.instruction).toBe('Day B');
     expect(entries[3]!.props.streak).toBe(4);
     expect(entries[4]!.props.streak).toBe(0);
   });

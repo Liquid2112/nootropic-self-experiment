@@ -377,7 +377,7 @@ function BaselineResult({ score, onNext, onRetry }: { score: QuickTestScore | nu
 const BUILD_STEPS = [
   'Reading your answers',
   'Randomizing your on and off days',
-  'Sealing the schedule so you stay blind',
+  'Locking your main score so results stay honest',
   'Setting your daily check-in',
 ];
 
@@ -432,7 +432,7 @@ function Plan({ answers, onStart }: { answers: QuizAnswers; onStart: () => void 
   const v = useEnter();
   const milestones = useMemo(() => planMilestones(new Date(), PLAN_LENGTH_DAYS), []);
   const verdict = milestones[milestones.length - 1]!;
-  const icons: Record<string, IconName> = { baseline: 'flag', start: 'cups', halfway: 'star', verdict: 'trophy' };
+  const icons: Record<string, IconName> = { baseline: 'flag', start: 'bolt', halfway: 'star', verdict: 'trophy' };
   return (
     <View style={styles.flex}>
       <Animated.ScrollView contentContainerStyle={styles.body} {...{ style: [styles.flex, enterStyle(v)] }}>

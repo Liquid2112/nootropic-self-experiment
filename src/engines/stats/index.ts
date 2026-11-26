@@ -10,3 +10,4 @@ export * from './hac';
 export * from './metrics';
 export * from './verdict';
 export * from './analyze';
+export * from './belief';

@@ -152,6 +152,7 @@ export function assembleDailyTest(input: DailyTestInput): DailyTestResult {
     symbolPerMin: symbol?.correctPerMin ?? null,
     recallScore: recall ? recall.score : null,
     calmScore,
+    expectation: input.context.expectation ?? null,
     note: input.note,
     valid,
   };

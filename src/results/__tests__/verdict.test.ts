@@ -268,8 +268,19 @@ describe('computeExperimentVerdict — blinding', () => {
     const sessions = makeSessions(exp.id, () => true);
     const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
     expect(vm.blindingState).toBe('unblinded');
-    expect(vm.unblindedCaveat).toBe('Unblinded run, placebo effect possible.');
+    expect(vm.unblindedCaveat).toMatch(/You knew which days were ON/);
     expect(vm.revealedMapping).toBeNull();
+  });
+
+  it('adds a belief check when check-ins carry an expectation rating', () => {
+    const { db, exp } = setup({ blindingMode: 'none' });
+    const schedule = makeSchedule(exp.id, () => true);
+    const plain = makeSessions(exp.id, () => true);
+    expect(computeExperimentVerdict(db, { experiment: exp, schedule, sessions: plain }).belief).toBeNull();
+    const rated = plain.map((s) => ({ ...s, expectation: 1 + (s.dayIndex % 5) }));
+    const vm = computeExperimentVerdict(db, { experiment: exp, schedule, sessions: rated });
+    expect(vm.belief?.metric).toBe(vm.primary.metric);
+    expect(vm.belief?.sentence.length).toBeGreaterThan(0);
   });
 
   it('unblinds a sealed run from the key and recovers the true ON effect', () => {
