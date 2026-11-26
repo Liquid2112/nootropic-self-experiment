@@ -30,6 +30,10 @@
   .screen img { display: block; width: 100%; }
   /* Screens with no top safe-area padding of their own get a status-bar strip. */
   .screen.inset { padding-top: 150px; }
+  .screen.dark { background: var(--ink); }
+  .screen.dark .status { color: var(--paper); }
+  .screen.dark .batt { border-color: var(--paper); }
+  .screen.dark .batt::after { background: var(--paper); }
   .island { position: absolute; top: 34px; left: 50%; width: 300px; height: 88px; transform: translateX(-50%); background: #000; border-radius: 44px; }
   .status { position: absolute; top: 50px; left: 110px; right: 96px; display: flex; justify-content: space-between; align-items: center; font: 700 48px/1 'Inter'; color: var(--ink); }
   .batt { display: block; width: 74px; height: 36px; border: 4px solid var(--ink); border-radius: 12px; position: relative; }
@@ -38,23 +42,23 @@
 </head>
 <body>
 <section class="frame" id="01-hook">
-  <div class="copy"><div class="kicker">Placebo</div><h1>Does your stack actually work?</h1></div>
-  <div class="phone" style="--tilt:-2deg"><div class="screen"><img src="raw/welcome.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+  <div class="copy"><div class="kicker">Placebo</div><h1>Is your supplement doing anything?</h1></div>
+  <div class="phone" style="--tilt:-2deg"><div class="screen inset"><img src="raw/welcome.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
 </section>
 <section class="frame ink" id="02-verdict">
   <div class="copy"><div class="kicker">The verdict</div><h1>A real answer from your own data.</h1></div>
-  <div class="phone"><div class="screen"><img src="raw/verdict.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+  <div class="phone"><div class="screen inset dark"><img src="raw/verdict.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
 </section>
 <section class="frame lilac" id="03-randomized">
   <div class="copy"><div class="kicker">Randomized</div><h1>On days, off days. A coin flip picks.</h1></div>
   <div class="phone" style="--tilt:2deg"><div class="screen inset"><img src="raw/progress.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
 </section>
 <section class="frame" id="04-daily-test">
-  <div class="copy"><div class="kicker">90 seconds a day</div><h1>Measure your brain, not your mood.</h1></div>
+  <div class="copy"><div class="kicker">Free reaction test</div><h1>Measure your brain, not your mood.</h1></div>
   <div class="phone"><div class="screen inset"><img src="raw/reaction-test.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
 </section>
 <section class="frame tang" id="05-countdown">
-  <div class="copy"><div class="kicker">Built to finish</div><h1>Quests, streaks and a date for your answer.</h1></div>
+  <div class="copy"><div class="kicker">Every day</div><h1>On or off today, then 3 minutes of tests.</h1></div>
   <div class="phone" style="--tilt:-2deg"><div class="screen inset"><img src="raw/home.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
 </section>
 <section class="frame" id="06-health">
