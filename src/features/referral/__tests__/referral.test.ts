@@ -79,7 +79,7 @@ describe('links', () => {
     const link = keyholderLink(payload);
     expect(parseLink(link)?.kind).toBe('k');
     expect(parseLink(`placebo://u/abc_-1`)).toEqual({ kind: 'u', token: 'abc_-1' });
-    expect(parseLink('https://placebo.app/r/PABCDEF')).toEqual({ kind: 'r', token: 'PABCDEF' });
+    expect(parseLink('https://placeboapp.com/r/PABCDEF')).toEqual({ kind: 'r', token: 'PABCDEF' });
     expect(parseLink('hello')).toBeNull();
   });
 

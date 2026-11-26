@@ -6,7 +6,7 @@ import { lookupCode, referralState, setCreatorCode, setReferredBy } from '@/feat
 import { syncAttribution } from '@/features/referral/rewards';
 
 /**
- * A referral or creator link (placebo.app/r/CODE), e.g. from a TikTok bio or a
+ * A referral or creator link (placeboapp.com/r/CODE), e.g. from a TikTok bio or a
  * shared verdict card. Saves the code (first one wins) and carries on into the
  * app as usual.
  */

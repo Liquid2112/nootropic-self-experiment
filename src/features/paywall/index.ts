@@ -36,6 +36,12 @@ export type PurchaseOutcome = 'purchased' | 'cancelled' | 'failed';
 export type PurchasesAdapter = {
   /** False when the native module or API key is missing. */
   available: boolean;
+  /**
+   * True for the test-build preview (Expo Go / dev, no RevenueCat key): plans
+   * show the launch prices and "buying" only unlocks Pro for this session.
+   * Nothing is charged, tracked, or scheduled.
+   */
+  preview?: boolean;
   isPro(): Promise<boolean>;
   getPlans(): Promise<Plan[]>;
   /** Plans in a named RevenueCat offering (e.g. the exit offer); [] when absent. */
@@ -222,21 +228,21 @@ export function trialTimeline(plan: Plan | undefined, today: Date): TrialStep[] 
       id: 'today',
       when: 'Today',
       title: 'Your experiment starts',
-      body: 'Full access. Set up your run and take your first check-in.',
+      body: 'Full access starts. You pay nothing today.',
       date: startOfDay(today),
     },
     {
       id: 'reminder',
       when: `Day ${days - lead}`,
       title: 'We remind you',
-      body: `A notification ${lead === 1 ? 'the day' : `${lead} days`} before your trial ends, if notifications are on.`,
+      body: `We send you a reminder ${lead === 1 ? 'the day' : `${lead} days`} before billing, if notifications are on.`,
       date: addDays(today, days - lead),
     },
     {
       id: 'billing',
       when: `Day ${days}`,
       title: `You're charged ${plan.priceString}/${per}`,
-      body: 'Unless you cancel at least 24 hours before. Cancel anytime in your App Store settings.',
+      body: `${plan.priceString} for the ${per}. Cancel at least 24 hours before this and you pay nothing.`,
       date: addDays(today, days),
     },
   ];
@@ -266,6 +272,13 @@ export function billingReminder(
 /** "$39.99/year": a plan's price and billing period. */
 export function pricePerPeriod(plan: Plan): string {
   return `${plan.priceString}/${PERIOD_NOUN[plan.period]}`;
+}
+
+/** "Works out to $0.77 a week" for a yearly plan; null otherwise. */
+export function weeklyEquivalent(plan: Plan): string | null {
+  if (plan.period !== 'annual' || plan.price <= 0) return null;
+  const symbol = plan.priceString.replace(/[\d.,\s]/g, '') || '$';
+  return `Works out to ${symbol}${(plan.price / 52).toFixed(2)} a week`;
 }
 
 /** The headline price line: price as prominent as "free", never hidden. */
@@ -416,6 +429,40 @@ export function revenueCatApiKey(os: string): string | undefined {
   return key && key.length > 0 ? key : undefined;
 }
 
+/** Launch prices from the business plan, shown only in test builds. */
+export const PREVIEW_PLANS: Plan[] = [
+  { id: 'preview_annual', period: 'annual', priceString: '$39.99', price: 39.99, trialDays: 7 },
+  { id: 'preview_monthly', period: 'monthly', priceString: '$9.99', price: 9.99, trialDays: 7 },
+];
+
+/**
+ * A stand-in store for development builds without a RevenueCat key, so the
+ * paywall can be seen and walked through in Expo Go. Never used in release.
+ */
+export function createPreviewPurchasesAdapter(): PurchasesAdapter {
+  let pro = false;
+  return {
+    available: true,
+    preview: true,
+    async isPro() {
+      return pro;
+    },
+    async getPlans() {
+      return PREVIEW_PLANS;
+    },
+    async getOffering() {
+      return [];
+    },
+    async purchase() {
+      pro = true;
+      return 'purchased';
+    },
+    async restore() {
+      return pro;
+    },
+  };
+}
+
 let cachedAdapter: Promise<PurchasesAdapter> | null = null;
 
 /**
@@ -426,7 +473,14 @@ export function loadPurchasesAdapter(os: string): Promise<PurchasesAdapter> {
   if (!cachedAdapter) {
     cachedAdapter = (async () => {
       const key = revenueCatApiKey(os);
-      if (!key) return unavailablePurchasesAdapter;
+      if (!key) {
+        const preview =
+          (globalThis as { __DEV__?: boolean }).__DEV__ === true ||
+          process.env.EXPO_PUBLIC_PAYWALL_PREVIEW === '1';
+        return preview
+          ? createPreviewPurchasesAdapter()
+          : unavailablePurchasesAdapter;
+      }
       try {
         const mod: { default?: unknown } = await import('react-native-purchases');
         return createRevenueCatAdapter(mod.default ?? mod, key);

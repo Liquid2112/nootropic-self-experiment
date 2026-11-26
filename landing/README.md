@@ -14,7 +14,7 @@ The form posts to Formspree (`FORM_ENDPOINT` in the `<script>` in `index.html`).
 ## Domain, app links and email
 
 The app's link domain is one constant: `LINK_DOMAIN` in `src/config/domain.ts`
-(currently `placebo.app`, not yet registered). `app.config.ts` builds the iOS
+(`placeboapp.com`, registered on Cloudflare). `app.config.ts` builds the iOS
 associated domain and Android app-link filters from it, and share links use it.
 If the domain you buy is different, change that one line.
 

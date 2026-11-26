@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Button, Scaffold, brand, fonts } from '@/ui';
-import { Icon, Logo, Brian, type IconName } from '@/brand';
+import { Icon, Logo, Brian } from '@/brand';
 import { tapLight } from '@/components/game';
 import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
@@ -11,6 +12,9 @@ import { getDatabase } from '@/db';
 
 /**
  * Screen 1 — Welcome + disclaimer.
+ *
+ * Two pages: the hero (what Placebo is, from the Figma "01 Onboarding"
+ * mockup), then the disclaimer gate below.
  *
  * Gate before anything else: the user must acknowledge this is not medical
  * advice and confirm they are 18+. The continue action stays disabled until
@@ -28,6 +32,7 @@ export function WelcomeScreen() {
   const [notMedical, setNotMedical] = useState(false);
   const [adult, setAdult] = useState(false);
   const [shareProgress, setShareProgress] = useState(false);
+  const [page, setPage] = useState<'hero' | 'gate'>('hero');
 
   const canContinue = notMedical && adult;
 
@@ -42,9 +47,49 @@ export function WelcomeScreen() {
     router.push('/quiz');
   }
 
+  if (page === 'hero') {
+    return (
+      <Scaffold
+        testID="welcome-screen"
+        contentStyle={styles.heroContent}
+        footer={
+          <View style={styles.footer}>
+            <Pager page={0} />
+            <Button
+              label="Start my experiment"
+              testID="welcome-start"
+              onPress={() => {
+                tapLight();
+                setPage('gate');
+              }}
+            />
+            <Pressable
+              accessibilityRole="button"
+              testID="welcome-reaction-test"
+              onPress={() => router.push('/reaction-test')}
+              style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+            >
+              <Text style={styles.secondaryText}>Just curious? Try the free reaction test</Text>
+            </Pressable>
+          </View>
+        }
+      >
+        <Logo size={20} />
+        <HeroArt />
+        <View style={styles.heroCopy}>
+          <Text style={styles.heroTitle}>Does your stack actually work?</Text>
+          <Text style={styles.heroBody}>
+            A randomized 28-day test on you. The app picks ON and OFF days, you do two minutes of
+            brain tests, and your own data gives the answer.
+          </Text>
+        </View>
+      </Scaffold>
+    );
+  }
+
   return (
     <Scaffold
-      testID="welcome-screen"
+      testID="welcome-gate"
       footer={
         <View style={styles.footer}>
           {!canContinue ? (
@@ -64,50 +109,12 @@ export function WelcomeScreen() {
             }}
             disabled={!canContinue}
           />
-          <Pressable
-            accessibilityRole="button"
-            testID="welcome-reaction-test"
-            onPress={() => router.push('/reaction-test')}
-            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-          >
-            <Icon name="bolt" size={18} color={brand.ink} />
-            <Text style={styles.secondaryText}>Just try the free reaction test</Text>
-          </Pressable>
         </View>
       }
     >
-      <View style={styles.hero}>
-        <Logo size={24} />
-        <View style={styles.mascot}>
-          <Brian size={148} mood="happy" />
-        </View>
-        <Text style={styles.promise}>Does your nootropic actually work?</Text>
-        <Text style={styles.subtitle}>
-          Run a 3 to 4 week experiment on one supplement and get a real answer, measured on your
-          own phone. Nothing to buy, no one else needed.
-        </Text>
-      </View>
-
-      <View style={styles.benefits}>
-        <BenefitRow
-          icon="calendar"
-          tint={brand.lilacSoft}
-          title="Randomized, like a real trial"
-          body="The app picks your ON and OFF days and your brain tests do the judging, so hype can't fake the result."
-        />
-        <BenefitRow
-          icon="flame"
-          tint={brand.tangSoft}
-          title="2 minutes a day"
-          body="A quick reaction and memory check-in. Keep your streak, earn XP, unlock badges."
-        />
-        <BenefitRow
-          icon="trophy"
-          tint={brand.sunSoft}
-          title="A real verdict in about 4 weeks"
-          body="Stats on your own data tell you if it works, does nothing, or backfires."
-          last
-        />
+      <View style={styles.gateHeader}>
+        <Pager page={1} />
+        <Text style={styles.gateTitle}>Two quick things first</Text>
       </View>
 
       <View style={styles.notice}>
@@ -203,17 +210,52 @@ function AcknowledgeRow({ label, checked, onToggle, testID, last, small }: Ackno
   );
 }
 
-type BenefitRowProps = { icon: IconName; tint: string; title: string; body: string; last?: boolean };
-
-function BenefitRow({ icon, tint, title, body, last }: BenefitRowProps) {
+/** Page dots: a wide ink dash for the current page. */
+function Pager({ page }: { page: number }) {
   return (
-    <View style={[styles.benefit, !last && styles.divider]}>
-      <View style={[styles.benefitIcon, { backgroundColor: tint }]}>
-        <Icon name={icon} size={22} color={brand.ink} />
+    <View style={styles.pager} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      {[0, 1].map((i) => (
+        <View key={i} style={[styles.pagerDot, i === page && styles.pagerDotOn]} />
+      ))}
+    </View>
+  );
+}
+
+/** A tilted day card: tang "ON" or lilac "OFF". */
+function DayCard({ label, fill, rotate }: { label: string; fill: string; rotate: string }) {
+  return (
+    <View style={{ transform: [{ rotate }] }}>
+      <Svg width={116} height={150} viewBox="0 0 116 150">
+        <Rect x={3} y={3} width={110} height={144} rx={24} fill={fill} stroke={brand.ink} strokeWidth={4} />
+        <Path d="M22 26 v40" stroke={brand.white} strokeWidth={6} strokeLinecap="round" opacity={0.45} />
+        <SvgText
+          x={58}
+          y={92}
+          textAnchor="middle"
+          fontSize={label.length > 2 ? 34 : 40}
+          fontFamily={fonts.display}
+          fill={brand.ink}
+        >
+          {label}
+        </SvgText>
+      </Svg>
+    </View>
+  );
+}
+
+/** Brian over today's two possible calls, from the Figma hero card. */
+function HeroArt() {
+  return (
+    <View style={styles.art} accessibilityRole="image" accessibilityLabel="Brian the brain over an ON card and an OFF card">
+      <View style={styles.cards}>
+        <DayCard label="ON" fill={brand.tang} rotate="-5deg" />
+        <DayCard label="OFF" fill={brand.lilac} rotate="5deg" />
       </View>
-      <View style={styles.benefitText}>
-        <Text style={styles.benefitTitle}>{title}</Text>
-        <Text style={styles.benefitBody}>{body}</Text>
+      <View style={styles.artBrian}>
+        <Brian size={132} mood="wink" />
+      </View>
+      <View style={styles.bubble}>
+        <Text style={styles.bubbleText}>Is it doing anything?</Text>
       </View>
     </View>
   );
@@ -230,39 +272,51 @@ const styles = StyleSheet.create({
     gap: 8,
     minHeight: 48,
   },
-  secondaryText: { fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
+  secondaryText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.ink },
   pressed: { opacity: 0.6 },
-  hero: { alignItems: 'center', gap: 12, paddingTop: 8 },
-  mascot: { marginVertical: 8 },
-  promise: {
-    fontSize: 32,
-    lineHeight: 38,
-    letterSpacing: -0.8,
+  heroContent: { paddingTop: 8, gap: 20 },
+  art: {
+    height: 300,
+    borderRadius: 32,
+    backgroundColor: brand.paperDeep,
+    overflow: 'hidden',
+  },
+  cards: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 28,
+  },
+  artBrian: { position: 'absolute', top: 36, left: 0, right: 0, alignItems: 'center' },
+  bubble: {
+    position: 'absolute',
+    top: 28,
+    right: 12,
+    backgroundColor: brand.white,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    transform: [{ rotate: '-4deg' }],
+  },
+  bubbleText: { fontSize: 13, fontFamily: fonts.semibold, color: brand.ink },
+  heroCopy: { gap: 14, paddingTop: 8 },
+  heroTitle: {
+    fontSize: 38,
+    lineHeight: 40,
+    letterSpacing: -1.4,
     fontFamily: fonts.display,
     color: brand.ink,
-    textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 16,
-    lineHeight: 23,
-    fontFamily: fonts.regular,
-    color: brand.muted,
-    textAlign: 'center',
-    paddingHorizontal: 8,
-  },
-  benefits: {
-    backgroundColor: brand.white,
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: brand.line,
-    paddingHorizontal: 16,
-  },
+  heroBody: { fontSize: 17, lineHeight: 25, letterSpacing: -0.2, fontFamily: fonts.regular, color: brand.muted },
+  pager: { flexDirection: 'row', gap: 6, paddingBottom: 14 },
+  pagerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: brand.line },
+  pagerDotOn: { width: 22, backgroundColor: brand.ink },
+  gateHeader: { gap: 14, paddingTop: 8 },
+  gateTitle: { fontSize: 32, lineHeight: 36, letterSpacing: -1, fontFamily: fonts.display, color: brand.ink },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: brand.line },
-  benefit: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
-  benefitIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  benefitText: { flex: 1, gap: 2 },
-  benefitTitle: { fontSize: 16, fontFamily: fonts.displayBold, color: brand.ink },
-  benefitBody: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
   notice: {
     backgroundColor: brand.paperDeep,
     borderRadius: 20,

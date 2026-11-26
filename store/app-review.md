@@ -158,7 +158,7 @@ The Library is an educational reference: what each compound claims and what publ
 - [ ] RevenueCat project, iOS key in EAS secrets, products attached to `pro`
 - [ ] Privacy contact email in docs/privacy-policy.md, policy hosted at a public URL
 - [ ] Support URL live (the landing page works)
-- [ ] placebo.app owned and serving AASA, or links switched
+- [ ] placeboapp.com serving AASA (needs the Apple Team ID), or links switched
 - [ ] Privacy label entered (privacy-label.md), age rating questionnaire (age-rating.md)
 - [ ] Screenshots uploaded (store/screenshots/en-US, 6.9")
 - [ ] Verdict screen recording attached to App Review Information
