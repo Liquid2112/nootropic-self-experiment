@@ -15,6 +15,7 @@ import {
   pricePerPeriod,
   renewalTerms,
   trialTimeline,
+  weeklyEquivalent,
   type Plan,
   type PurchasesAdapter,
   type TrialStep,
@@ -31,11 +32,22 @@ const PERIOD_TITLE: Record<Plan['period'], string> = {
   other: 'Plan',
 };
 
-const STEP_ICON: Record<TrialStep['id'], IconName> = {
-  today: 'sparkle',
-  reminder: 'clock',
-  billing: 'calendar',
+/** Timeline dots: tang today, lilac reminder, ink billing day. */
+const STEP_DOT: Record<TrialStep['id'], string> = {
+  today: brand.tang,
+  reminder: brand.lilac,
+  billing: brand.ink,
 };
+
+const BENEFITS: { icon: IconName; tint: string; text: string }[] = [
+  {
+    icon: 'calendar',
+    tint: brand.tangSoft,
+    text: 'Random ON and OFF days, so a good week can’t fake the result',
+  },
+  { icon: 'bolt', tint: brand.lilacSoft, text: 'Six science-backed brain tests, about 2 minutes a day' },
+  { icon: 'chart', tint: brand.mintSoft, text: 'A verdict from your own data, with the math shown' },
+];
 
 /** Set once the exit offer has been shown, so it never nags twice. */
 const EXIT_OFFER_SEEN_KEY = 'exit_offer_seen_v1';
@@ -43,7 +55,12 @@ const EXIT_OFFER_SEEN_KEY = 'exit_offer_seen_v1';
 type ExitOffer = NonNullable<ReturnType<typeof pickExitOffer>>;
 
 function shortDate(date: Date): string {
-  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/** "Start my free week" for a 7-day trial; the shared label otherwise. */
+function mainCta(plan: Plan | undefined): string {
+  return plan?.trialDays === 7 ? 'Start my free week' : ctaLabel(plan);
 }
 
 /**
@@ -107,7 +124,9 @@ export default function PaywallScreen() {
       setMessage(null);
       const outcome = await adapter.purchase(plan.id);
       setBusy(false);
-      if (outcome === 'purchased') {
+      if (outcome === 'purchased' && adapter.preview) {
+        router.back();
+      } else if (outcome === 'purchased') {
         track('trial_started', { plan_period: plan.period, trial_days: plan.trialDays ?? 0 });
         // Keep the promise on the timeline: remind before the trial converts.
         const reminder = billingReminder(plan, new Date());
@@ -162,18 +181,26 @@ export default function PaywallScreen() {
   const header = (
     <Stack.Screen
       options={{
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: brand.paper },
         headerLeft: () => (
           <Pressable
             onPress={() => void onClose()}
             accessibilityRole="button"
             accessibilityLabel="Close"
-            hitSlop={8}
+            hitSlop={12}
             testID="paywall-close"
             style={({ pressed }) => [styles.close, pressed && styles.closePressed]}
           >
-            <Icon name="close" size={20} color={brand.ink} />
+            <Icon name="close" size={24} color={brand.ink} />
           </Pressable>
         ),
+        headerRight: () =>
+          exitOffer ? null : (
+            <Pressable onPress={() => void onRestore()} accessibilityRole="button" hitSlop={12}>
+              <Text style={styles.restore}>Restore</Text>
+            </Pressable>
+          ),
       }}
     />
   );
@@ -220,23 +247,25 @@ export default function PaywallScreen() {
   return (
     <Scaffold
       testID="paywall-screen"
+      edges={['bottom']}
+      contentStyle={styles.content}
       footer={
         <View style={styles.footer}>
           {loadFailed ? (
             <Button label="Try again" onPress={retryLoad} testID="paywall-retry" />
           ) : (
             <Button
-              label={ctaLabel(selected)}
+              label={mainCta(selected)}
               onPress={() => void buy(selected)}
               disabled={!selected || busy}
               loading={busy}
             />
           )}
           {selected && !loadFailed && <Text style={styles.terms}>{renewalTerms(selected)}</Text>}
+          {adapter?.preview ? (
+            <Text style={styles.terms}>Test build: nothing is charged.</Text>
+          ) : null}
           <View style={styles.links}>
-            <Pressable onPress={() => void onRestore()} accessibilityRole="button">
-              <Text style={styles.link}>Restore</Text>
-            </Pressable>
             <Pressable onPress={() => void Linking.openURL(TERMS_OF_USE_URL)} accessibilityRole="link">
               <Text style={styles.link}>Terms</Text>
             </Pressable>
@@ -248,11 +277,20 @@ export default function PaywallScreen() {
       }
     >
       {header}
-      <View style={styles.titleBlock}>
-        <Text style={styles.title}>Find out if it actually works</Text>
-        <Text style={styles.subtitle}>
-          A randomized experiment, six science-backed brain tests to choose from, and a real verdict in 4 weeks.
-        </Text>
+      <View style={styles.hero}>
+        <Text style={styles.title}>Your answer in 28 days.</Text>
+        <Brian size={78} mood="wink" />
+      </View>
+
+      <View style={styles.benefits}>
+        {BENEFITS.map((b) => (
+          <View key={b.icon} style={styles.benefit}>
+            <View style={[styles.benefitIcon, { backgroundColor: b.tint }]}>
+              <Icon name={b.icon} size={22} color={brand.ink} />
+            </View>
+            <Text style={styles.benefitText}>{b.text}</Text>
+          </View>
+        ))}
       </View>
 
       {adapter === null ? (
@@ -270,6 +308,7 @@ export default function PaywallScreen() {
         <View style={styles.plans}>
           {plans.map((plan) => {
             const on = plan.id === selectedId;
+            const weekly = weeklyEquivalent(plan);
             return (
               <Pressable
                 key={plan.id}
@@ -282,18 +321,22 @@ export default function PaywallScreen() {
                 accessibilityState={{ checked: on }}
                 style={[styles.plan, on && styles.planOn]}
               >
-                <View style={styles.planRow}>
-                  <View style={[styles.radio, on && styles.radioOn]}>
-                    {on ? <Icon name="check" size={14} color={brand.white} strokeWidth={3} /> : null}
-                  </View>
-                  <Text style={styles.planTitle}>{PERIOD_TITLE[plan.period]}</Text>
-                  {plan.period === 'annual' && savings !== null && (
-                    <View style={styles.saveTag}>
-                      <Text style={styles.saveText}>{`Save ${savings}%`}</Text>
-                    </View>
-                  )}
+                <View style={[styles.radio, on && styles.radioOn]}>
+                  {on ? <Icon name="check" size={14} color={brand.white} strokeWidth={3} /> : null}
                 </View>
-                <Text style={styles.planPrice}>{priceLine(plan)}</Text>
+                <View style={styles.planText}>
+                  <View style={styles.planRow}>
+                    <Text style={styles.planTitle}>{PERIOD_TITLE[plan.period]}</Text>
+                    {plan.period === 'annual' && savings !== null && (
+                      <View style={styles.saveTag}>
+                        <Text style={styles.saveText}>{`Save ${savings}%`}</Text>
+                      </View>
+                    )}
+                  </View>
+                  {/* Same size and weight for "free" and the price: one line, nothing hidden. */}
+                  <Text style={styles.planPrice}>{priceLine(plan)}</Text>
+                  {weekly ? <Text style={styles.planWeekly}>{weekly}</Text> : null}
+                </View>
               </Pressable>
             );
           })}
@@ -302,22 +345,21 @@ export default function PaywallScreen() {
 
       {timeline && (
         <View style={styles.timeline} testID="trial-timeline">
-          <Text style={styles.timelineTitle}>How your free trial works</Text>
+          <Text style={styles.timelineTitle}>
+            {selected?.trialDays === 7 ? 'How your free week works' : 'How your free trial works'}
+          </Text>
           {timeline.map((step, i) => {
             const last = i === timeline.length - 1;
             return (
               <View key={step.id} style={styles.step}>
                 <View style={styles.stepRail}>
-                  <View style={[styles.stepIcon, last && styles.stepIconLast]}>
-                    <Icon name={STEP_ICON[step.id]} size={18} color={last ? brand.white : brand.ink} />
-                  </View>
+                  <View style={[styles.stepDot, { backgroundColor: STEP_DOT[step.id] }]} />
                   {!last && <View style={styles.stepLine} />}
                 </View>
-                <View style={styles.stepText}>
-                  <Text style={styles.stepWhen}>
-                    {step.id === 'today' ? step.when : `${step.when} · ${shortDate(step.date)}`}
+                <View style={[styles.stepText, last && styles.stepTextLast]}>
+                  <Text style={styles.stepTitle}>
+                    {step.id === 'today' ? `Today, ${shortDate(step.date)}` : shortDate(step.date)}
                   </Text>
-                  <Text style={styles.stepTitle}>{step.title}</Text>
                   <Text style={styles.stepBody}>{step.body}</Text>
                 </View>
               </View>
@@ -332,16 +374,8 @@ export default function PaywallScreen() {
 }
 
 const styles = StyleSheet.create({
-  close: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: brand.paperDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  closePressed: { backgroundColor: brand.line },
+  close: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  closePressed: { opacity: 0.6 },
   loadFailed: {
     alignItems: 'center',
     gap: 10,
@@ -354,60 +388,67 @@ const styles = StyleSheet.create({
   },
   loadFailedTitle: { fontSize: 20, lineHeight: 25, fontFamily: fonts.displayBold, color: brand.ink, marginTop: 4 },
   loadFailedBody: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted, textAlign: 'center' },
-  titleBlock: { gap: 8 },
-  title: { fontSize: 30, lineHeight: 35, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.ink },
-  subtitle: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
-  plans: { gap: 12 },
+  content: { paddingTop: 4, gap: 20 },
+  hero: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
+  title: {
+    flex: 1,
+    fontSize: 34,
+    lineHeight: 38,
+    letterSpacing: -1.3,
+    fontFamily: fonts.display,
+    color: brand.ink,
+  },
+  benefits: { gap: 14 },
+  benefit: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  benefitIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  benefitText: { flex: 1, fontSize: 16, lineHeight: 22, fontFamily: fonts.medium, color: brand.ink },
+  plans: { gap: 10 },
   plan: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
     borderWidth: 1.5,
     borderColor: brand.line,
     borderRadius: 20,
-    padding: 16,
-    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     backgroundColor: brand.white,
   },
-  planOn: { borderColor: brand.ink, borderWidth: 2 },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  planOn: { borderColor: brand.ink, borderWidth: 2.5 },
+  planText: { flex: 1, gap: 3 },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: brand.line,
+    borderColor: brand.faint,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioOn: { backgroundColor: brand.ink, borderColor: brand.ink },
-  planTitle: { flex: 1, fontSize: 15, fontFamily: fonts.semibold, color: brand.muted },
-  // Same size and weight for "free" and the price: one line, nothing hidden.
-  planPrice: { fontSize: 19, lineHeight: 24, fontFamily: fonts.displayBold, color: brand.ink, marginLeft: 32 },
-  saveTag: { backgroundColor: brand.tangSoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  planTitle: { fontSize: 17, fontFamily: fonts.semibold, color: brand.ink },
+  planPrice: { fontSize: 15, lineHeight: 20, fontFamily: fonts.regular, color: brand.ink },
+  planWeekly: { fontSize: 13, fontFamily: fonts.medium, color: brand.muted },
+  saveTag: { backgroundColor: brand.tangSoft, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   saveText: { fontSize: 12, fontFamily: fonts.bold, color: brand.tangInk },
-  timeline: {
-    backgroundColor: brand.white,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: brand.line,
-    padding: 18,
-    gap: 0,
+  timeline: { backgroundColor: brand.paperDeep, borderRadius: 24, padding: 20 },
+  timelineTitle: {
+    fontSize: 20,
+    letterSpacing: -0.3,
+    fontFamily: fonts.displayBold,
+    color: brand.ink,
+    marginBottom: 14,
   },
-  timelineTitle: { fontSize: 17, fontFamily: fonts.displayBold, color: brand.ink, marginBottom: 14 },
   step: { flexDirection: 'row', gap: 14 },
-  stepRail: { alignItems: 'center', width: 36 },
-  stepIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: brand.paper,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepIconLast: { backgroundColor: brand.ink },
-  stepLine: { width: 2, flex: 1, minHeight: 14, backgroundColor: brand.line, marginVertical: 4 },
-  stepText: { flex: 1, paddingBottom: 16, gap: 2 },
-  stepWhen: { fontSize: 12, letterSpacing: 0.4, fontFamily: fonts.semibold, color: brand.tangInk },
+  stepRail: { alignItems: 'center', width: 16 },
+  stepDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: brand.ink },
+  stepLine: { width: 2, flex: 1, backgroundColor: 'rgba(21,19,28,0.25)' },
+  stepText: { flex: 1, paddingBottom: 16, gap: 2, marginTop: -2 },
+  stepTextLast: { paddingBottom: 0 },
   stepTitle: { fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
-  stepBody: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
+  stepBody: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
+  restore: { fontSize: 15, fontFamily: fonts.semibold, color: brand.muted, marginRight: 8 },
   footer: { gap: 10 },
   // Auto-renewal terms must be clear and conspicuous next to the button
   // (ROSCA, California's auto-renewal law, App Store 3.1.2): readable size,
