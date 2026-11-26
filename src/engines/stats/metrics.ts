@@ -20,6 +20,12 @@ export type MetricKey =
   | 'focus'
   | 'energy'
   | 'mood'
+  // The expanded battery (see features/battery). Null on days the test wasn't
+  // part of the check-in, so they only enter the analysis for runs that chose them.
+  | 'stroopInterferenceMs'
+  | 'symbolPerMin'
+  | 'recallScore'
+  | 'calmScore'
   // Nightly values from Apple Health / Health Connect (see features/health).
   // Each is the night AFTER the dose day, so last night's sleep is matched to
   // yesterday's dose.
@@ -50,6 +56,15 @@ export const METRICS: Record<MetricKey, MetricSpec> = {
   focus: { key: 'focus', label: 'focus rating', unit: '', betterDirection: 'higher' },
   energy: { key: 'energy', label: 'energy rating', unit: '', betterDirection: 'higher' },
   mood: { key: 'mood', label: 'mood rating', unit: '', betterDirection: 'higher' },
+  stroopInterferenceMs: {
+    key: 'stroopInterferenceMs',
+    label: 'Stroop interference',
+    unit: 'ms',
+    betterDirection: 'lower',
+  },
+  symbolPerMin: { key: 'symbolPerMin', label: 'symbol-coding speed', unit: 'per min', betterDirection: 'higher' },
+  recallScore: { key: 'recallScore', label: 'words remembered', unit: '', betterDirection: 'higher' },
+  calmScore: { key: 'calmScore', label: 'calm score', unit: '', betterDirection: 'higher' },
   healthSleepHours: { key: 'healthSleepHours', label: 'sleep', unit: 'h', betterDirection: 'higher' },
   healthRestingHr: { key: 'healthRestingHr', label: 'resting heart rate', unit: 'bpm', betterDirection: 'lower' },
   healthHrv: { key: 'healthHrv', label: 'overnight HRV', unit: 'ms', betterDirection: 'higher' },
@@ -66,6 +81,17 @@ export const CORE_METRICS: MetricKey[] = [
   'mood',
 ];
 
+/** Metrics added by the expanded battery; present only when their test ran. */
+export const BATTERY_METRICS: MetricKey[] = [
+  'stroopInterferenceMs',
+  'symbolPerMin',
+  'recallScore',
+  'calmScore',
+];
+
+/** Every metric a check-in can record. */
+export const CHECK_IN_METRICS: MetricKey[] = [...CORE_METRICS, ...BATTERY_METRICS];
+
 /** Metrics that come from Apple Health / Health Connect. */
 export const HEALTH_METRICS: MetricKey[] = ['healthSleepHours', 'healthRestingHr', 'healthHrv'];
 
@@ -81,14 +107,16 @@ export type Goal = 'focus' | 'memory' | 'calm' | 'sleep';
 
 /**
  * Map a goal to its primary metric; the others become secondary. Focus leans on
- * the reaction-time task, memory on the n-back, and calm/sleep on the relevant
- * self-rating since there is no objective task for them.
+ * the reaction-time task, memory on the n-back, calm on the calm check, and
+ * sleep on next-day energy. Each entry lists fallbacks in order: a calm run
+ * created before the calm check existed has no calm score, so it is judged on
+ * the mood rating as it was when that run started.
  */
-const PRIMARY_BY_GOAL: Record<Goal, MetricKey> = {
-  focus: 'pvtMedianMs',
-  memory: 'nbackDprime',
-  calm: 'mood',
-  sleep: 'energy',
+const PRIMARY_BY_GOAL: Record<Goal, MetricKey[]> = {
+  focus: ['pvtMedianMs'],
+  memory: ['nbackDprime'],
+  calm: ['calmScore', 'mood'],
+  sleep: ['energy'],
 };
 
 export type PrimarySelection = {
@@ -103,12 +131,13 @@ export type PrimarySelection = {
  */
 export function selectPrimaryMetric(
   goal: Goal,
-  available: MetricKey[] = CORE_METRICS,
+  available: MetricKey[] = CHECK_IN_METRICS,
 ): PrimarySelection {
-  const primary = PRIMARY_BY_GOAL[goal];
-  if (!primary) {
+  const choices = PRIMARY_BY_GOAL[goal];
+  if (!choices) {
     throw new Error(`Unknown goal: ${goal}`);
   }
+  const primary = choices.find((m) => available.includes(m)) ?? choices[choices.length - 1]!;
   const secondary = available.filter((m) => m !== primary);
   return { primary, secondary };
 }

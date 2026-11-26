@@ -36,6 +36,7 @@ import {
 } from './adherence';
 import { COMPLIANCE_DISCLAIMER, UNBLINDED_CAVEAT } from './compliance';
 import { monthlyCostLine, type MonthlyCostInput } from './cost';
+import { batteryOf, metricsForBattery } from '@/features/battery';
 
 /** Column on test_session holding each metric's value. */
 const METRIC_COLUMN: Partial<Record<MetricKey, keyof TestSession>> = {
@@ -46,6 +47,10 @@ const METRIC_COLUMN: Partial<Record<MetricKey, keyof TestSession>> = {
   focus: 'focus',
   energy: 'energy',
   mood: 'mood',
+  stroopInterferenceMs: 'stroopInterferenceMs',
+  symbolPerMin: 'symbolPerMin',
+  recallScore: 'recallScore',
+  calmScore: 'calmScore',
 };
 
 /** health_night metric behind each Health metric key. */
@@ -167,32 +172,60 @@ function resolveOnByDay(
 /**
  * Assemble the per-metric day observations: one row per valid test session that
  * has a non-null value for the metric and a matching schedule day. `t` is the
- * day index, `sleep` falls back to 0 when unlogged, `caffeine` is the session's
- * flag. Returns the observations in day order.
+ * day index and `caffeine` is the session's flag.
+ *
+ * `sleep` is the night before the test, best source first: what the user
+ * picked at check-in, else the hours Apple Health / Health Connect measured for
+ * the night ending on the test day, else the mean of the nights we do know. The
+ * mean (rather than 0) keeps a skipped answer from looking like an all-nighter,
+ * which would drag the sleep coefficient and, through it, the ON estimate. With
+ * no sleep at all the column is constant and the model drops it.
  */
 function observationsFor(
   metric: MetricKey,
   sessions: TestSession[],
   onByDay: Map<number, 0 | 1>,
+  measuredSleepByDay: Map<number, number> = new Map(),
 ): DayObservation[] {
   const column = METRIC_COLUMN[metric];
-  const rows: DayObservation[] = [];
-  if (!column) return rows;
+  if (!column) return [];
+  const picked: { s: TestSession; on: 0 | 1; y: number; sleep: number | null }[] = [];
   for (const s of sessions) {
     if (!s.valid) continue;
     const on = onByDay.get(s.dayIndex);
     if (on === undefined) continue; // no schedule day for this session
     const raw = s[column];
     if (typeof raw !== 'number') continue; // metric not measured this day
-    rows.push({
-      y: raw,
+    const sleep =
+      typeof s.sleepHours === 'number' ? s.sleepHours : (measuredSleepByDay.get(s.dayIndex) ?? null);
+    picked.push({ s, on, y: raw, sleep });
+  }
+  const known = picked.map((p) => p.sleep).filter((v): v is number => v !== null);
+  const fill = known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : 0;
+  return picked
+    .map(({ s, on, y, sleep }) => ({
+      y,
       on,
       t: s.dayIndex,
-      sleep: typeof s.sleepHours === 'number' ? s.sleepHours : 0,
-      caffeine: s.caffeine ? 1 : 0,
-    });
+      sleep: sleep ?? fill,
+      caffeine: (s.caffeine ? 1 : 0) as 0 | 1,
+    }))
+    .sort((a, b) => a.t - b.t);
+}
+
+/**
+ * Health-measured sleep for the night before each schedule day (the night that
+ * ends on that day's morning), keyed by day index. Feeds the sleep covariate of
+ * the check-in metrics when the user skipped the sleep question.
+ */
+export function measuredSleepByDay(schedule: ScheduleDay[], nights: HealthNight[]): Map<number, number> {
+  const byDate = new Map(nights.filter((n) => n.metric === 'sleep_hours').map((n) => [n.date, n.value]));
+  const out = new Map<number, number>();
+  for (const day of schedule) {
+    const v = byDate.get(day.date);
+    if (v !== undefined) out.set(day.dayIndex, v);
   }
-  return rows.sort((a, b) => a.t - b.t);
+  return out;
 }
 
 /**
@@ -256,6 +289,12 @@ function fromAnalysis(analysis: MetricAnalysis): MetricVerdict {
   };
 }
 
+/** Keep the original metrics in their familiar order, new ones after them. */
+function orderLikeCore(metrics: MetricKey[]): MetricKey[] {
+  const core = CORE_METRICS.filter((m) => metrics.includes(m));
+  return [...core, ...metrics.filter((m) => !CORE_METRICS.includes(m))];
+}
+
 function countOnDays(onByDay: Map<number, 0 | 1>): number {
   let n = 0;
   for (const v of onByDay.values()) if (v === 1) n += 1;
@@ -292,7 +331,10 @@ export function computeExperimentVerdict(
   const goal = experiment.goal as Goal;
   const nights = input.healthNights ?? [];
   const hasHealth = nights.length > 0;
-  const available: MetricKey[] = hasHealth ? [...CORE_METRICS, ...HEALTH_METRICS] : CORE_METRICS;
+  // The run's own battery decides what it measured: its tests plus the ratings.
+  // Older runs fall back to the original reaction + 2-back pair.
+  const checkIn = orderLikeCore(metricsForBattery(batteryOf(experiment)));
+  const available: MetricKey[] = hasHealth ? [...checkIn, ...HEALTH_METRICS] : checkIn;
   const goalSelection = selectPrimaryMetric(goal, available);
   // A run that connected Health before day 1 pre-registered a Health outcome.
   const preRegistered = HEALTH_PRIMARY_DB[experiment.primaryMetric];
@@ -304,6 +346,7 @@ export function computeExperimentVerdict(
       ? preRegistered
       : undefined;
   const primary: MetricKey = healthPrimary ?? goalSelection.primary;
+  const sleepByDay = measuredSleepByDay(schedule, nights);
   const metricOrder: MetricKey[] = [primary, ...available.filter((m) => m !== primary)];
   const design: 'acute' | 'cumulative' =
     experiment.design === 'cumulative' ? 'cumulative' : 'acute';
@@ -314,7 +357,7 @@ export function computeExperimentVerdict(
   for (const metric of metricOrder) {
     const days = HEALTH_COLUMN[metric]
       ? healthObservationsFor(metric, schedule, sessions, nights, onByDay)
-      : observationsFor(metric, sessions, onByDay);
+      : observationsFor(metric, sessions, onByDay, sleepByDay);
     let verdict: MetricVerdict;
     try {
       const analysis = analyzeMetric(metric, days, { adherence: adherenceInput, design });

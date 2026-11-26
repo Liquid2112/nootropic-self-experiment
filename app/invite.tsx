@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { getDatabase } from '@/db';
+import { rewardCopy } from '@/config/referralRewards';
 import { Icon } from '@/brand';
 import {
   canSendKey,
@@ -73,13 +74,10 @@ export default function InviteScreen() {
   return (
     <Scaffold>
       <Card style={styles.hero}>
-        <Text style={styles.kicker}>GIVE A MONTH, GET A MONTH</Text>
+        <Text style={styles.kicker}>{rewardCopy('inviteKicker')}</Text>
         <Text style={styles.heroTitle}>Your code</Text>
         <Text style={styles.code}>{state.me.myCode}</Text>
-        <Text style={styles.heroBody}>
-          A friend who starts with your code gets a free month, and so do you. Your code is also on every verdict card
-          you share.
-        </Text>
+        <Text style={styles.heroBody}>{rewardCopy('inviteBody')}</Text>
         <Button label="Share my code" onPress={() => void shareCode()} />
       </Card>
 
@@ -140,7 +138,7 @@ export default function InviteScreen() {
 
 const styles = StyleSheet.create({
   hero: { gap: spacing.sm, backgroundColor: brand.tangSoft, borderColor: brand.tangSoft },
-  kicker: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 1.2, color: brand.tangDeep },
+  kicker: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 1.2, color: brand.tangInk },
   heroTitle: { fontFamily: fonts.medium, fontSize: 14, color: brand.muted },
   code: { fontFamily: fonts.display, fontSize: 40, letterSpacing: 3, color: brand.ink },
   heroBody: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: brand.ink2, marginBottom: spacing.sm },
@@ -161,5 +159,5 @@ const styles = StyleSheet.create({
     color: brand.ink,
     backgroundColor: brand.white,
   },
-  error: { fontFamily: fonts.medium, fontSize: 13, color: brand.rose },
+  error: { fontFamily: fonts.medium, fontSize: 13, color: brand.roseInk },
 });

@@ -71,7 +71,7 @@ src/
     seed.ts           Curated ~30-supplement seed list
     index.ts          getDatabase() + public re-exports
     __tests__/        Jest tests + in-memory test driver
-  engines/            Cognitive-test engine (PVT + 2-back); stats reserved
+  engines/            Cognitive-test engine (PVT, 2-back, Stroop, symbol code, word memory, calm check); stats
   features/
     daily-loop/       Pure Today-view, context, off-window, timer, device,
                       session-assembly logic (UI-free, fully unit-tested)
@@ -87,10 +87,14 @@ src/
 - **Today (`app/index.tsx`)** — the hub: Day X of N, today's dose instruction,
   Mark taken, Start check-in, and the streak. During a blinded run the arm is
   never revealed; the instruction is phrased as a numbered cup.
-- **Daily test (`app/daily-test.tsx`)** — a full-screen ~90-second flow: pre-test
-  context (sleep, caffeine, phone/tablet), a PVT timed with the high-resolution
-  clock (`performance.now`), a letter 2-back, and three 0–10 sliders plus an
-  optional note. Raw trials are scored through the cognitive-test engine; one
+- **Daily test (`app/daily-test.tsx`)** — a full-screen ~2-minute flow: pre-test
+  context (sleep, caffeine, phone/tablet), then the run's own test battery, then
+  three 0–10 sliders plus an optional note. The battery is picked at setup from
+  six tests (`src/features/battery`): reaction time (PVT, high-resolution
+  clock), letter 2-back, color clash (Stroop), symbol code (digit-symbol
+  substitution), word memory (delayed recognition), and a four-item calm check.
+  The goal's own test is locked on; runs created before the picker use PVT +
+  2-back. Raw trials are scored through the cognitive-test engine; one
   `test_session` row is persisted, with off-window and abandoned/invalid runs
   flagged.
 - **Notifications** — a morning dose reminder and a check-in-window reminder,
@@ -118,3 +122,20 @@ conventions that keep the data layer testable.
 - Still needed before submitting: RevenueCat project + keys, the final bundle
   ID, a contact email in the privacy policy, App Store screenshots, and a pass
   on real devices.
+
+### Health and widget setup once the Apple Developer account exists
+
+Both features are configured in `app.json` and need a dev build (`eas build
+--profile development`); Expo Go can't load them. On the Apple side:
+
+- **HealthKit:** enable the HealthKit capability on the App ID
+  `com.liquid2112.nootropicexperiment`. EAS adds the entitlement on the next
+  build. Read-only access (sleep, resting heart rate, HRV); nothing is written.
+- **Widget and Live Activity:** register the App Group
+  `group.com.liquid2112.nootropicexperiment` and add it to both the app and the
+  widget extension's App IDs. The widget reads its timeline from that group.
+- **Android:** Health Connect permissions are in `app.json`. Google Play asks
+  for a Health Connect declaration form before release.
+
+When Health is connected and last night's sleep has synced, the daily check-in
+skips the sleep question and the verdict adjusts for the measured hours instead.

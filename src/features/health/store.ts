@@ -103,3 +103,21 @@ export function healthCoverage(
   for (let d = first; d <= to; d = addDays(d, 1)) expected += 1;
   return { synced: healthNights.countNights(db, first, to), expected };
 }
+
+/** Display name for a connected Health source. */
+export function healthSourceLabel(source: string): string {
+  return source === 'health_connect' ? 'Health Connect' : 'Apple Health';
+}
+
+/**
+ * Whether last night's sleep (the night ending on `today`) already synced from
+ * Health, so the check-in can skip asking. Returns the source's display name,
+ * never the hours: values stay hidden until the verdict, same as the coverage
+ * counter, so the check-in can't nudge anyone into guessing their arm.
+ */
+export function measuredSleepSource(db: SqlDriver, today: string): string | null {
+  const connection = healthConnection(db);
+  if (!connection) return null;
+  const synced = healthNights.listBetween(db, today, today).some((n) => n.metric === 'sleep_hours');
+  return synced ? healthSourceLabel(connection.source) : null;
+}

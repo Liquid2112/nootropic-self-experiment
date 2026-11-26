@@ -12,7 +12,7 @@ import type { Goal, TestWindow, TestWindowId } from './types';
  * columns (see src/db/types.ts) so the stats engine can read the right column:
  *   - focus  -> reaction time (PVT median, ms; lower is better)
  *   - memory -> working memory (n-back d-prime; higher is better)
- *   - calm   -> self-rated mood
+ *   - calm   -> the calm check (0..100 calm score)
  *   - sleep  -> self-rated next-day energy
  *
  * This must match the stats engine's PRIMARY_BY_GOAL (src/engines/stats/
@@ -23,7 +23,7 @@ import type { Goal, TestWindow, TestWindowId } from './types';
 const GOAL_TO_METRIC: Record<Goal, string> = {
   focus: 'pvt_median_ms',
   memory: 'nback_dprime',
-  calm: 'mood',
+  calm: 'calm_score',
   sleep: 'energy',
 };
 

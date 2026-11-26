@@ -15,6 +15,7 @@ import {
 import { scheduleRevealReminder } from '@/features/referral/reminders';
 import { stubRewardsBackend, syncAttribution } from '@/features/referral/rewards';
 import { shortDateLabel } from '@/features/widget/model';
+import { REFERRAL_REWARDS_LIVE } from '@/config/referralRewards';
 import { Button, Card, Scaffold, brand, fonts, radius, spacing } from '@/ui';
 
 /**
@@ -123,8 +124,10 @@ export default function KeyholderScreen() {
       ) : accepted ? (
         <Card style={styles.card}>
           <View style={styles.rowHead}>
-            <Icon name="gift" size={20} color={brand.mint} />
-            <Text style={styles.cardTitle}>Key saved. You both get a free month.</Text>
+            <Icon name={REFERRAL_REWARDS_LIVE ? 'gift' : 'lock'} size={20} color={brand.mint} />
+            <Text style={styles.cardTitle}>
+              {REFERRAL_REWARDS_LIVE ? 'Key saved. You both get a free month.' : 'Key saved. You’re the keyholder.'}
+            </Text>
           </View>
           <Text style={styles.muted}>
             {`We’ll remind you on ${reveal} to send it back. Until then, sit tight.`}
@@ -135,9 +138,11 @@ export default function KeyholderScreen() {
       ) : (
         <>
           <Button label="Hold the key" onPress={() => void onAccept(payload)} />
-          <Text style={styles.fine}>
-            {`You and ${who} each get ${REFERRAL_REWARD.months} free month of Placebo.`}
-          </Text>
+          {REFERRAL_REWARDS_LIVE ? (
+            <Text style={styles.fine}>
+              {`You and ${who} each get ${REFERRAL_REWARD.months} free month of Placebo.`}
+            </Text>
+          ) : null}
         </>
       )}
     </Scaffold>

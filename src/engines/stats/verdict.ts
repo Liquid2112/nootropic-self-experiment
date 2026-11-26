@@ -128,6 +128,9 @@ function improvementWord(spec: MetricSpec, improved: boolean): string {
   if (spec.key === 'pvtMedianMs') return improved ? 'faster' : 'slower';
   if (spec.key === 'pvtLapses') return improved ? 'fewer' : 'more';
   if (spec.key === 'healthSleepHours') return improved ? 'longer' : 'shorter';
+  if (spec.key === 'stroopInterferenceMs') return improved ? 'smaller' : 'larger';
+  if (spec.key === 'symbolPerMin') return improved ? 'faster' : 'slower';
+  if (spec.key === 'recallScore') return improved ? 'more' : 'fewer';
   return improved ? 'higher' : 'lower';
 }
 

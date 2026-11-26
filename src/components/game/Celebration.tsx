@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   rowLabel: { flex: 1, fontSize: 15, fontFamily: fonts.medium, color: brand.muted },
   rowValue: { fontSize: 17, fontFamily: fonts.display, color: brand.ink },
   levelBlock: { marginTop: 8, paddingTop: 14, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: brand.line, gap: 10 },
-  levelUp: { fontSize: 14, fontFamily: fonts.semibold, color: brand.tang, textAlign: 'center' },
+  levelUp: { fontSize: 14, fontFamily: fonts.semibold, color: brand.tangInk, textAlign: 'center' },
   footer: { gap: 10, paddingHorizontal: 20, paddingBottom: 12 },
   footnote: { fontSize: 14, fontFamily: fonts.regular, color: brand.muted, textAlign: 'center' },
 });

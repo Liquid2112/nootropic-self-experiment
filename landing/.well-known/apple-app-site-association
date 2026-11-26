@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["APPLE_TEAM_ID.com.liquid2112.nootropicexperiment"],
+        "components": [
+          { "/": "/k/*", "comment": "Keyholder invite" },
+          { "/": "/u/*", "comment": "Key sent back to unlock a verdict" },
+          { "/": "/r/*", "comment": "Referral or creator code" }
+        ]
+      }
+    ]
+  }
+}

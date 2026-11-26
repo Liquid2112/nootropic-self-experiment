@@ -223,7 +223,7 @@ function CheckInActivityLayout(props: LiveActivityProps, env: LiveActivityEnviro
     ),
     expandedBottom: (
       <Text modifiers={[font({ size: 13 })]}>
-        {`90-second check-in keeps your ${props.streak}-day streak. Reveal in ${props.daysToVerdict} days.`}
+        {`2-minute check-in keeps your ${props.streak}-day streak. Reveal in ${props.daysToVerdict} days.`}
       </Text>
     ),
   };

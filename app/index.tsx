@@ -30,6 +30,7 @@ import {
 import { cancelDailyReminders, loadNotificationsAdapter, scheduleDailyReminders } from '@/features/notifications';
 import { RESUME_WARNING, activePause, endExperimentForSafety, resumeExperiment } from '@/features/safety';
 import { track, trackOnce } from '@/features/analytics';
+import { rewardCopy } from '@/config/referralRewards';
 import { refreshWidgets } from '@/features/widget/useWidgetSync';
 import {
   ActionTile,
@@ -257,6 +258,9 @@ export default function TodayScreen() {
     // day still counts as following the plan.
     doseTitle: view.instruction.startsWith('No capsule') ? 'Log your off day' : undefined,
   });
+  // Open runs say "No capsule today" on OFF days; "Mark taken" would read as
+  // "I took something", so the action names what is actually logged.
+  const offDay = view.instruction.startsWith('No capsule');
   const goal = dailyGoalProgress(quests);
   const goalDone = quests.filter((q) => !q.bonus && q.done).length;
   const goalTotal = quests.filter((q) => !q.bonus).length;
@@ -384,10 +388,14 @@ export default function TodayScreen() {
               (view.taken ? (
                 <View style={styles.takenRow}>
                   <Icon name="check" size={18} color={brand.mint} strokeWidth={2.6} />
-                  <Text style={styles.takenText}>Dose logged</Text>
+                  <Text style={styles.takenText}>{offDay ? 'Off day logged' : 'Dose logged'}</Text>
                 </View>
               ) : (
-                <Button label="Mark taken" onPress={markTaken} accessibilityHint="Records that you took today's dose" />
+                <Button
+                  label={offDay ? 'Log off day' : 'Mark taken'}
+                  onPress={markTaken}
+                  accessibilityHint={offDay ? 'Records that you skipped the capsule as planned' : "Records that you took today's dose"}
+                />
               ))}
           </View>
         )}
@@ -465,7 +473,7 @@ export default function TodayScreen() {
           <ActionTile
             icon="gift"
             title="Invite friends"
-            subtitle="You both get a month free"
+            subtitle={rewardCopy('homeTile')}
             tint={brand.tangSoft}
             iconColor={brand.tang}
             onPress={() => router.push('/invite')}
@@ -582,10 +590,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
-  riskText: { flex: 1, color: brand.tangDeep, fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19 },
+  riskText: { flex: 1, color: brand.tangInk, fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19 },
   hero: { backgroundColor: brand.ink, borderRadius: 28, padding: 20, gap: 14, overflow: 'hidden' },
   heroTop: { flexDirection: 'row', alignItems: 'flex-start' },
-  heroEyebrow: { color: 'rgba(255,255,255,0.6)', fontSize: 11, fontFamily: fonts.bold, letterSpacing: 1.2 },
+  heroEyebrow: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontFamily: fonts.bold, letterSpacing: 1.2 },
   heroBigRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   heroBig: { color: brand.white, fontSize: 64, lineHeight: 70, fontFamily: fonts.display, letterSpacing: -2 },
   heroUnit: { color: brand.white, fontSize: 22, fontFamily: fonts.displayBold },
@@ -622,7 +630,7 @@ const styles = StyleSheet.create({
   body: { fontSize: 16, lineHeight: 23, fontFamily: fonts.regular, color: brand.ink },
   muted: { fontSize: 14, lineHeight: 19, fontFamily: fonts.regular, color: brand.muted },
   takenRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  takenText: { fontSize: 16, fontFamily: fonts.semibold, color: brand.mint },
+  takenText: { fontSize: 16, fontFamily: fonts.semibold, color: brand.mintInk },
   levelMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   section: { fontSize: 22, fontFamily: fonts.display, letterSpacing: -0.4, color: brand.ink, marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -651,5 +659,5 @@ const styles = StyleSheet.create({
     borderColor: brand.rose,
   },
   helpLink: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  helpLinkText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.tangDeep },
+  helpLinkText: { fontSize: 15, fontFamily: fonts.semibold, color: brand.tangInk },
 });

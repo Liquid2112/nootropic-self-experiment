@@ -6,7 +6,8 @@ import { Icon, Logo, Brian, type IconName } from '@/brand';
 import { tapLight } from '@/components/game';
 import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
-import { track } from '@/features/analytics';
+import { setAnalyticsProgressConsent, track } from '@/features/analytics';
+import { getDatabase } from '@/db';
 
 /**
  * Screen 1 — Welcome + disclaimer.
@@ -15,17 +16,28 @@ import { track } from '@/features/analytics';
  * advice and confirm they are 18+. The continue action stays disabled until
  * both are checked, and the disclaimer acknowledgment is recorded in onboarding
  * state so later screens know the gate was passed.
+ *
+ * A third, optional box asks to share anonymous progress counts (run days,
+ * check-ins). It starts unchecked: that's an opt-in, which the FTC Health
+ * Breach Notification Rule and Washington's My Health My Data Act expect
+ * before a health app shares activity with an analytics service.
  */
 export function WelcomeScreen() {
   const router = useRouter();
   const { update } = useOnboarding();
   const [notMedical, setNotMedical] = useState(false);
   const [adult, setAdult] = useState(false);
+  const [shareProgress, setShareProgress] = useState(false);
 
   const canContinue = notMedical && adult;
 
   function onContinue() {
     update({ acknowledgedDisclaimer: true });
+    try {
+      setAnalyticsProgressConsent(getDatabase(), shareProgress);
+    } catch {
+      // No database: nothing is sent anyway.
+    }
     track('onboarding_started');
     router.push('/quiz');
   }
@@ -35,6 +47,14 @@ export function WelcomeScreen() {
       testID="welcome-screen"
       footer={
         <View style={styles.footer}>
+          {!canContinue ? (
+            <View style={styles.gateHint} accessibilityLiveRegion="polite">
+              <Icon name="check" size={14} color={brand.muted} strokeWidth={2.6} />
+              <Text style={styles.gateHintText}>
+                {notMedical || adult ? 'One more box to tick above' : 'Tick the two boxes above to start'}
+              </Text>
+            </View>
+          ) : null}
           <Button
             label="Start my experiment"
             testID="welcome-continue"
@@ -78,7 +98,7 @@ export function WelcomeScreen() {
         <BenefitRow
           icon="flame"
           tint={brand.tangSoft}
-          title="90 seconds a day"
+          title="2 minutes a day"
           body="A quick reaction and memory check-in. Keep your streak, earn XP, unlock badges."
         />
         <BenefitRow
@@ -127,6 +147,20 @@ export function WelcomeScreen() {
         />
       </View>
 
+      <View style={styles.acks}>
+        <AcknowledgeRow
+          testID="ack-share-progress"
+          checked={shareProgress}
+          onToggle={() => {
+            tapLight();
+            setShareProgress((v) => !v);
+          }}
+          label="Optional: share anonymous progress counts (which day you're on, check-ins done) to help improve Placebo. Never your scores, health data or supplement. Change it anytime."
+          small
+          last
+        />
+      </View>
+
       <Pressable
         accessibilityRole="link"
         testID="welcome-privacy"
@@ -148,9 +182,11 @@ type AcknowledgeRowProps = {
   onToggle: () => void;
   testID?: string;
   last?: boolean;
+  /** Smaller label, for the optional consent row. */
+  small?: boolean;
 };
 
-function AcknowledgeRow({ label, checked, onToggle, testID, last }: AcknowledgeRowProps) {
+function AcknowledgeRow({ label, checked, onToggle, testID, last, small }: AcknowledgeRowProps) {
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -162,7 +198,7 @@ function AcknowledgeRow({ label, checked, onToggle, testID, last }: AcknowledgeR
       <View style={[styles.box, checked ? styles.boxChecked : null]}>
         {checked ? <Icon name="check" size={16} color={brand.white} strokeWidth={3} /> : null}
       </View>
-      <Text style={styles.ackLabel}>{label}</Text>
+      <Text style={[styles.ackLabel, small && styles.ackLabelSmall]}>{label}</Text>
     </Pressable>
   );
 }
@@ -184,6 +220,8 @@ function BenefitRow({ icon, tint, title, body, last }: BenefitRowProps) {
 }
 
 const styles = StyleSheet.create({
+  gateHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingBottom: 6 },
+  gateHintText: { fontSize: 13, lineHeight: 18, fontFamily: fonts.medium, color: brand.muted },
   footer: { gap: 4 },
   secondary: {
     flexDirection: 'row',
@@ -254,6 +292,7 @@ const styles = StyleSheet.create({
   },
   boxChecked: { backgroundColor: brand.ink, borderColor: brand.ink },
   ackLabel: { flex: 1, fontSize: 15, lineHeight: 20, fontFamily: fonts.medium, color: brand.ink },
+  ackLabelSmall: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
   privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   privacyLink: { fontSize: 13, fontFamily: fonts.regular, color: brand.muted },
   privacyUnderline: { fontFamily: fonts.semibold, color: brand.ink, textDecorationLine: 'underline' },

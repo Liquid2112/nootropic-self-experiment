@@ -29,6 +29,16 @@ function toText(value: SqlValue | undefined): string | null {
   return typeof value === 'string' ? value : null;
 }
 
+function parseStringList(value: SqlValue | undefined): string[] | null {
+  if (typeof value !== 'string' || value.length === 0) return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === 'string') ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function requireText(value: SqlValue | undefined, column: string): string {
   if (typeof value !== 'string') {
     throw new Error(`Expected text for column "${column}", got ${String(value)}`);
@@ -123,6 +133,7 @@ function rowToExperiment(row: SqlRow): Experiment {
     status,
     sealedKey: toText(row.sealed_key),
     seed: toText(row.seed),
+    battery: parseStringList(row.battery),
   };
 }
 
@@ -130,8 +141,8 @@ export const experiments = {
   insert(db: SqlDriver, e: Experiment): void {
     db.run(
       `INSERT INTO experiment
-        (id, supplement_id, goal, primary_metric, design, blinding_mode, length_days, start_date, status, sealed_key, seed)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, supplement_id, goal, primary_metric, design, blinding_mode, length_days, start_date, status, sealed_key, seed, battery)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         e.id,
         e.supplementId,
@@ -144,6 +155,7 @@ export const experiments = {
         e.status,
         e.sealedKey,
         e.seed,
+        e.battery && e.battery.length > 0 ? JSON.stringify(e.battery) : null,
       ],
     );
   },
@@ -226,6 +238,11 @@ function rowToTestSession(row: SqlRow): TestSession {
     mood: toInt(row.mood),
     sleepHours: toInt(row.sleep_hours),
     caffeine: toBool(row.caffeine),
+    stroopInterferenceMs: toInt(row.stroop_interference_ms),
+    stroopAccuracy: toInt(row.stroop_accuracy),
+    symbolPerMin: toInt(row.symbol_per_min),
+    recallScore: toInt(row.recall_score),
+    calmScore: toInt(row.calm_score),
     note: toText(row.note),
     valid: toBool(row.valid),
   };
@@ -236,8 +253,9 @@ export const testSessions = {
     db.run(
       `INSERT INTO test_session
         (id, experiment_id, day_index, started_at, device_model, pvt_median_ms, pvt_lapses,
-         nback_accuracy, nback_dprime, focus, energy, mood, sleep_hours, caffeine, note, valid)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         nback_accuracy, nback_dprime, focus, energy, mood, sleep_hours, caffeine, note, valid,
+         stroop_interference_ms, stroop_accuracy, symbol_per_min, recall_score, calm_score)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         t.id,
         t.experimentId,
@@ -255,6 +273,11 @@ export const testSessions = {
         t.caffeine ? 1 : 0,
         t.note,
         t.valid ? 1 : 0,
+        t.stroopInterferenceMs ?? null,
+        t.stroopAccuracy ?? null,
+        t.symbolPerMin ?? null,
+        t.recallScore ?? null,
+        t.calmScore ?? null,
       ],
     );
   },

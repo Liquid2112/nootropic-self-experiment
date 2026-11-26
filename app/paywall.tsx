@@ -65,9 +65,14 @@ export default function PaywallScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [exitOffer, setExitOffer] = useState<ExitOffer | null>(null);
   const [today] = useState(() => new Date());
+  // Bumped by "Try again" to re-run the plan load after a failure.
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     track('paywall_viewed');
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     void (async () => {
       const a = await loadPurchasesAdapter(Platform.OS);
@@ -76,13 +81,19 @@ export default function PaywallScreen() {
       setAdapter(a);
       setPlans(list);
       setSelectedId(list[0]?.id ?? null);
-      if (!a.available || list.length === 0) {
-        setMessage('Subscriptions couldn’t load. Check your connection and try again.');
-      }
     })();
     return () => {
       cancelled = true;
     };
+  }, [loadAttempt]);
+
+  // Store unreachable or no offering: show a recoverable state, not a dead button.
+  const loadFailed = adapter !== null && (!adapter.available || plans.length === 0);
+  const retryLoad = useCallback(() => {
+    tapLight();
+    setAdapter(null);
+    setMessage(null);
+    setLoadAttempt((n) => n + 1);
   }, []);
 
   const selected = useMemo(() => plans.find((p) => p.id === selectedId), [plans, selectedId]);
@@ -156,10 +167,11 @@ export default function PaywallScreen() {
             onPress={() => void onClose()}
             accessibilityRole="button"
             accessibilityLabel="Close"
-            hitSlop={12}
+            hitSlop={8}
             testID="paywall-close"
+            style={({ pressed }) => [styles.close, pressed && styles.closePressed]}
           >
-            <Icon name="close" size={22} color={brand.ink} />
+            <Icon name="close" size={20} color={brand.ink} />
           </Pressable>
         ),
       }}
@@ -210,13 +222,17 @@ export default function PaywallScreen() {
       testID="paywall-screen"
       footer={
         <View style={styles.footer}>
-          <Button
-            label={ctaLabel(selected)}
-            onPress={() => void buy(selected)}
-            disabled={!selected || busy}
-            loading={busy}
-          />
-          {selected && <Text style={styles.terms}>{renewalTerms(selected)}</Text>}
+          {loadFailed ? (
+            <Button label="Try again" onPress={retryLoad} testID="paywall-retry" />
+          ) : (
+            <Button
+              label={ctaLabel(selected)}
+              onPress={() => void buy(selected)}
+              disabled={!selected || busy}
+              loading={busy}
+            />
+          )}
+          {selected && !loadFailed && <Text style={styles.terms}>{renewalTerms(selected)}</Text>}
           <View style={styles.links}>
             <Pressable onPress={() => void onRestore()} accessibilityRole="button">
               <Text style={styles.link}>Restore</Text>
@@ -235,12 +251,21 @@ export default function PaywallScreen() {
       <View style={styles.titleBlock}>
         <Text style={styles.title}>Find out if it actually works</Text>
         <Text style={styles.subtitle}>
-          A blinded experiment, a daily brain check-in and a real verdict in 4 weeks.
+          A blinded experiment, six science-backed brain tests to choose from, and a real verdict in 4 weeks.
         </Text>
       </View>
 
       {adapter === null ? (
         <ActivityIndicator color={brand.ink} />
+      ) : loadFailed ? (
+        <View style={styles.loadFailed} testID="paywall-load-failed">
+          <Brian size={96} mood="sleepy" />
+          <Text style={styles.loadFailedTitle}>Plans didn’t load</Text>
+          <Text style={styles.loadFailedBody}>
+            We couldn’t reach the App Store. Check your connection, then try again. You won’t be
+            charged for anything until you pick a plan.
+          </Text>
+        </View>
       ) : (
         <View style={styles.plans}>
           {plans.map((plan) => {
@@ -307,6 +332,28 @@ export default function PaywallScreen() {
 }
 
 const styles = StyleSheet.create({
+  close: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: brand.paperDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  closePressed: { backgroundColor: brand.line },
+  loadFailed: {
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    backgroundColor: brand.white,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brand.line,
+  },
+  loadFailedTitle: { fontSize: 20, lineHeight: 25, fontFamily: fonts.displayBold, color: brand.ink, marginTop: 4 },
+  loadFailedBody: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted, textAlign: 'center' },
   titleBlock: { gap: 8 },
   title: { fontSize: 30, lineHeight: 35, letterSpacing: -0.7, fontFamily: fonts.display, color: brand.ink },
   subtitle: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: brand.muted },
@@ -335,7 +382,7 @@ const styles = StyleSheet.create({
   // Same size and weight for "free" and the price: one line, nothing hidden.
   planPrice: { fontSize: 19, lineHeight: 24, fontFamily: fonts.displayBold, color: brand.ink, marginLeft: 32 },
   saveTag: { backgroundColor: brand.tangSoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  saveText: { fontSize: 12, fontFamily: fonts.bold, color: brand.tangDeep },
+  saveText: { fontSize: 12, fontFamily: fonts.bold, color: brand.tangInk },
   timeline: {
     backgroundColor: brand.white,
     borderRadius: 20,
@@ -358,17 +405,20 @@ const styles = StyleSheet.create({
   stepIconLast: { backgroundColor: brand.ink },
   stepLine: { width: 2, flex: 1, minHeight: 14, backgroundColor: brand.line, marginVertical: 4 },
   stepText: { flex: 1, paddingBottom: 16, gap: 2 },
-  stepWhen: { fontSize: 12, letterSpacing: 0.4, fontFamily: fonts.semibold, color: brand.tang },
+  stepWhen: { fontSize: 12, letterSpacing: 0.4, fontFamily: fonts.semibold, color: brand.tangInk },
   stepTitle: { fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
   stepBody: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
   footer: { gap: 10 },
-  terms: { fontSize: 11, lineHeight: 15, fontFamily: fonts.regular, color: brand.faint, textAlign: 'center' },
+  // Auto-renewal terms must be clear and conspicuous next to the button
+  // (ROSCA, California's auto-renewal law, App Store 3.1.2): readable size,
+  // full-contrast muted ink, never the faint fine-print color.
+  terms: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted, textAlign: 'center' },
   links: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   link: { fontSize: 13, fontFamily: fonts.medium, color: brand.muted },
   noThanks: { alignSelf: 'center', paddingVertical: 6 },
-  error: { fontSize: 14, fontFamily: fonts.medium, color: brand.rose, textAlign: 'center' },
+  error: { fontSize: 14, fontFamily: fonts.medium, color: brand.roseInk, textAlign: 'center' },
   offerHero: { alignItems: 'center', gap: 8, paddingTop: 12 },
-  offerEyebrow: { fontSize: 12, letterSpacing: 1, fontFamily: fonts.bold, color: brand.tang, marginTop: 8 },
+  offerEyebrow: { fontSize: 12, letterSpacing: 1, fontFamily: fonts.bold, color: brand.tangInk, marginTop: 8 },
   offerTitle: {
     fontSize: 28,
     lineHeight: 33,

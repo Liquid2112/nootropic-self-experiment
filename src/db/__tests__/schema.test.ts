@@ -190,6 +190,7 @@ describe('repositories round-trip', () => {
       status: 'active',
       sealedKey: null,
       seed: null,
+      battery: ['pvt', 'stroop', 'calm'],
     };
     experiments.insert(db, experiment);
     expect(experiments.getById(db, 'exp-1')).toEqual(experiment);
@@ -225,6 +226,11 @@ describe('repositories round-trip', () => {
       mood: 4,
       sleepHours: 7,
       caffeine: true,
+      stroopInterferenceMs: 84.5,
+      stroopAccuracy: 0.96,
+      symbolPerMin: 52,
+      recallScore: 7,
+      calmScore: 67,
       note: 'felt sharp',
       valid: true,
     };

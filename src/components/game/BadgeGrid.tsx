@@ -45,5 +45,5 @@ const styles = StyleSheet.create({
   medalOff: { backgroundColor: brand.paper, borderWidth: 1.5, borderColor: brand.line, borderStyle: 'dashed' },
   title: { fontSize: 13, fontFamily: fonts.semibold, textAlign: 'center', color: brand.ink },
   off: { color: brand.muted },
-  desc: { fontSize: 11, lineHeight: 14, fontFamily: fonts.regular, textAlign: 'center', color: brand.faint },
+  desc: { fontSize: 12, lineHeight: 15, fontFamily: fonts.regular, textAlign: 'center', color: brand.muted },
 });

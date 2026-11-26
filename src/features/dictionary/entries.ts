@@ -265,7 +265,7 @@ export const OTC_ENTRIES: DictionaryEntry[] = [
     goals: ['memory', 'longevity'],
     tagline: 'Famous memory herb with famously disappointing big trials.',
     mechanism: 'Antioxidant flavonoids and terpenoids that may improve blood flow.',
-    claims: ['Better memory', 'Dementia prevention', 'Circulation'],
+    claims: ['Better memory', 'Sharper thinking with age', 'Circulation'],
     research:
       'Large, well-run trials found no memory benefit in healthy older adults and no protection against dementia. Some smaller trials in people with dementia report modest benefits.',
     evidence: 'limited',

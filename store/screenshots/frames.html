@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Placebo App Store frames</title>
+<!--
+  App Store screenshot frames, 1320x2868 (iPhone 6.9"). Rendered to PNG by
+  render.mjs. Raw captures in raw/ come from scripts/screenshots.mjs
+  (see store/README.md).
+-->
+<style>
+  @font-face { font-family: 'Bricolage'; font-weight: 800; src: url('../../node_modules/@expo-google-fonts/bricolage-grotesque/800ExtraBold/BricolageGrotesque_800ExtraBold.ttf'); }
+  @font-face { font-family: 'Inter'; font-weight: 700; src: url('../../node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf'); }
+  :root { --ink:#15131C; --paper:#F7F4EE; --tang:#FF5A36; --lilac:#B7A6FF; --mint:#1FAE6B; --sun:#FFC23D; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #888; }
+  .frame { width: 1320px; height: 2868px; position: relative; overflow: hidden; background: var(--paper); color: var(--ink); }
+  .frame.ink { background: var(--ink); color: var(--paper); }
+  .frame.tang { background: var(--tang); color: var(--ink); }
+  .frame.lilac { background: var(--lilac); color: var(--ink); }
+  .copy { position: absolute; top: 190px; left: 110px; right: 110px; }
+  .kicker { font: 700 44px/1 'Inter'; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 40px; color: var(--tang); }
+  .ink .kicker { color: var(--sun); }
+  .tang .kicker, .lilac .kicker { color: var(--ink); opacity: .65; }
+  h1 { font: 800 132px/1.02 'Bricolage'; letter-spacing: -0.035em; }
+  .phone { position: absolute; left: 50%; top: 830px; width: 1040px; transform: translateX(-50%) rotate(var(--tilt, 0deg));
+           border-radius: 150px; background: var(--ink); padding: 30px; box-shadow: 0 60px 120px rgba(21,19,28,.28); }
+  .ink .phone { background: #2e2a38; box-shadow: 0 60px 120px rgba(0,0,0,.5); }
+  .screen { position: relative; border-radius: 122px; overflow: hidden; background: var(--paper); }
+  .screen img { display: block; width: 100%; }
+  /* Screens with no top safe-area padding of their own get a status-bar strip. */
+  .screen.inset { padding-top: 150px; }
+  .island { position: absolute; top: 34px; left: 50%; width: 300px; height: 88px; transform: translateX(-50%); background: #000; border-radius: 44px; }
+  .status { position: absolute; top: 50px; left: 110px; right: 96px; display: flex; justify-content: space-between; align-items: center; font: 700 48px/1 'Inter'; color: var(--ink); }
+  .batt { display: block; width: 74px; height: 36px; border: 4px solid var(--ink); border-radius: 12px; position: relative; }
+  .batt::after { content: ''; position: absolute; top: 4px; bottom: 4px; left: 4px; right: 14px; background: var(--ink); border-radius: 5px; }
+</style>
+</head>
+<body>
+<section class="frame" id="01-hook">
+  <div class="copy"><div class="kicker">Placebo</div><h1>Does your stack actually work?</h1></div>
+  <div class="phone" style="--tilt:-2deg"><div class="screen"><img src="raw/welcome.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+<section class="frame ink" id="02-verdict">
+  <div class="copy"><div class="kicker">The verdict</div><h1>A real answer from your own data.</h1></div>
+  <div class="phone"><div class="screen"><img src="raw/verdict.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+<section class="frame lilac" id="03-blinded">
+  <div class="copy"><div class="kicker">Blinded</div><h1>Test it like a real trial. Hype can't fake it.</h1></div>
+  <div class="phone" style="--tilt:2deg"><div class="screen"><img src="raw/experiment-setup.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+<section class="frame" id="04-daily-test">
+  <div class="copy"><div class="kicker">90 seconds a day</div><h1>Measure your brain, not your mood.</h1></div>
+  <div class="phone"><div class="screen inset"><img src="raw/reaction-test.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+<section class="frame tang" id="05-countdown">
+  <div class="copy"><div class="kicker">Built to finish</div><h1>Quests, streaks and a date for your answer.</h1></div>
+  <div class="phone" style="--tilt:-2deg"><div class="screen inset"><img src="raw/home.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+<section class="frame" id="06-health">
+  <div class="copy"><div class="kicker">Apple Health</div><h1>Sleep and HRV, counted for you.</h1></div>
+  <div class="phone"><div class="screen inset"><img src="raw/health.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+<section class="frame ink" id="07-library">
+  <div class="copy"><div class="kicker">The library</div><h1>What it claims. What the research says.</h1></div>
+  <div class="phone" style="--tilt:2deg"><div class="screen inset"><img src="raw/dictionary.png"><div class="island"></div><div class="status"><span>9:41</span><span class="batt"></span></div></div></div>
+</section>
+</body>
+</html>

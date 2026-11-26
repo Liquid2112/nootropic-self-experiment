@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { CREATORS } from '@/config/creators';
+import { creatorThanks, rewardCopy } from '@/config/referralRewards';
 import { getDatabase } from '@/db';
 import { Button, brand, fonts, radius, spacing } from '@/ui';
 import { lookupCode } from './model';
@@ -42,8 +43,8 @@ export function WhoSentYou({ onDone, skippable = false }: WhoSentYouProps) {
     setSaved(true);
     setMessage(
       match.kind === 'creator'
-        ? `Thanks for coming from ${match.name}. Your first month is on us when you start an experiment.`
-        : 'Code saved. You and your friend each get a free month when you start an experiment.',
+        ? creatorThanks(match.name)
+        : rewardCopy('codeSavedFriend'),
     );
     onDone?.({ saved: true });
   }
@@ -51,7 +52,7 @@ export function WhoSentYou({ onDone, skippable = false }: WhoSentYouProps) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Who sent you?</Text>
-      <Text style={styles.body}>Got a code from a creator or a friend? Enter it for a free month.</Text>
+      <Text style={styles.body}>{rewardCopy('codePrompt')}</Text>
       <TextInput
         value={value}
         onChangeText={(t) => {
@@ -93,6 +94,6 @@ const styles = StyleSheet.create({
     backgroundColor: brand.white,
   },
   actions: { gap: spacing.sm },
-  ok: { fontFamily: fonts.medium, fontSize: 14, color: brand.mint },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: brand.rose },
+  ok: { fontFamily: fonts.medium, fontSize: 14, color: brand.mintInk },
+  error: { fontFamily: fonts.medium, fontSize: 14, color: brand.roseInk },
 });

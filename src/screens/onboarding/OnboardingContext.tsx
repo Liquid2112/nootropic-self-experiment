@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import type { BlindingMode } from '@/db';
 import type { RunLength } from '@/engines/experiment';
 import type { Goal, SupplementChoice, TestWindowId } from '@/engines/onboarding';
+import type { TestId } from '@/features/battery';
 
 /**
  * In-memory onboarding state shared across the three screens.
@@ -20,6 +21,8 @@ export type OnboardingState = {
   lengthDays: RunLength;
   blindingMode: BlindingMode;
   testWindow: TestWindowId;
+  /** The daily tests the user picked; null means the goal's default set. */
+  battery: TestId[] | null;
   startDate: string;
   friendPassphrase: string;
   /** Friend-blinded runs: the user's first name, shown to their keyholder. */
@@ -48,6 +51,7 @@ function initialState(): OnboardingState {
     lengthDays: 28,
     blindingMode: 'none',
     testWindow: 'morning',
+    battery: null,
     startDate: todayIso(),
     friendPassphrase: '',
     keyholderFromName: '',

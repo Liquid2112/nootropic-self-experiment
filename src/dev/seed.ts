@@ -6,6 +6,7 @@
  */
 import type { SqlDriver } from '@/db/driver';
 import { experiments, quickTests, scheduleDays, testSessions } from '@/db/repositories';
+import { createRng } from '@/engines/experiment/rng';
 import { createExperiment } from '@/engines/onboarding/createExperiment';
 
 const EXPERIMENT_ID = 'demo-experiment';
@@ -62,6 +63,8 @@ export function seedDemoData(db: SqlDriver): void {
       lengthDays: 21,
       blindingMode: 'none',
       testWindow: 'morning',
+      // The focus defaults plus the two optional tasks, so the demo shows all six.
+      battery: ['pvt', 'stroop', 'symbol', 'recall', 'calm'],
       startDate: localDay(daysAgo(START_AGO)),
     },
     { experimentId: EXPERIMENT_ID, seed: 'demo-seed-1' },
@@ -111,7 +114,59 @@ export function seedDemoData(db: SqlDriver): void {
   }
 }
 
-function insertSession(db: SqlDriver, dayIndex: number, at: Date, arm: string, i: number): void {
+/**
+ * A finished, self-blinded 21-day L-Theanine + Caffeine run (ended yesterday)
+ * with a clear effect, so the verdict screen shows a real result. Used for App
+ * Store screenshots (`node scripts/screenshots.mjs --scenario=completed`).
+ */
+export function seedCompletedDemo(db: SqlDriver): void {
+  clearDemoData(db);
+  const LENGTH = 21;
+  const START_AGO = LENGTH + 1;
+  const seed = 'demo-seed-done';
+
+  createExperiment(
+    db,
+    {
+      goal: 'focus',
+      supplement: {
+        kind: 'curated',
+        supplementId: 'l-theanine-caffeine',
+        type: 'acute',
+        name: 'L-Theanine + Caffeine',
+      },
+      lengthDays: LENGTH,
+      blindingMode: 'self_blind',
+      testWindow: 'morning',
+      startDate: localDay(daysAgo(START_AGO)),
+    },
+    { experimentId: EXPERIMENT_ID, seed },
+  );
+
+  // Same draw the blinding engine makes, so we know which cup is the real one.
+  const supplementLabel = createRng(`labels:${seed}`).next() < 0.5 ? 'A' : 'B';
+  const schedule = scheduleDays.listForExperiment(db, EXPERIMENT_ID);
+  let n = 0;
+  for (let b = -3; b <= -1; b++) {
+    insertSession(db, b, daysAgo(START_AGO - b, 9, 10 + b), 'OFF', n++);
+  }
+  for (const day of schedule) {
+    const at = daysAgo(START_AGO - day.dayIndex, 8, 30);
+    scheduleDays.markTaken(db, EXPERIMENT_ID, day.dayIndex, at.toISOString());
+    if (day.dayIndex === 12) continue; // one missed check-in, like real life
+    const arm = day.arm === supplementLabel ? 'ON' : 'OFF';
+    insertSession(db, day.dayIndex, daysAgo(START_AGO - day.dayIndex, 9, 15), arm, n++, 0.15);
+  }
+}
+
+function insertSession(
+  db: SqlDriver,
+  dayIndex: number,
+  at: Date,
+  arm: string,
+  i: number,
+  drift = 0.6,
+): void {
   const on = arm === 'ON' || arm === 'A';
   const jitter = rand(i);
   testSessions.insert(db, {
@@ -120,15 +175,21 @@ function insertSession(db: SqlDriver, dayIndex: number, at: Date, arm: string, i
     dayIndex,
     startedAt: at.toISOString(),
     deviceModel: 'web',
-    pvtMedianMs: Math.round((on ? 284 : 302) + jitter * 18 - i * 0.6),
+    pvtMedianMs: Math.round((on ? 284 : 302) + jitter * 18 - i * drift),
     pvtLapses: on ? Math.round(jitter * 1.4) : 1 + Math.round(jitter * 2),
-    nbackAccuracy: Math.round(((on ? 0.86 : 0.79) + jitter * 0.06) * 100) / 100,
+    // Percent (0..100), like the real n-back engine stores it.
+    nbackAccuracy: Math.round((on ? 86 : 79) + jitter * 6),
     nbackDprime: Math.round(((on ? 2.4 : 2.0) + jitter * 0.4) * 100) / 100,
     focus: Math.min(10, (on ? 7 : 5) + Math.round(jitter * 2)),
     energy: Math.min(10, (on ? 7 : 5) + Math.round(rand(i + 7) * 2)),
     mood: Math.min(10, 6 + Math.round(rand(i + 13) * 2)),
     sleepHours: Math.round((6.5 + rand(i + 3) * 1.5) * 10) / 10,
     caffeine: on,
+    stroopInterferenceMs: Math.round((on ? 78 : 96) + jitter * 20),
+    stroopAccuracy: Math.round((0.92 + jitter * 0.06) * 100) / 100,
+    symbolPerMin: Math.round((on ? 54 : 49) + jitter * 5 + i * 0.3),
+    recallScore: Math.min(10, (on ? 7 : 6) + Math.round(rand(i + 5) * 2)),
+    calmScore: Math.min(100, (on ? 63 : 58) + Math.round(rand(i + 11) * 17)),
     note: null,
     valid: true,
   });

@@ -11,6 +11,7 @@ import {
 } from '@/features/referral';
 import { shortDateLabel } from '@/features/widget/model';
 import { Button, Card, Scaffold, brand, fonts, spacing } from '@/ui';
+import { REFERRAL_REWARDS_LIVE } from '@/config/referralRewards';
 
 /**
  * Right after starting a friend-blinded run: get the key to a keyholder. Send a
@@ -75,12 +76,14 @@ export default function KeyholderInviteScreen() {
         <Step n={3} text={`On ${shortDateLabel(payload.reveal)} they send the key back and your verdict unlocks.`} />
       </Card>
 
-      <Card style={{ ...styles.card, ...styles.reward }}>
-        <View style={styles.row}>
-          <Icon name="gift" size={20} color={brand.tang} />
-          <Text style={styles.rewardText}>You both get a free month when they hold your key.</Text>
-        </View>
-      </Card>
+      {REFERRAL_REWARDS_LIVE ? (
+        <Card style={{ ...styles.card, ...styles.reward }}>
+          <View style={styles.row}>
+            <Icon name="gift" size={20} color={brand.tang} />
+            <Text style={styles.rewardText}>You both get a free month when they hold your key.</Text>
+          </View>
+        </Card>
+      ) : null}
 
       {sent ? (
         <Text style={styles.note}>Sent. Make sure they open it on their phone, not yours.</Text>

@@ -10,7 +10,13 @@ import { getDatabase } from '@/db';
 import { createTracker } from './tracker';
 
 export * from './events';
-export { analyticsOptedOut, setAnalyticsOptOut } from './tracker';
+export {
+  analyticsOptedOut,
+  anonymousId,
+  setAnalyticsOptOut,
+  analyticsProgressConsent,
+  setAnalyticsProgressConsent,
+} from './tracker';
 
 const tracker = createTracker({
   getDb: () => {
