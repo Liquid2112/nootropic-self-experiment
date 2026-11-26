@@ -6,7 +6,7 @@ function drawComment(g,W,H,txt){g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(
 function drawScore(g,W,H,a,b){g.fillStyle='#14121c';g.beginPath();g.roundRect(4,4,W-8,H-8,36);g.fill();g.strokeStyle='#2c2840';g.lineWidth=5;g.stroke();
   g.textAlign='center';g.fillStyle='#8e88a8';g.font='800 26px Inter';g.fillText('COFFEE',W*.27,60);g.fillText('TEA',W*.73,60);
   g.fillStyle='#FF5A36';g.font='900 72px Inter';g.fillText(a,W*.27,150);g.fillStyle='#58d46e';g.fillText(b,W*.73,150);
-  g.fillStyle='#6d6788';g.font='800 22px Inter';g.fillText('blind days logged',W/2,H-24);g.textAlign='left';g.fillStyle='#2c2840';g.fillRect(W/2-2,40,4,130);}
+  g.fillStyle='#6d6788';g.font='800 22px Inter';g.fillText('test days logged',W/2,H-24);g.textAlign='left';g.fillStyle='#2c2840';g.fillRect(W/2-2,40,4,130);}
 function drawPoll(g,W,H){g.fillStyle='#FF5A36';g.beginPath();g.roundRect(4,4,W/2-8,H-8,26);g.fill();g.fillStyle='#58d46e';g.beginPath();g.roundRect(W/2+4,4,W/2-8,H-8,26);g.fill();
   g.fillStyle='#15131C';g.font='900 56px Inter';g.textAlign='center';g.fillText('COFFEE',W*.25,H*.62);g.fillText('TEA',W*.75,H*.62);g.textAlign='left';}
 export function build(S){

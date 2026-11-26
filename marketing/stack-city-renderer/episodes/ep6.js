@@ -11,7 +11,7 @@ export function build(S){
   minis=names.map(([n,c],i)=>{const m=S.card(.85,1.15,280,drawMini);m.redraw(n,c);m.i=i;return m;});
   entry=S.card(1.8,2.5,360,drawEntry);cal=S.card(2,1.4,320,drawCalendar);
   stamps=['READ ✓','TESTED ✓','KNOWN ✓'].map((s,i)=>{const c=S.card(1.6,.5,280,drawBanner);c.redraw(s,'',['#F7F4EE','#B7A6FF','#FF5A36'][i]);return c;});
-  conf=S.confetti(70);logo=S.card(2.2,.7,300,drawBanner);logo.redraw('Placebo','the nootropic library + blind tests');
+  conf=S.confetti(70);logo=S.card(2.2,.7,300,drawBanner);logo.redraw('Placebo','the nootropic library + real tests');
 }
 export const duration=S=>S.words[S.words.length-1].t1+1.6;
 export function update(t,S){

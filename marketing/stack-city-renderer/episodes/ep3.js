@@ -6,7 +6,7 @@ function drawBubble(g,W,H,a){g.globalAlpha=a;g.fillStyle='#F7F4EE';g.beginPath()
   g.fillStyle='#15131C';g.font='900 52px Inter';g.textAlign='center';g.fillText('I feel SHARP ✦',W/2,(H-60)/2+18);g.textAlign='left';g.globalAlpha=1;}
 function drawPhone(g,W,H,day){g.fillStyle='#0d0c12';g.beginPath();g.roundRect(4,4,W-8,H-8,44);g.fill();g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(22,22,W-44,H-44,32);g.fill();
   g.textAlign='center';g.fillStyle='#6d6788';g.font='800 26px Inter';g.fillText('TODAY',W/2,100);g.fillStyle='#15131C';g.font='900 64px Inter';g.fillText('Day '+day,W/2,180);
-  g.fillStyle='#15131C';g.beginPath();g.roundRect(50,220,W-100,70,20);g.fill();g.fillStyle='#F7F4EE';g.font='900 30px Inter';g.fillText('BLINDED',W/2,266);
+  g.fillStyle='#15131C';g.beginPath();g.roundRect(50,220,W-100,70,20);g.fill();g.fillStyle='#F7F4EE';g.font='900 30px Inter';g.fillText('RANDOMIZED',W/2,266);
   g.fillStyle='#FF5A36';g.beginPath();g.arc(W/2,H-150,70,0,7);g.fill();g.fillStyle='#15131C';g.font='900 26px Inter';g.fillText('TEST',W/2,H-140);g.textAlign='left';}
 export function build(S){
   B=S.makeChar('brian');

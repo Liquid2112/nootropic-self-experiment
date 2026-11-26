@@ -2,7 +2,7 @@ import {slideCard,camKeys,drawVerdict,drawCalendar,drawBanner} from './common.js
 export const display=`"My pre-workout _ makes me a GENIUS." Cool. PROVE it. Three weeks. Blind days. 60 seconds a morning. And his answer was right there. HIS answer. He kept one. Cut one. Saved $40 _ a month. Tag the friend who needs RECEIPTS.`;
 let B,K,tub,tub2,phone,cal,ver,save,coinsA,sweat,logo;
 function drawPhone(g,W,H){g.fillStyle='#0d0c12';g.beginPath();g.roundRect(4,4,W-8,H-8,44);g.fill();g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(22,22,W-44,H-44,32);g.fill();
-  g.fillStyle='#15131C';g.font='900 40px Inter';g.textAlign='center';g.fillText('Placebo',W/2,110);g.font='700 24px Inter';g.fillStyle='#6d6788';g.fillText('21-day blind test',W/2,150);
+  g.fillStyle='#15131C';g.font='900 40px Inter';g.textAlign='center';g.fillText('Placebo',W/2,110);g.font='700 24px Inter';g.fillStyle='#6d6788';g.fillText('21-day test',W/2,150);
   g.fillStyle='#FF5A36';g.beginPath();g.roundRect(50,H-150,W-100,80,22);g.fill();g.fillStyle='#15131C';g.font='900 32px Inter';g.fillText('START',W/2,H-98);g.textAlign='left';}
 export function build(S){
   B=S.makeChar('brian');K=S.makeChar('brick');

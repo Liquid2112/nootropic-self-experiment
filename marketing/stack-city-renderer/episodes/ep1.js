@@ -5,7 +5,7 @@ export function build(S){
   B=S.makeChar('brian');J=S.jars(5);coinsA=S.coins(22);
   desk=S.box(4.2,.25,1.6,S.M(0x2a2350),0,-2.05,1.1);
   cal=S.card(2,1.4,320,drawCalendar);rx=S.card(2,1.7,320,drawReaction);ver=S.card(2,1.375,320,drawVerdict);
-  logo=S.card(2.2,.7,300,drawBanner);logo.redraw('Placebo','blind-test your stack');
+  logo=S.card(2.2,.7,300,drawBanner);logo.redraw('Placebo','test your stack');
 }
 export const duration=S=>S.words[S.words.length-1].t1+1.6;
 export function update(t,S){
