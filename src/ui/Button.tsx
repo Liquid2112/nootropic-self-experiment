@@ -11,7 +11,7 @@ import { AppText } from './AppText';
 import { useTheme } from './theme';
 import { brand, type Theme } from './tokens';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle';
+export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'tang';
 
 export type ButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   /** Visual weight. `primary` is filled accent, `secondary` is outlined, `subtle` is a tinted fill. */
@@ -54,6 +54,15 @@ function variantColors(theme: Theme, variant: ButtonVariant): VariantColors {
         border: theme.colors.border,
         text: 'textPrimary',
         spinner: theme.colors.accent,
+      };
+    case 'tang':
+      // Signature action on the dark check-in card (Figma "Button / Tang").
+      return {
+        background: brand.tang,
+        backgroundPressed: brand.tangDeep,
+        border: brand.tang,
+        text: 'textPrimary',
+        spinner: brand.ink,
       };
     case 'subtle':
       return {

@@ -10,3 +10,4 @@ export * from './adherence';
 export * from './cost';
 export * from './verdict';
 export * from './evidence';
+export * from './headline';

@@ -251,7 +251,7 @@ export default function DailyTestScreen() {
 
   if (phase.kind === 'no-experiment') {
     return (
-      <Scaffold inverse scroll={false} contentStyle={styles.centerFill}>
+      <Scaffold scroll={false} contentStyle={styles.centerFill}>
         <Brian size={110} mood="sleepy" />
         <Text style={ink.title}>No active experiment</Text>
         <Text style={ink.muted}>Start an experiment to log a daily check-in.</Text>
@@ -280,7 +280,7 @@ export default function DailyTestScreen() {
 
     if (phase.intro) {
       return (
-        <Scaffold inverse scroll={false} contentStyle={styles.fill}>
+        <Scaffold scroll={false} contentStyle={styles.fill}>
           <TaskIntro
             step={stepNumber}
             total={totalSteps}
@@ -294,7 +294,7 @@ export default function DailyTestScreen() {
     switch (step) {
       case 'calm':
         return (
-          <Scaffold inverse>
+          <Scaffold>
             <StepHeader
               step={stepNumber}
               total={totalSteps}
@@ -312,7 +312,7 @@ export default function DailyTestScreen() {
         );
       case 'recall_study':
         return (
-          <Scaffold inverse scroll={false} contentStyle={styles.fill}>
+          <Scaffold scroll={false} contentStyle={styles.fill}>
             <RecallStudy words={recallSet.study} onDone={done} />
           </Scaffold>
         );
@@ -338,7 +338,7 @@ export default function DailyTestScreen() {
         );
       case 'stroop':
         return (
-          <Scaffold inverse scroll={false} contentStyle={styles.fill}>
+          <Scaffold scroll={false} contentStyle={styles.fill}>
             <StroopTask
               trials={stroopTrials}
               onDone={(responses) => {
@@ -350,7 +350,7 @@ export default function DailyTestScreen() {
         );
       case 'symbol':
         return (
-          <Scaffold inverse scroll={false} contentStyle={styles.fill}>
+          <Scaffold scroll={false} contentStyle={styles.fill}>
             <SymbolTask
               set={symbolSet}
               durationMs={SYMBOL_DURATION_MS}
@@ -363,7 +363,7 @@ export default function DailyTestScreen() {
         );
       case 'recall_test':
         return (
-          <Scaffold inverse>
+          <Scaffold>
             <StepHeader
               step={stepNumber}
               total={totalSteps}
@@ -382,7 +382,7 @@ export default function DailyTestScreen() {
       case 'ratings':
       default:
         return (
-          <Scaffold inverse>
+          <Scaffold>
             <StepHeader
               step={stepNumber}
               total={totalSteps}
@@ -423,7 +423,7 @@ export default function DailyTestScreen() {
     );
   }
   return (
-    <Scaffold inverse scroll={false} contentStyle={styles.centerFill}>
+    <Scaffold scroll={false} contentStyle={styles.centerFill}>
       <Brian size={110} mood={recorded ? 'happy' : 'wink'} />
       <Text style={ink.title}>{recorded ? 'Check-in saved' : 'Practice run done'}</Text>
       <Text style={ink.muted}>
@@ -538,7 +538,7 @@ function ContextStep({
 }) {
   const [askSleep, setAskSleep] = useState(sleepSource === null);
   return (
-    <Scaffold inverse>
+    <Scaffold>
       <StepHeader
         step={1}
         total={total}
@@ -552,7 +552,7 @@ function ContextStep({
 
       <View style={ink.darkCard}>
         <View style={styles.labelRow}>
-          <Icon name="moon" size={18} color={brand.lilac} />
+          <Icon name="moon" size={18} color={brand.lilacDeep} />
           <Text style={ink.label}>Hours slept last night</Text>
         </View>
         {askSleep ? null : (
@@ -577,7 +577,7 @@ function ContextStep({
 
       <View style={ink.darkCard}>
         <View style={styles.labelRow}>
-          <Icon name="bolt" size={18} color={brand.lilac} />
+          <Icon name="bolt" size={18} color={brand.lilacDeep} />
           <Text style={ink.label}>Had caffeine today?</Text>
         </View>
         <View style={ink.chipRow}>
@@ -588,7 +588,7 @@ function ContextStep({
 
       <View style={ink.darkCard}>
         <View style={styles.labelRow}>
-          <Icon name="sparkle" size={18} color={brand.lilac} />
+          <Icon name="sparkle" size={18} color={brand.lilacDeep} />
           <Text style={ink.label}>How sharp do you expect to be right now?</Text>
         </View>
         <View style={ink.chipRow}>
@@ -606,7 +606,7 @@ function ContextStep({
 
       <View style={ink.darkCard}>
         <View style={styles.labelRow}>
-          <Icon name="target" size={18} color={brand.lilac} />
+          <Icon name="target" size={18} color={brand.lilacDeep} />
           <Text style={ink.label}>Device</Text>
         </View>
         <View style={ink.chipRow}>
@@ -626,7 +626,7 @@ function ContextStep({
         <View style={styles.lineupRow}>
           {tests.map((id) => (
             <View key={id} style={styles.lineupPill}>
-              <Icon name={TEST_CATALOG[id].icon} size={14} color={brand.lilac} />
+              <Icon name={TEST_CATALOG[id].icon} size={14} color={brand.lilacDeep} />
               <Text style={styles.lineupText}>{TEST_CATALOG[id].name}</Text>
             </View>
           ))}
@@ -671,7 +671,7 @@ function NbackStep({
   const total = sequence.letters.length;
 
   return (
-    <Scaffold inverse scroll={false} contentStyle={styles.nbackLayout}>
+    <Scaffold scroll={false} contentStyle={styles.nbackLayout}>
       <View style={styles.nbackTop}>
         <Text style={ink.progress}>{`${index + 1} / ${total}`}</Text>
         <TaskTrack fraction={index / Math.max(1, total)} />
@@ -698,9 +698,9 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   sleepSyncedRow: { gap: spacing.xs },
-  sleepOverride: { fontSize: 15, fontFamily: fonts.semibold, color: brand.lilac },
+  sleepOverride: { fontSize: 15, fontFamily: fonts.semibold, color: brand.lilacDeep },
   hidden: { display: 'none' },
-  beliefHint: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.6)' },
+  beliefHint: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
   lightCard: { gap: spacing.lg, borderRadius: 24 },
   lineup: { gap: spacing.sm, paddingTop: spacing.xs },
   lineupRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
@@ -713,9 +713,9 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
-    backgroundColor: 'rgba(183,166,255,0.08)',
+    backgroundColor: brand.lilacSoft,
   },
-  lineupText: { fontSize: 13, fontFamily: fonts.medium, color: brand.white },
+  lineupText: { fontSize: 13, fontFamily: fonts.medium, color: brand.ink },
   noteInput: {
     minHeight: 64,
     borderWidth: 1,
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 40,
-    backgroundColor: brand.ink2,
+    backgroundColor: brand.white,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: HAIRLINE,
     alignItems: 'center',
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     fontSize: 104,
     lineHeight: 120,
     fontFamily: fonts.display,
-    color: brand.white,
+    color: brand.ink,
   },
   nbackButtons: {
     width: '100%',

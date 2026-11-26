@@ -1,23 +1,23 @@
-import { Stack } from 'expo-router';
-import { useFonts } from 'expo-font';
+import { Stack } from "expo-router";
+import { useFonts } from "expo-font";
 import {
   BricolageGrotesque_700Bold,
   BricolageGrotesque_800ExtraBold,
-} from '@expo-google-fonts/bricolage-grotesque';
+} from "@expo-google-fonts/bricolage-grotesque";
 import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-} from '@expo-google-fonts/inter';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { OnboardingProvider } from '@/screens/onboarding/OnboardingContext';
+} from "@expo-google-fonts/inter";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { OnboardingProvider } from "@/screens/onboarding/OnboardingContext";
 
-import { ThemeProvider, useTheme } from '@/ui';
-import { useWidgetSync } from '@/features/widget/useWidgetSync';
-import { useHealthSync } from '@/features/health/useHealthSync';
-import { useAnalyticsFlush } from '@/features/analytics/useAnalyticsFlush';
+import { ThemeProvider, brand, useTheme } from "@/ui";
+import { useWidgetSync } from "@/features/widget/useWidgetSync";
+import { useHealthSync } from "@/features/health/useHealthSync";
+import { useAnalyticsFlush } from "@/features/analytics/useAnalyticsFlush";
 
 /**
  * Root navigator. One stack with a route per MVP screen, wrapped in the
@@ -63,31 +63,67 @@ function ThemedStack() {
         screenOptions={{
           headerShown: true,
           headerTintColor: theme.colors.textPrimary,
-          headerTitleStyle: { color: theme.colors.textPrimary, fontFamily: theme.typography.headline.fontFamily },
-          headerBackButtonDisplayMode: 'minimal',
+          headerTitleStyle: {
+            color: theme.colors.textPrimary,
+            fontFamily: theme.typography.headline.fontFamily,
+          },
+          headerBackButtonDisplayMode: "minimal",
           headerShadowVisible: false,
           headerStyle: { backgroundColor: theme.colors.background },
           contentStyle: { backgroundColor: theme.colors.background },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Today', headerShown: false }} />
-        <Stack.Screen name="welcome" options={{ title: '', headerShown: false }} />
-        <Stack.Screen name="quiz" options={{ headerShown: false, gestureEnabled: false }} />
-        <Stack.Screen name="goal-picker" options={{ title: '' }} />
-        <Stack.Screen name="experiment-setup" options={{ title: '' }} />
-        <Stack.Screen name="daily-test" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="progress" options={{ title: 'Journey' }} />
-        <Stack.Screen name="achievements" options={{ title: 'Achievements' }} />
-        <Stack.Screen name="verdict" options={{ title: '' }} />
-        <Stack.Screen name="evidence-card" options={{ title: 'Evidence Card' }} />
-        <Stack.Screen name="paywall" options={{ title: '', presentation: 'modal' }} />
-        <Stack.Screen name="reaction-test" options={{ title: 'Reaction test' }} />
-        <Stack.Screen name="dictionary/index" options={{ title: 'Library' }} />
-        <Stack.Screen name="dictionary/[id]" options={{ title: '' }} />
-        <Stack.Screen name="health" options={{ title: 'Health sync' }} />
-        <Stack.Screen name="privacy-settings" options={{ title: 'Privacy' }} />
-        <Stack.Screen name="bad-reaction" options={{ title: '', presentation: 'modal' }} />
-        <Stack.Screen name="invite" options={{ title: 'Invite friends' }} />
+        <Stack.Screen
+          name="index"
+          options={{ title: "Today", headerShown: false }}
+        />
+        <Stack.Screen
+          name="welcome"
+          options={{ title: "", headerShown: false }}
+        />
+        <Stack.Screen
+          name="quiz"
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen name="goal-picker" options={{ title: "" }} />
+        <Stack.Screen name="experiment-setup" options={{ title: "" }} />
+        <Stack.Screen
+          name="daily-test"
+          options={{ headerShown: false, presentation: "fullScreenModal" }}
+        />
+        <Stack.Screen name="progress" options={{ title: "Journey" }} />
+        <Stack.Screen name="achievements" options={{ title: "Achievements" }} />
+        <Stack.Screen
+          name="verdict"
+          options={{
+            title: "",
+            headerStyle: { backgroundColor: brand.ink },
+            headerTintColor: brand.paper,
+            headerShadowVisible: false,
+            contentStyle: { backgroundColor: brand.ink },
+          }}
+        />
+        <Stack.Screen
+          name="evidence-card"
+          options={{ title: "Evidence Card" }}
+        />
+        <Stack.Screen
+          name="paywall"
+          options={{ title: "", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="reaction-test"
+          options={{ title: "Reaction test" }}
+        />
+        <Stack.Screen name="dictionary/index" options={{ title: "Library" }} />
+        <Stack.Screen name="dictionary/[id]" options={{ title: "" }} />
+        <Stack.Screen name="health" options={{ title: "Health sync" }} />
+        <Stack.Screen name="privacy-settings" options={{ title: "Privacy" }} />
+        <Stack.Screen
+          name="bad-reaction"
+          options={{ title: "", presentation: "modal" }}
+        />
+        <Stack.Screen name="invite" options={{ title: "Invite friends" }} />
         <Stack.Screen name="r/[code]" options={{ headerShown: false }} />
       </Stack>
     </>

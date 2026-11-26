@@ -4,13 +4,14 @@ import { Icon, type IconName } from '@/brand';
 import { brand, fonts, radius, spacing } from '@/ui';
 
 /**
- * Shared pieces for the dark ("ink") check-in screens: the white pill button,
+ * Shared pieces for the check-in screens (light paper since the Figma
+ * restyle; the name "ink" is historical): the white pill button,
  * the outlined secondary button, the step header with progress dashes, the
  * chip, and the intro card that opens each timed task.
  */
 
-export const DIM = 'rgba(255,255,255,0.6)';
-export const HAIRLINE = 'rgba(255,255,255,0.12)';
+export const DIM = brand.muted;
+export const HAIRLINE = brand.line;
 
 /** White pill button for the ink screens (the ink primary would vanish here). */
 export function LightButton({
@@ -176,27 +177,27 @@ export const ink = StyleSheet.create({
   stepHeader: { gap: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.xs },
   stepDots: { flexDirection: 'row', gap: 6, marginBottom: spacing.xs, alignSelf: 'stretch' },
   stepDot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: HAIRLINE },
-  stepDotOn: { backgroundColor: brand.lilac },
-  eyebrow: { fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 1.2, color: brand.lilac },
+  stepDotOn: { backgroundColor: brand.ink },
+  eyebrow: { fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 1.2, color: brand.lilacDeep },
   title: {
     fontSize: 28,
     lineHeight: 34,
     fontFamily: fonts.display,
     letterSpacing: -0.6,
-    color: brand.white,
+    color: brand.ink,
   },
   muted: { fontSize: 15, lineHeight: 21, fontFamily: fonts.regular, color: DIM },
-  footnote: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.45)' },
-  label: { fontSize: 16, fontFamily: fonts.semibold, color: brand.white },
+  footnote: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: brand.muted },
+  label: { fontSize: 16, fontFamily: fonts.semibold, color: brand.ink },
   progress: {
     fontSize: 13,
     fontFamily: fonts.semibold,
     letterSpacing: 1,
-    color: 'rgba(255,255,255,0.55)',
+    color: brand.muted,
     textAlign: 'center',
   },
   darkCard: {
-    backgroundColor: brand.ink2,
+    backgroundColor: brand.white,
     borderRadius: 20,
     padding: spacing.lg,
     gap: spacing.md,
@@ -212,35 +213,35 @@ export const ink = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  chipIdle: { borderColor: HAIRLINE, backgroundColor: 'rgba(255,255,255,0.04)' },
-  chipSelected: { borderColor: brand.white, backgroundColor: brand.white },
-  chipText: { fontSize: 15, fontFamily: fonts.medium, color: brand.white },
-  chipTextSelected: { color: brand.ink, fontFamily: fonts.semibold },
+  chipIdle: { borderColor: HAIRLINE, backgroundColor: brand.paperDeep },
+  chipSelected: { borderColor: brand.ink, backgroundColor: brand.ink },
+  chipText: { fontSize: 15, fontFamily: fonts.medium, color: brand.ink },
+  chipTextSelected: { color: brand.paper, fontFamily: fonts.semibold },
   lightButton: {
     minHeight: 54,
     borderRadius: radius.pill,
-    backgroundColor: brand.white,
+    backgroundColor: brand.ink,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
     alignSelf: 'stretch',
   },
-  lightButtonPressed: { backgroundColor: brand.paperDeep, transform: [{ translateY: 1 }] },
-  lightButtonText: { fontSize: 17, fontFamily: fonts.semibold, color: brand.ink },
+  lightButtonPressed: { backgroundColor: brand.ink2, transform: [{ translateY: 1 }] },
+  lightButtonText: { fontSize: 17, fontFamily: fonts.semibold, color: brand.paper },
   disabled: { opacity: 0.35 },
   ghostButton: {
     minHeight: 54,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: brand.faint,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'stretch',
   },
-  ghostPressed: { backgroundColor: 'rgba(255,255,255,0.06)' },
-  ghostText: { fontSize: 17, fontFamily: fonts.semibold, color: brand.white },
+  ghostPressed: { backgroundColor: brand.paperDeep },
+  ghostText: { fontSize: 17, fontFamily: fonts.semibold, color: brand.ink },
   track: { alignSelf: 'stretch', height: 4, borderRadius: 2, backgroundColor: HAIRLINE, overflow: 'hidden' },
-  trackFill: { height: '100%', borderRadius: 2, backgroundColor: brand.lilac },
+  trackFill: { height: '100%', borderRadius: 2, backgroundColor: brand.ink },
   introFill: {
     flex: 1,
     justifyContent: 'space-between',
