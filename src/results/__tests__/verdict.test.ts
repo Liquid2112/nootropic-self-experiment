@@ -1,10 +1,10 @@
 import { createMemoryDriver } from '@/db/__tests__/memoryDriver';
 import { migrate } from '@/db/schema';
 import { experiments, results, scheduleDays, supplements, testSessions } from '@/db/repositories';
-import type { Experiment, ScheduleDay, TestSession } from '@/db/types';
+import type { Experiment, HealthNight, ScheduleDay, TestSession } from '@/db/types';
 import { applyBlinding, selfBlindPassphrase } from '@/engines/experiment';
 import type { SqlDriver } from '@/db/driver';
-import { computeExperimentVerdict } from '../verdict';
+import { computeExperimentVerdict, measuredSleepByDay } from '../verdict';
 
 /**
  * End-to-end wiring tests for the verdict layer: adherence-gate behavior,
@@ -330,6 +330,79 @@ describe('computeExperimentVerdict — covariate guard (finding 2)', () => {
     expect(vm.adherenceMet).toBe(true);
     expect(vm.primary.analyzed).toBe(true);
     expect(vm.primary.verdictSentence).toContain('Measurable improvement');
+  });
+});
+
+describe('computeExperimentVerdict — measured sleep covariate', () => {
+  // Sleep runs an hour longer on ON days and every extra hour is 20 ms faster,
+  // so ignoring sleep doubles the apparent effect (about -38 ms vs a true -18).
+  const sleepFor = (i: number, on: 0 | 1) => 7 + on + ((i * 7) % 5) * 0.1;
+  const confounded = (exp: Experiment, sleepLogged: (i: number) => boolean): TestSession[] =>
+    makeSessions(exp.id, () => true).map((s) => {
+      const on: 0 | 1 = s.dayIndex % 2 === 0 ? 1 : 0;
+      const sleep = sleepFor(s.dayIndex, on);
+      return {
+        ...s,
+        pvtMedianMs: 300 - 18 * on - 20 * (sleep - 7) + noise(s.dayIndex) * 0.2,
+        sleepHours: sleepLogged(s.dayIndex) ? sleep : null,
+      };
+    });
+  const nightsFor = (schedule: ScheduleDay[]): HealthNight[] =>
+    schedule.map((d) => ({
+      date: d.date,
+      metric: 'sleep_hours',
+      value: sleepFor(d.dayIndex, d.dayIndex % 2 === 0 ? 1 : 0),
+      source: 'healthkit',
+      syncedAt: '2026-01-30T00:00:00Z',
+    }));
+
+  it('keys each schedule day to the night ending that morning', () => {
+    const schedule = makeSchedule('exp1', () => true);
+    const map = measuredSleepByDay(schedule, [
+      { date: '2026-01-05', metric: 'sleep_hours', value: 6.2, source: 'healthkit', syncedAt: 'x' },
+      { date: '2026-01-05', metric: 'hrv_ms', value: 55, source: 'healthkit', syncedAt: 'x' },
+    ]);
+    expect([...map.entries()]).toEqual([[4, 6.2]]);
+  });
+
+  it('adjusts for Health-measured sleep when the user never picked their hours', () => {
+    const { db, exp } = setup();
+    const schedule = makeSchedule(exp.id, () => true);
+    const sessions = confounded(exp, () => false);
+    const without = computeExperimentVerdict(db, { experiment: exp, schedule, sessions });
+    const withHealth = computeExperimentVerdict(db, {
+      experiment: exp,
+      schedule,
+      sessions,
+      healthNights: nightsFor(schedule),
+    });
+    expect(without.primary.estimate!).toBeLessThan(-30);
+    expect(withHealth.primary.estimate!).toBeGreaterThan(-22);
+    expect(withHealth.primary.estimate!).toBeLessThan(-14);
+  });
+
+  it('fills a skipped sleep answer with the mean, not zero hours', () => {
+    // Zero-filling 5 skipped days made them look like all-nighters, which
+    // swamped the covariate and left the estimate as confounded (~ -38 ms) as
+    // never logging sleep at all. The mean keeps most of the adjustment.
+    const { db, exp } = setup();
+    const schedule = makeSchedule(exp.id, () => true);
+    const vm = computeExperimentVerdict(db, {
+      experiment: exp,
+      schedule,
+      sessions: confounded(exp, (i) => i % 5 !== 0),
+    });
+    expect(vm.primary.analyzed).toBe(true);
+    expect(vm.primary.estimate!).toBeGreaterThan(-35);
+    // Health fills the gaps exactly, which recovers the true effect.
+    const filled = computeExperimentVerdict(db, {
+      experiment: exp,
+      schedule,
+      sessions: confounded(exp, (i) => i % 5 !== 0),
+      healthNights: nightsFor(schedule),
+    });
+    expect(filled.primary.estimate!).toBeGreaterThan(-22);
+    expect(filled.primary.estimate!).toBeLessThan(-14);
   });
 });
 

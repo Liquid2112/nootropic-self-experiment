@@ -8,6 +8,7 @@ import {
   healthConnection,
   healthCoverage,
   healthPrimaryFor,
+  measuredSleepSource,
   meanForNight,
   nightAfterByDay,
   sleepHoursForNight,
@@ -157,6 +158,14 @@ describe('connectHealth / syncHealth', () => {
     const db = setupDb();
     expect((await connectHealth(db, fakeAdapter(raw, false), new Date(), utc)).connected).toBe(false);
     expect(await syncHealth(db, fakeAdapter(raw), new Date(), utc)).toEqual({ nights: 0 });
+  });
+
+  it('lets the check-in skip the sleep question once last night synced', async () => {
+    const db = setupDb();
+    expect(measuredSleepSource(db, '2026-12-02')).toBeNull();
+    await connectHealth(db, fakeAdapter(raw), new Date('2026-12-02T09:00:00Z'), utc);
+    expect(measuredSleepSource(db, '2026-12-02')).toBe('Apple Health');
+    expect(measuredSleepSource(db, '2026-12-03')).toBeNull();
   });
 });
 
