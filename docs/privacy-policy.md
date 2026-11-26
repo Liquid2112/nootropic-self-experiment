@@ -100,4 +100,4 @@ If we change this policy, we'll update the date at the top and, for meaningful c
 
 ## Contact
 
-Questions or privacy requests: **CONTACT_EMAIL_TBD**
+Questions or privacy requests: **support@placeboapp.com**

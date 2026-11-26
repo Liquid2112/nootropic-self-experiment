@@ -6,7 +6,7 @@
  *
  * Plain constants with no imports: app.config.ts loads this file at build time.
  */
-export const LINK_DOMAIN = 'placebo.app';
+export const LINK_DOMAIN = 'placeboapp.com';
 
 /** Support and privacy contact (Cloudflare Email Routing forwards it). */
 export const SUPPORT_EMAIL = `support@${LINK_DOMAIN}`;

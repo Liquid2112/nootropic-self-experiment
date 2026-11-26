@@ -6,8 +6,10 @@ import { LINK_DOMAIN } from './domain';
  */
 
 /** Plain-language privacy policy (docs/privacy-policy.md in this repo). */
-export const PRIVACY_POLICY_URL =
-  'https://github.com/Liquid2112/nootropic-self-experiment/blob/main/docs/privacy-policy.md';
+export const PRIVACY_POLICY_URL = `https://${LINK_DOMAIN}/privacy`;
+
+/** Support page (App Store "Support URL"). */
+export const SUPPORT_URL = `https://${LINK_DOMAIN}/support`;
 
 /** Apple's standard end-user license agreement, used as the terms of use. */
 export const TERMS_OF_USE_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';

@@ -27,15 +27,10 @@ Developer account is approved.
 
 ## Still open
 
-- **Privacy contact email**: docs/privacy-policy.md still says
-  `CONTACT_EMAIL_TBD`. Once it's in, host the policy on the landing site and put
-  that URL in `store.config.json` (`privacyPolicyUrl`), `src/config/links.ts`,
-  and the description's last line.
-- **Support URL** (required): the landing page, once it has a public address.
-  Add it as `supportUrl` in `store.config.json`.
-- **Domain**: not bought yet. When it is, set `LINK_DOMAIN` in
-  `src/config/domain.ts` (everything else derives from it) and follow
-  "Domain setup" below.
+- **Domain**: placeboapp.com (bought 2026-11-26), support@placeboapp.com
+  forwards via Cloudflare Email Routing. Privacy policy is served at
+  https://placeboapp.com/privacy and support at /support once the landing
+  site is on the domain (see "Domain setup").
 
 ## Domain setup (about 20 minutes)
 
@@ -54,7 +49,7 @@ Developer account is approved.
    reply *as* support@ later, add an SMTP sender (e.g. Gmail "Send mail as"
    with a transactional mail service).
 4. **Tell Claude the domain.** Then: `LINK_DOMAIN` changes if it's not
-   placebo.app, the privacy policy gets the support email and a `/privacy`
+   placeboapp.com, the privacy policy gets the support email and a `/privacy`
    page on the landing site, a `/support` page goes up, and
    `store.config.json` gets `privacyPolicyUrl` and `supportUrl`.
 5. **After the Apple Developer account exists**: put the Team ID into

@@ -1,7 +1,7 @@
 <!--
 DRAFT, not live. Needs a lawyer's review before it replaces Apple's standard
 EULA as TERMS_OF_USE_URL (src/config/links.ts). Fill OPERATOR_NAME_TBD,
-CONTACT_EMAIL_TBD and GOVERNING_STATE_TBD first. The arbitration clause in
+GOVERNING_STATE_TBD first. The arbitration clause in
 particular must be checked: it only holds up if it is shown clearly and
 accepted, and some states limit it.
 -->
@@ -68,7 +68,7 @@ Some places don't allow these limits, so some may not apply to you. Nothing here
 
 ## 10. Disputes
 
-**Please read this section: it affects your rights.** If you have a problem, contact us first at CONTACT_EMAIL_TBD and we'll try to fix it within 60 days.
+**Please read this section: it affects your rights.** If you have a problem, contact us first at support@placeboapp.com and we'll try to fix it within 60 days.
 
 If we can't, you and we agree to resolve any dispute through **binding individual arbitration** instead of in court, except that either of us may bring an individual claim in small-claims court. **You and we waive the right to a jury trial and to take part in a class action.** You can opt out of this arbitration agreement by emailing us within 30 days of first accepting these terms. [LAWYER: provider, rules, fees, venue.]
 
@@ -80,4 +80,4 @@ We may update these terms. If a change is meaningful, we'll tell you in the app 
 
 ## 12. Contact
 
-OPERATOR_NAME_TBD · CONTACT_EMAIL_TBD
+OPERATOR_NAME_TBD · support@placeboapp.com

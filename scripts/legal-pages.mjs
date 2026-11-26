@@ -1,6 +1,6 @@
-// Renders docs/privacy-policy.md (and docs/terms-of-use.md once its
-// placeholders are filled) into static pages under landing/, served at
-// /privacy and /terms. Run after editing either doc:
+// Renders docs/privacy-policy.md, docs/support.md (and docs/terms-of-use.md
+// once its placeholders are filled) into static pages under landing/, served
+// at /privacy, /support and /terms. Run after editing either doc:
 //   node scripts/legal-pages.mjs
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { marked } from 'marked';
@@ -8,6 +8,7 @@ import { marked } from 'marked';
 const pages = [
   { src: 'docs/privacy-policy.md', out: 'landing/privacy.html', title: 'Privacy Policy' },
   { src: 'docs/terms-of-use.md', out: 'landing/terms.html', title: 'Terms of Use' },
+  { src: 'docs/support.md', out: 'landing/support.html', title: 'Support' },
 ];
 
 const slug = (t) =>
