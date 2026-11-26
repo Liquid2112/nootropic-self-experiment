@@ -10,7 +10,7 @@ const { LINK_DOMAIN } = require('./src/config/domain.ts') as typeof import('./sr
  * the link domain lives in one place (src/config/domain.ts).
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const linkPaths = ['/k/', '/u/', '/r/'];
+  const linkPaths = ['/r/'];
   return {
     ...(config as ExpoConfig),
     ios: {

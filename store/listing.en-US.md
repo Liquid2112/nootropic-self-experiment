@@ -17,11 +17,12 @@ Alternates if Apple or a trademark clash forces a change:
 
 ## Subtitle (30 max)
 
-**Blind-test your nootropics** (26)
+**Test your nootropics for real** (29)
 
 Words in the name and subtitle are indexed, so neither the subtitle nor the
-keyword field repeats "placebo", "supplement", "tracker", "blind", "test" or
-"nootropics".
+keyword field repeats "placebo", "supplement", "tracker", "test", "real" or
+"nootropics". (Blinding was dropped on 2026-11-26: runs are open-label, so no
+store copy may promise blinding, placebo pills or placebo control.)
 
 ## Keywords (100 max, comma separated, no spaces)
 
@@ -44,31 +45,30 @@ Notes:
 
 ## Promotional text (170 max, editable any time without review)
 
-> Stop guessing. Run a blinded 3 to 4 week experiment on the supplement you already take, and get a real verdict from your own reaction-time and memory data. (155)
+> Stop guessing. Run a randomized 3 to 4 week on/off experiment on the supplement you already take, and get a verdict from your own reaction-time and memory data. (160)
 
 Launch-week alternate (use it once Shubh's on-camera reveal is out):
 
-> Shubh blind-tested his own stack for 3 weeks. One thing worked. One did nothing. Run the same experiment on yours. (115)
+> Shubh tested his own stack for 3 weeks. One thing moved his numbers. One did nothing. Run the same experiment on yours. (122)
 
 ## Description (4000 max)
 
 ```
 Does your supplement actually do anything? Placebo finds out, on you.
 
-Most of what you take was chosen from a TikTok, a forum thread or a friend's stack. Placebo runs a small, blinded experiment on one supplement and tells you if it moved your numbers, did nothing, or made things worse.
+Most of what you take was chosen from a TikTok, a forum thread or a friend's stack. Placebo runs a small, randomized experiment on one supplement and tells you if it moved your numbers, did nothing, or made things worse.
 
 HOW IT WORKS
 • Pick one goal and one supplement you already have.
-• Placebo builds a randomized schedule: some days you take it, some days you don't.
-• Blind it if you can: fill two identical cups, one real and one placebo, and let the app (or a friend holding the key) track which is which. Your expectations can't sway the result if you don't know.
+• Placebo builds a randomized schedule: some days you take it, some days you don't. A coin flip picks the days, not your mood.
 • Each day, a 90-second check-in: a reaction-time test, a quick memory task and three sliders.
-• After 3 to 4 weeks, your verdict unlocks: measurable improvement, no meaningful effect, measured worse, or not enough data yet. With the range, in plain units.
+• After 3 to 4 weeks, your verdict compares your on days with your off days: measurable improvement, no meaningful effect, measured worse, or not enough data yet. With the range, in plain units.
+• The verdict leans on timed tests, not just how you feel, because knowing which days are on can color how you rate them.
 
 BUILT SO YOU FINISH
 • A countdown to your verdict date from day one.
 • Daily quests, streaks and badges.
 • A home-screen widget and a Live Activity for today's check-in.
-• Results stay sealed until the end, so no early peeking spoils the answer.
 
 APPLE HEALTH
 Connect Apple Health and Placebo reads your sleep, resting heart rate and heart rate variability, then compares each night to the dose the day before. Read-only: Placebo never writes to Health, and Health data never leaves your phone.
@@ -98,7 +98,7 @@ subscribers" and the trial sentences.
 ## What's New (version 1.0)
 
 ```
-The first version of Placebo. Pick a supplement, blind it, and get a real verdict in 3 to 4 weeks.
+The first version of Placebo. Pick a supplement, follow a randomized on/off schedule, and get a verdict in 3 to 4 weeks.
 ```
 
 ## Categories
@@ -116,8 +116,8 @@ subscription settings. Prices per the business plan.
 
 | Reference name | Product ID (suggested) | Duration | Price | Trial | Display name | Description (55 max) |
 |---|---|---|---|---|---|---|
-| Pro Yearly | `placebo_pro_yearly` | 1 year | $39.99 | 7 days | Placebo Pro Yearly | Run unlimited blinded experiments. |
-| Pro Monthly | `placebo_pro_monthly` | 1 month | $9.99 | 7 days | Placebo Pro Monthly | Run unlimited blinded experiments. |
+| Pro Yearly | `placebo_pro_yearly` | 1 year | $39.99 | 7 days | Placebo Pro Yearly | Run unlimited supplement experiments. |
+| Pro Monthly | `placebo_pro_monthly` | 1 month | $9.99 | 7 days | Placebo Pro Monthly | Run unlimited supplement experiments. |
 
 Each subscription needs a review screenshot of the purchase screen:
 `docs/screenshots/paywall.png` works (780x1688).
