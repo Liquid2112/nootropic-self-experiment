@@ -60,6 +60,13 @@ Developer account is approved.
 5. **After the Apple Developer account exists**: put the Team ID into
    `landing/.well-known/apple-app-site-association` (see landing/README.md).
 
+## Screenshots still to redo after the no-blinding redesign
+
+Blinding was dropped on 2026-11-26. Frame 03 now uses the progress screen, but
+two raw captures still show the old UI: `welcome.png` ("Blinded, like a real
+trial") and `verdict.png` (the "Unblinded" card). Re-capture all raws once the
+redesign is on main, then re-render. Don't upload 01 or 02 before that.
+
 ## Regenerating the screenshots
 
 Raw captures come from the app's web build with seeded demo data, then get
@@ -70,7 +77,7 @@ npm ci
 # active run (home, reaction test, health, library, setup, welcome)
 node scripts/screenshots.mjs /tmp/raw/active --size=440x956 --scale=3 \
   --routes=/,/reaction-test,/welcome,/dictionary,/health,/experiment-setup
-# finished blinded run, for the verdict
+# finished run, for the verdict
 node scripts/screenshots.mjs /tmp/raw/done --no-build --scenario=completed \
   --size=440x956 --scale=3 --routes=/verdict
 # copy the PNGs you want into store/screenshots/raw/, then
@@ -79,7 +86,7 @@ node store/screenshots/render.mjs
 
 Headlines live in `store/screenshots/frames.html`. Order matters: the first
 three show in search results, so they carry the hook (does your stack work?),
-the payoff (a verdict) and the differentiator (blinded).
+the payoff (a verdict) and the differentiator (randomized on/off days).
 
 Only the 6.9" size is needed: App Store Connect scales it down for smaller
 iPhones. iPad isn't needed because 1.0 is iPhone-only (`supportsTablet: false`).

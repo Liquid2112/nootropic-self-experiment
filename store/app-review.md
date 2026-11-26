@@ -32,7 +32,8 @@ What we do:
 Rules for anything we add later (promo text, What's New, screenshots):
 - Never: "boost focus", "improve memory", "proven", "clinically", "doctor
   recommended", percentages of users who improved.
-- OK: "find out if", "measure", "your own data", "blinded".
+- OK: "find out if", "measure", "your own data", "randomized".
+- Never (since 2026-11-26): "blinded", "placebo-controlled", "like a real trial". Runs are open-label.
 
 ### 2. Prescription and gray-market compounds in the library (1.4.3)
 
@@ -107,7 +108,7 @@ enforced in `affiliate.ts`).
 
 ### 8. Link domain
 
-Invite, keyholder and referral links, plus iOS universal links and Android app
+Invite and referral links, plus iOS universal links and Android app
 links, all come from `LINK_DOMAIN` in `src/config/domain.ts` (through
 `app.config.ts`). Shubh is buying the domain (2026-11-25). Until it serves
 `landing/.well-known/apple-app-site-association`, every shared link is dead,
@@ -131,7 +132,7 @@ reach us about the review).
 Notes:
 
 ```
-Placebo helps people check whether a supplement they already take makes a measurable difference for them, using a randomized, optionally blinded on/off schedule and a 90-second daily check-in (a reaction-time test, a short memory task and three ratings).
+Placebo helps people check whether a supplement they already take makes a measurable difference for them, using a randomized on/off schedule and a 90-second daily check-in (a reaction-time test, a short memory task and three ratings).
 
 No account or sign-in. All experiment data stays on the device.
 
