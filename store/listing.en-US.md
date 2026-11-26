@@ -61,7 +61,7 @@ Most of what you take was chosen from a TikTok, a forum thread or a friend's sta
 HOW IT WORKS
 • Pick one goal and one supplement you already have.
 • Placebo builds a randomized schedule: some days you take it, some days you don't. A coin flip picks the days, not your mood.
-• Each day, a 90-second check-in: a reaction-time test, a quick memory task and three sliders.
+• Each day, a check-in of five short brain tests, about 3 minutes: reaction time, color clash, symbol code, word memory and a calm check.
 • After 3 to 4 weeks, your verdict compares your on days with your off days: measurable improvement, no meaningful effect, measured worse, or not enough data yet. With the range, in plain units.
 • The verdict leans on timed tests, not just how you feel, because knowing which days are on can color how you rate them.
 
@@ -88,10 +88,10 @@ Running an experiment needs Placebo Pro, with a free trial for new subscribers. 
 Placebo is a personal measurement tool, not a medical device. It does not diagnose, treat or prevent any condition, and it doesn't tell you what to take. Talk to a doctor before starting any supplement, especially if you take prescription medication, are pregnant, or have a health condition.
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Privacy Policy: PRIVACY_POLICY_URL
+Privacy Policy: https://placeboapp.com/privacy
 ```
 
-Before pasting: replace `PRIVACY_POLICY_URL` (see store/README.md). If the
+Before pasting: if the
 store products end up with no free trial, delete "with a free trial for new
 subscribers" and the trial sentences.
 

@@ -6,7 +6,6 @@
  */
 import type { SqlDriver } from '@/db/driver';
 import { experiments, quickTests, scheduleDays, testSessions } from '@/db/repositories';
-import { createRng } from '@/engines/experiment/rng';
 import { createExperiment } from '@/engines/onboarding/createExperiment';
 
 const EXPERIMENT_ID = 'demo-experiment';
@@ -115,7 +114,7 @@ export function seedDemoData(db: SqlDriver): void {
 }
 
 /**
- * A finished, self-blinded 21-day L-Theanine + Caffeine run (ended yesterday)
+ * A finished, open-label 21-day L-Theanine + Caffeine run (ended yesterday)
  * with a clear effect, so the verdict screen shows a real result. Used for App
  * Store screenshots (`node scripts/screenshots.mjs --scenario=completed`).
  */
@@ -136,15 +135,13 @@ export function seedCompletedDemo(db: SqlDriver): void {
         name: 'L-Theanine + Caffeine',
       },
       lengthDays: LENGTH,
-      blindingMode: 'self_blind',
+      blindingMode: 'none',
       testWindow: 'morning',
       startDate: localDay(daysAgo(START_AGO)),
     },
     { experimentId: EXPERIMENT_ID, seed },
   );
 
-  // Same draw the blinding engine makes, so we know which cup is the real one.
-  const supplementLabel = createRng(`labels:${seed}`).next() < 0.5 ? 'A' : 'B';
   const schedule = scheduleDays.listForExperiment(db, EXPERIMENT_ID);
   let n = 0;
   for (let b = -3; b <= -1; b++) {
@@ -154,7 +151,7 @@ export function seedCompletedDemo(db: SqlDriver): void {
     const at = daysAgo(START_AGO - day.dayIndex, 8, 30);
     scheduleDays.markTaken(db, EXPERIMENT_ID, day.dayIndex, at.toISOString());
     if (day.dayIndex === 12) continue; // one missed check-in, like real life
-    const arm = day.arm === supplementLabel ? 'ON' : 'OFF';
+    const arm = day.arm === 'ON' ? 'ON' : 'OFF';
     insertSession(db, day.dayIndex, daysAgo(START_AGO - day.dayIndex, 9, 15), arm, n++, 0.15);
   }
 }
