@@ -16,7 +16,7 @@ rejection reason.
 | Question | Answer | Why |
 |---|---|---|
 | Parental controls | No | |
-| Age assurance | No | |
+| Age assurance | No | Onboarding asks for a birth year and blocks under 18, but it is self-declared, not verified (`src/features/age/ageGate.ts`) |
 | Unrestricted web access | No | Links open specific pages (PubMed, store) in the system browser; there's no in-app browser |
 | User-generated content | No | Nothing a user types is shown to anyone else |
 | Messaging and chat | No | |
