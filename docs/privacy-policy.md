@@ -2,7 +2,7 @@
 
 _Last updated: November 25, 2026_
 
-This policy explains what the Placebo app and the Placebo website ("Placebo", "we") do with your information. Placebo is operated by **OPERATOR_NAME_TBD**.
+This policy explains what the Placebo app and the Placebo website ("Placebo", "we") do with your information. Your use of Placebo is also covered by our [Terms of Use](/terms).
 
 The short version: **your experiment data and health data stay on your phone.** We don't run accounts, we don't have a server that stores your results, and we don't sell your data or share it for advertising.
 
@@ -100,4 +100,4 @@ If we change this policy, we'll update the date at the top and, for meaningful c
 
 ## Contact
 
-Questions or privacy requests: **support@placeboapp.com**
+Questions or privacy requests: **support@placeboapp.com**. See also our [Terms of Use](/terms).

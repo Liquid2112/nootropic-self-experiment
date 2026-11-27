@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Button, Scaffold, brand, fonts } from '@/ui';
 import { Icon, Logo, Brian } from '@/brand';
 import { tapLight } from '@/components/game';
-import { PRIVACY_POLICY_URL } from '@/config/links';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
 import { setAnalyticsProgressConsent, track } from '@/features/analytics';
 import { getDatabase } from '@/db';
@@ -179,6 +179,28 @@ export function WelcomeScreen() {
           Your data stays on this phone. <Text style={styles.privacyUnderline}>Privacy policy</Text>
         </Text>
       </Pressable>
+
+      {/* Assent notice for the Terms (incl. arbitration). Keep it next to the
+          start button's screen and the links tappable, or the terms may not bind. */}
+      <Text style={styles.termsNotice} testID="welcome-terms">
+        By tapping Start my experiment, you agree to our{' '}
+        <Text
+          accessibilityRole="link"
+          style={styles.privacyUnderline}
+          onPress={() => void Linking.openURL(TERMS_OF_USE_URL)}
+        >
+          Terms of Use
+        </Text>
+        , including binding individual arbitration and a class-action waiver, and confirm you have read our{' '}
+        <Text
+          accessibilityRole="link"
+          style={styles.privacyUnderline}
+          onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+        >
+          Privacy Policy
+        </Text>
+        .
+      </Text>
     </Scaffold>
   );
 }
@@ -350,4 +372,12 @@ const styles = StyleSheet.create({
   privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   privacyLink: { fontSize: 13, fontFamily: fonts.regular, color: brand.muted },
   privacyUnderline: { fontFamily: fonts.semibold, color: brand.ink, textDecorationLine: 'underline' },
+  termsNotice: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fonts.regular,
+    color: brand.muted,
+    textAlign: 'center',
+    paddingTop: 8,
+  },
 });
