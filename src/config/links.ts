@@ -11,8 +11,11 @@ export const PRIVACY_POLICY_URL = `https://${LINK_DOMAIN}/privacy`;
 /** Support page (App Store "Support URL"). */
 export const SUPPORT_URL = `https://${LINK_DOMAIN}/support`;
 
-/** Apple's standard end-user license agreement, used as the terms of use. */
-export const TERMS_OF_USE_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+/**
+ * Our own Terms of Use (docs/terms-of-use.md), which replace Apple's standard
+ * EULA. App Store Connect must point its custom EULA / description link here too.
+ */
+export const TERMS_OF_USE_URL = `https://${LINK_DOMAIN}/terms`;
 
 /**
  * Affiliate stores, highest payout first (rates checked 2026-11-25):

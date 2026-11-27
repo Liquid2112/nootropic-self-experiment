@@ -87,7 +87,7 @@ Running an experiment needs Placebo Pro, with a free trial for new subscribers. 
 
 Placebo is a personal measurement tool, not a medical device. It does not diagnose, treat or prevent any condition, and it doesn't tell you what to take. Talk to a doctor before starting any supplement, especially if you take prescription medication, are pregnant, or have a health condition.
 
-Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Terms of Use: https://placeboapp.com/terms
 Privacy Policy: https://placeboapp.com/privacy
 ```
 

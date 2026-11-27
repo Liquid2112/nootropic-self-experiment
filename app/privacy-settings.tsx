@@ -8,7 +8,7 @@ import {
   setAnalyticsOptOut,
   setAnalyticsProgressConsent,
 } from '@/features/analytics';
-import { PRIVACY_POLICY_URL } from '@/config/links';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/config/links';
 import { Card, Scaffold, brand, fonts } from '@/ui';
 
 function read<T>(fn: () => T, fallback: T): T {
@@ -77,6 +77,9 @@ export default function PrivacySettings() {
 
       <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}>
         <Text style={styles.link}>Read the privacy policy</Text>
+      </Pressable>
+      <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(TERMS_OF_USE_URL)}>
+        <Text style={styles.link}>Read the terms of use</Text>
       </Pressable>
     </Scaffold>
   );
