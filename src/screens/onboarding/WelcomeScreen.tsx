@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Button, Scaffold, brand, fonts } from '@/ui';
@@ -9,6 +9,7 @@ import { PRIVACY_POLICY_URL } from '@/config/links';
 import { useOnboarding } from './OnboardingContext';
 import { setAnalyticsProgressConsent, track } from '@/features/analytics';
 import { getDatabase } from '@/db';
+import { checkBirthYear } from '@/features/age/ageGate';
 
 /**
  * Screen 1 — Welcome + disclaimer.
@@ -17,8 +18,8 @@ import { getDatabase } from '@/db';
  * mockup), then the disclaimer gate below.
  *
  * Gate before anything else: the user must acknowledge this is not medical
- * advice and confirm they are 18+. The continue action stays disabled until
- * both are checked, and the disclaimer acknowledgment is recorded in onboarding
+ * advice and enter a birth year that makes them 18+. The continue action stays disabled
+ * until the box is checked and the year passes, and the disclaimer acknowledgment is recorded in onboarding
  * state so later screens know the gate was passed.
  *
  * A third, optional box asks to share anonymous progress counts (run days,
@@ -30,10 +31,12 @@ export function WelcomeScreen() {
   const router = useRouter();
   const { update } = useOnboarding();
   const [notMedical, setNotMedical] = useState(false);
-  const [adult, setAdult] = useState(false);
+  const [birthYear, setBirthYear] = useState('');
   const [shareProgress, setShareProgress] = useState(false);
   const [page, setPage] = useState<'hero' | 'gate'>('hero');
 
+  const ageCheck = checkBirthYear(birthYear);
+  const adult = ageCheck === 'ok';
   const canContinue = notMedical && adult;
 
   function onContinue() {
@@ -96,7 +99,9 @@ export function WelcomeScreen() {
             <View style={styles.gateHint} accessibilityLiveRegion="polite">
               <Icon name="check" size={14} color={brand.muted} strokeWidth={2.6} />
               <Text style={styles.gateHintText}>
-                {notMedical || adult ? 'One more box to tick above' : 'Tick the two boxes above to start'}
+                {ageCheck === 'under'
+                  ? 'Placebo is for adults 18 and older'
+                  : 'Tick the box and enter your birth year to start'}
               </Text>
             </View>
           ) : null}
@@ -142,16 +147,29 @@ export function WelcomeScreen() {
           }}
           label="I understand this is not medical advice."
         />
-        <AcknowledgeRow
-          testID="ack-adult"
-          checked={adult}
-          onToggle={() => {
-            tapLight();
-            setAdult((v) => !v);
-          }}
-          label="I am 18 years of age or older."
-          last
-        />
+        <View style={styles.ageRow}>
+          <Text style={styles.ackLabel}>Year you were born (18+ only)</Text>
+          <TextInput
+            testID="birth-year"
+            value={birthYear}
+            onChangeText={(t) => setBirthYear(t.replace(/\D/g, '').slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
+            placeholder="YYYY"
+            placeholderTextColor={brand.muted}
+            accessibilityLabel="Birth year"
+            style={styles.ageInput}
+          />
+        </View>
+        {ageCheck === 'under' ? (
+          <Text testID="age-blocked" style={styles.ageBlocked} accessibilityLiveRegion="polite">
+            Sorry, Placebo is only for people 18 and older, so we can't start an experiment for you.
+          </Text>
+        ) : ageCheck === 'invalid' ? (
+          <Text style={styles.ageBlocked} accessibilityLiveRegion="polite">
+            Enter a valid four-digit year.
+          </Text>
+        ) : null}
       </View>
 
       <View style={styles.acks}>
@@ -333,6 +351,20 @@ const styles = StyleSheet.create({
     borderColor: brand.line,
     paddingHorizontal: 16,
   },
+  ageRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
+  ageInput: {
+    width: 92,
+    borderWidth: 2,
+    borderColor: brand.line,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    fontSize: 17,
+    fontFamily: fonts.semibold,
+    color: brand.ink,
+    textAlign: 'center',
+  },
+  ageBlocked: { fontSize: 14, lineHeight: 19, fontFamily: fonts.medium, color: brand.ink, paddingBottom: 12 },
   ackRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   box: {
     width: 26,

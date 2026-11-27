@@ -14,7 +14,7 @@ These terms are an agreement between you and **OPERATOR_NAME_TBD** ("Placebo", "
 
 ## 1. Who can use Placebo
 
-You must be **18 or older**. Placebo is for personal, non-commercial use.
+You must be **18 or older**. The app asks for your birth year before you start and blocks anyone under 18; if you're under 18, you may not use Placebo, and we may close any account or data we learn belongs to a minor. Placebo is for personal, non-commercial use.
 
 ## 2. Placebo is not medical advice
 

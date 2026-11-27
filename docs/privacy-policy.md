@@ -88,7 +88,7 @@ Analytics events are kept for up to 2 years, then deleted. Purchase records are 
 
 ## Children
 
-Placebo is for adults 18 and older, and the app asks you to confirm your age before you start. We don't knowingly collect information from anyone under 18. If you think a minor has used Placebo, contact us and we'll delete anything we hold.
+Placebo is for adults 18 and older, and the app asks for your birth year before you start and won't let anyone under 18 continue. We don't store it. We don't knowingly collect information from anyone under 18. If you think a minor has used Placebo, contact us and we'll delete anything we hold.
 
 ## Health information disclaimer
 
