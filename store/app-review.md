@@ -83,8 +83,10 @@ Terms and Privacy links, no toggles or countdown timers. The description has
 the standard auto-renew paragraph and both links. The free tier (reaction test)
 means the app isn't a bare paywall.
 
-Must-do in App Store Connect: put the Terms of Use (Apple's standard EULA) link
-in the description (done) and fill in the Privacy Policy URL field.
+Must-do in App Store Connect: the description links our own Terms of Use
+(https://placeboapp.com/terms, done); also paste that URL as the custom
+License Agreement (App Information > License Agreement > Edit) so Apple's
+standard EULA isn't shown, and fill in the Privacy Policy URL field.
 
 ### 5. HealthKit (2.5.1, 5.1.3)
 

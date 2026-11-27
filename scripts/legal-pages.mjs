@@ -1,5 +1,5 @@
-// Renders docs/privacy-policy.md, docs/support.md (and docs/terms-of-use.md
-// once its placeholders are filled) into static pages under landing/, served
+// Renders docs/privacy-policy.md, docs/terms-of-use.md and docs/support.md
+// into static pages under landing/, served
 // at /privacy, /support and /terms. Run after editing either doc:
 //   node scripts/legal-pages.mjs
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
@@ -25,7 +25,7 @@ marked.use({
 for (const { src, out, title } of pages) {
   let md = readFileSync(src, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
   if (/DATE_TBD|GOVERNING_STATE_TBD/.test(md)) {
-    // Not ready to publish (needs the operator, state and a lawyer's review).
+    // Guard: never publish a page with unfilled placeholders.
     if (existsSync(out)) rmSync(out);
     console.log(`skip ${src}: placeholders not filled`);
     continue;
