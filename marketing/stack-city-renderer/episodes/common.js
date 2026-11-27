@@ -17,7 +17,7 @@ export function camKeys(S,t,keys,useLx){ // keys: [t,x,y,z,lx,ly], eased between
 }
 export function drawVerdict(g,W,H,stamp,blur){
   g.fillStyle='#14121c';g.beginPath();g.roundRect(4,4,W-8,H-8,36);g.fill();g.strokeStyle='#2c2840';g.lineWidth=5;g.stroke();
-  g.fillStyle='#8e88a8';g.font='800 26px Inter';g.fillText('DAY 21 · BLIND TEST RESULT',40,64);
+  g.fillStyle='#8e88a8';g.font='800 26px Inter';g.fillText('DAY 21 · TEST RESULT',40,64);
   g.fillStyle='#fff';g.font='900 46px Inter';g.fillText('Your morning stack',40,124);
   if(blur)g.filter='blur(9px)';
   const bar=(y,l,w,c,v)=>{g.fillStyle='#8e88a8';g.font='800 24px Inter';g.fillText(l,40,y+28);g.fillStyle='#262236';g.beginPath();g.roundRect(150,y,440,40,12);g.fill();g.fillStyle=c;g.beginPath();g.roundRect(150,y,w,40,12);g.fill();g.fillStyle='#fff';g.font='900 22px Inter';g.fillText(v,150+w-82,y+28);};
@@ -33,9 +33,9 @@ export function drawCalendar(g,W,H,fill,blinded,seed=3){
   g.fillStyle='#8e88a8';g.font='800 26px Inter';g.fillText('YOUR 21 DAYS',40,62);
   let s=seed;const r=()=>(s=(s*16807)%2147483647)/2147483647;
   for(let i=0;i<21;i++){const x=40+(i%7)*80,y=90+Math.floor(i/7)*80;const on=r()<.5;
-    g.fillStyle=i<fill?(blinded?'#3a3550':(on?'#FF5A36':'#B7A6FF')):'#221f30';g.beginPath();g.roundRect(x,y,66,66,14);g.fill();
-    g.fillStyle=i<fill?'#15131C':'#4a4560';g.font='900 22px Inter';g.textAlign='center';g.fillText(blinded&&i<fill?'?':String(i+1),x+33,y+42);g.textAlign='left';}
-  if(blinded){g.fillStyle='#FF5A36';g.beginPath();g.roundRect(W-230,26,190,48,14);g.fill();g.fillStyle='#15131C';g.font='900 24px Inter';g.fillText('BLINDED',W-196,58);}
+    g.fillStyle=i<fill?(on?'#FF5A36':'#B7A6FF'):'#221f30';g.beginPath();g.roundRect(x,y,66,66,14);g.fill();
+    g.fillStyle=i<fill?'#15131C':'#4a4560';g.font='900 22px Inter';g.textAlign='center';g.fillText(String(i+1),x+33,y+42);g.textAlign='left';}
+  if(blinded){g.fillStyle='#FF5A36';g.beginPath();g.roundRect(W-230,26,190,48,14);g.fill();g.fillStyle='#15131C';g.font='900 24px Inter';g.fillText('RANDOM',W-190,58);}
 }
 export function drawReaction(g,W,H,state,ms){ // state 0 dark, 1 orange
   g.fillStyle='#14121c';g.beginPath();g.roundRect(4,4,W-8,H-8,36);g.fill();g.strokeStyle='#2c2840';g.lineWidth=5;g.stroke();
@@ -71,7 +71,7 @@ export function drawEntry(g,W,H,e,btn){
   y+=110;g.fillStyle='#6d6788';g.font='800 28px Inter';g.fillText('WHAT THE RESEARCH SAYS',40,y);y+=54;
   g.fillStyle='#15131C';g.font='900 42px Inter';y=wrapText(g,e.research,40,y,W-80,52);
   y+=8;let x=40;g.font='800 28px Inter';for(const c of e.chips){const w=g.measureText(c).width+40;g.fillStyle='#B7A6FF';g.beginPath();g.roundRect(x,y,w,50,14);g.fill();g.fillStyle='#15131C';g.fillText(c,x+20,y+35);x+=w+14;}
-  if(btn){g.fillStyle=btn>1?'#15131C':'#FF5A36';g.beginPath();g.roundRect(40,H-130,W-80,90,24);g.fill();g.fillStyle=btn>1?'#F7F4EE':'#15131C';g.font='900 40px Inter';g.textAlign='center';g.fillText(btn>1?'BLIND TEST STARTED':'TEST THIS ON ME',W/2,H-72);g.textAlign='left';}
+  if(btn){g.fillStyle=btn>1?'#15131C':'#FF5A36';g.beginPath();g.roundRect(40,H-130,W-80,90,24);g.fill();g.fillStyle=btn>1?'#F7F4EE':'#15131C';g.font='900 40px Inter';g.textAlign='center';g.fillText(btn>1?'TEST STARTED':'TEST THIS ON ME',W/2,H-72);g.textAlign='left';}
 }
 export function drawMini(g,W,H,name,col){g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-8,26);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(4,4,W-8,60,[26,26,0,0]);g.fill();
   g.fillStyle='#15131C';g.font='900 34px Inter';g.textAlign='center';wrapText(g,name,W/2,140,W-30,40);g.textAlign='left';}

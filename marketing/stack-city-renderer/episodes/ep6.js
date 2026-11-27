@@ -1,5 +1,5 @@
 import {slideCard,camKeys,drawBanner,drawCalendar,drawEntry,drawMini} from './common.js';
-export const display=`A thousand nootropic TikToks. ZERO receipts. What if one app had them ALL? What it is. What studies ACTUALLY tested. REAL sources, not anecdotes. Then don't just read it. TEST it. Blind, on you. Read it. Test it. KNOW it. Comment a nootropic, and I'll look it up.`;
+export const display=`A thousand nootropic TikToks. ZERO receipts. What if one app had them ALL? What it is. What studies ACTUALLY tested. REAL sources, not anecdotes. Then don't just read it. TEST it. Daily, on you. Read it. Test it. KNOW it. Comment a nootropic, and I'll look it up.`;
 const E={name:'L-Theanine',tag:'The calm-focus amino acid from tea leaves.',evidence:'MODERATE',evColor:'#FFC23A',research:'May ease stress in people under stress. Trials are small.',chips:['PubMed','Systematic review']};
 let B,noise,minis,entry,cal,stamps,conf,logo;
 function drawComment(g,W,H,txt){g.fillStyle='#F7F4EE';g.beginPath();g.roundRect(4,4,W-8,H-8,24);g.fill();g.fillStyle='#FF5A36';g.beginPath();g.arc(48,H/2,24,0,7);g.fill();g.fillStyle='#15131C';g.font='800 30px Inter';g.fillText(txt,86,H/2+11);}
@@ -11,7 +11,7 @@ export function build(S){
   minis=names.map(([n,c],i)=>{const m=S.card(.85,1.15,280,drawMini);m.redraw(n,c);m.i=i;return m;});
   entry=S.card(1.8,2.5,360,drawEntry);cal=S.card(2,1.4,320,drawCalendar);
   stamps=['READ ✓','TESTED ✓','KNOWN ✓'].map((s,i)=>{const c=S.card(1.6,.5,280,drawBanner);c.redraw(s,'',['#F7F4EE','#B7A6FF','#FF5A36'][i]);return c;});
-  conf=S.confetti(70);logo=S.card(2.2,.7,300,drawBanner);logo.redraw('Placebo','the nootropic library + blind tests');
+  conf=S.confetti(70);logo=S.card(2.2,.7,300,drawBanner);logo.redraw('Placebo','the nootropic library + real tests');
 }
 export const duration=S=>S.words[S.words.length-1].t1+1.6;
 export function update(t,S){
