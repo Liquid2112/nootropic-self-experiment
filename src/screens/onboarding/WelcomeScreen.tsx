@@ -163,7 +163,7 @@ export function WelcomeScreen() {
         </View>
         {ageCheck === 'under' ? (
           <Text testID="age-blocked" style={styles.ageBlocked} accessibilityLiveRegion="polite">
-            Sorry, Placebo is only for people 18 and older, so we can't start an experiment for you.
+            Sorry, Placebo is only for people 18 and older, so we can&apos;t start an experiment for you.
           </Text>
         ) : ageCheck === 'invalid' ? (
           <Text style={styles.ageBlocked} accessibilityLiveRegion="polite">
